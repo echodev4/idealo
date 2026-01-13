@@ -1,0 +1,61 @@
+.comparisonGridContainer {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .comparisonGridContainer {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .comparisonGridContainer {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.cardRow {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Synchronized row heights across all columns */
+@media (min-width: 1024px) {
+    .comparisonGridContainer .cardRowCreditScore {
+        min-height: 140px;
+    }
+
+    .comparisonGridContainer .cardRowGreatFor {
+        min-height: 100px;
+    }
+
+    .comparisonGridContainer .cardRowAnnualFee {
+        min-height: 80px;
+    }
+
+    .comparisonGridContainer .cardRowBonus {
+        min-height: 120px;
+    }
+
+    .comparisonGridContainer .cardRowRewards {
+        min-height: 120px;
+    }
+
+    .comparisonGridContainer .cardRowIntroApr {
+        min-height: 80px;
+    }
+
+    .comparisonGridContainer .cardRowOngoingApr {
+        min-height: 80px;
+    }
+
+    .comparisonGridContainer .cardRowPros {
+        min-height: 150px;
+    }
+
+    .comparisonGridContainer .cardRowCons {
+        min-height: 120px;
+    }
+}
