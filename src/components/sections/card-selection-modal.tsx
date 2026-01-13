@@ -7,7 +7,7 @@ import { CardData } from "@/types/card";
 
 interface CardSelectionModalProps {
     isOpen: boolean;
-    cards: CardData[];
+    cards: (CardData & any)[];
     onClose: () => void;
     onSelectCard: (card: CardData) => void;
 }
@@ -26,8 +26,11 @@ const CardSelectionModal = ({
     const filteredCards = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();
         if (!q) return cards;
+
         return cards.filter(card =>
-            card.name.toLowerCase().includes(q)
+            card.name.toLowerCase().includes(q) ||
+            card.annualFee?.toLowerCase().includes(q) ||
+            card.rewardsRate?.toLowerCase().includes(q)
         );
     }, [cards, searchQuery]);
 
@@ -99,7 +102,7 @@ const CardSelectionModal = ({
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <input
                             type="search"
-                            placeholder="Search card name..."
+                            placeholder="Search by bank, fee, or earn rate..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
@@ -129,15 +132,30 @@ const CardSelectionModal = ({
                                         height={176}
                                         className="w-full aspect-[1.586/1] object-cover rounded-md mb-3 bg-muted"
                                     />
+
                                     <h3 className="text-base font-semibold text-neutral-darkest line-clamp-2 mb-2 group-hover:text-primary">
                                         {card.name}
                                     </h3>
-                                    <div className="flex items-center gap-2 text-sm">
+
+                                    <div className="flex items-center gap-2 text-sm mb-1">
                                         <span className="text-muted-foreground">Rating:</span>
                                         <span className="font-bold">{card.rating || "—"}</span>
-                                        <span className="text-muted-foreground">
-                                            • {card.annualFee || "—"}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-sm mb-1">
+                                        <span className="text-muted-foreground">Annual Fee:</span>
+                                        <span className="font-medium">{card.annualFee || "—"}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-sm mb-1">
+                                        <span className="text-muted-foreground">Salary Transfer:</span>
+                                        <span className="font-medium">
+                                            {card.creditScoreText || "—"}
                                         </span>
+                                    </div>
+
+                                    <div className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                        {card.rewardsRate || ""}
                                     </div>
                                 </button>
                             ))}

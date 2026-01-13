@@ -13,4 +13,5 @@ export interface CardData {
   pros: string[];
   cons: string[];
   applyUrl: string;
+  keyLifestyleBenefits?:string
 }

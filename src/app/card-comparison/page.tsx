@@ -7,22 +7,32 @@ import ComparisonGridSection from "@/components/sections/comparison-grid-section
 import CardBrowseSection from "@/components/sections/card-browse-section";
 import type { CardData } from "@/types/card";
 
-function mapDbCard(c: any): CardData {
+function mapDbCard(c: any): any {
     return {
         id: c._id,
-        name: `${c.bankName} ${c.cardName ?? ""}`.trim(),
+        name: `${c.bankName}`,
         image: c.cardImageUrl,
+
         rating: 4.2,
-        creditScoreText: "Good to Excellent",
+
+        creditScoreText: c.salaryTransferRequired ? "Salary Transfer Required" : "No Salary Transfer",
+
         greatFor: [],
+
         annualFee: c.joiningAnnualFee,
         bonusOffers: c.welcomeBonus,
         rewardsRate: c.earnRates,
-        introAPR: "",
+
+        introAPR: c.pointsRedemption,
         ongoingAPR: c.apr,
+
         pros: [],
         cons: [],
+
         applyUrl: "#",
+
+        lifestyleBenefits: c.keyLifestyleBenefits,
+        documentsRequired: c.documentsRequired,
     };
 }
 

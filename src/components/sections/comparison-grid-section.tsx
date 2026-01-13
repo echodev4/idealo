@@ -97,7 +97,8 @@ const ProsConsList = ({ title, items, type }: { title: string; items?: string[];
     );
 };
 
-const FilledCardSlot = ({ card, onRemove }: { card: CardData; onRemove: () => void }) => (
+
+const FilledCardSlot = ({ card, onRemove }: { card: CardData & any; onRemove: () => void }) => (
     <div className="flex flex-col h-full bg-white">
         <div className="p-1">
             <button onClick={onRemove} className="block text-right text-sm text-[#0066cc] hover:underline mb-1 ml-auto">
@@ -123,61 +124,63 @@ const FilledCardSlot = ({ card, onRemove }: { card: CardData; onRemove: () => vo
         </div>
 
         <div className="card-content-section">
-            <div className={cn(styles.cardRow, styles.cardRowCreditScore)}>
-                <AttributeRow icon={BarChart2} label="Recommended Credit Score">
-                    {card.creditScoreText || "—"}
+
+            {/* Salary Transfer */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={BarChart2} label="Salary Transfer">
+                    {card.creditScoreText}
                 </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowGreatFor)}>
-                <AttributeRow icon={ThumbsUp} label="Great For">
-                    <div className="flex flex-wrap gap-1.5">
-                        {(card.greatFor || []).map((g, i) => (
-                            <span key={i} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">
-                                {g}
-                            </span>
-                        ))}
-                    </div>
-                </AttributeRow>
-            </div>
-
-            <div className={cn(styles.cardRow, styles.cardRowAnnualFee)}>
+            {/* Annual Fee */}
+            <div className={cn(styles.cardRow)}>
                 <AttributeRow icon={DollarSign} label="Annual Fee">
-                    {card.annualFee || "—"}
+                    <ExpandableText text={card.annualFee} />
                 </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowBonus)}>
-                <AttributeRow icon={Gift} label="Bonus Offers">
+            {/* Welcome Bonus */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={Gift} label="Welcome Bonus">
                     <ExpandableText text={card.bonusOffers} />
                 </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowRewards)}>
-                <AttributeRow icon={Percent} label="Rewards Rate">
+            {/* Earn Rates */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={Percent} label="Earn Rates">
                     <ExpandableText text={card.rewardsRate} />
                 </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowIntroApr)}>
-                <AttributeRow icon={Calendar} label="Intro APR">
-                    {card.introAPR || "—"}
+            {/* Lifestyle Benefits */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={ThumbsUp} label="Lifestyle Benefits">
+                    <ExpandableText text={card.lifestyleBenefits} />
                 </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowOngoingApr)}>
-                <AttributeRow icon={TrendingUp} label="Ongoing APR">
+            {/* Points Redemption */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={Calendar} label="Points Redemption">
+                    <ExpandableText text={card.introAPR} />
+                </AttributeRow>
+            </div>
+
+            {/* APR */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={TrendingUp} label="APR">
                     {card.ongoingAPR || "—"}
                 </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowPros)}>
-                <ProsConsList title="Pros" items={card.pros} type="pros" />
+            {/* Documents Required */}
+            <div className={cn(styles.cardRow)}>
+                <AttributeRow icon={Check} label="Documents Required">
+                    <ExpandableText text={card.documentsRequired} />
+                </AttributeRow>
             </div>
 
-            <div className={cn(styles.cardRow, styles.cardRowCons)}>
-                <ProsConsList title="Cons" items={card.cons} type="cons" />
-            </div>
         </div>
 
         <div className="mt-6">
@@ -193,6 +196,7 @@ const FilledCardSlot = ({ card, onRemove }: { card: CardData; onRemove: () => vo
         </div>
     </div>
 );
+
 
 const EmptyCardSlot = ({ onClick }: { onClick: () => void }) => (
     <button

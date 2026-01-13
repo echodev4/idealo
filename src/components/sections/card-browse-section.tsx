@@ -6,7 +6,7 @@ import Image from "next/image";
 import { CardData } from "@/types/card";
 
 interface CardBrowseSectionProps {
-    cards: CardData[];
+    cards: (CardData & any)[];
     onSelectCard: (card: CardData) => void;
     selectedCardIds: string[];
 }
@@ -17,8 +17,11 @@ const CardBrowseSection = ({ cards, onSelectCard, selectedCardIds }: CardBrowseS
     const filteredCards = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();
         if (!q) return cards;
+
         return cards.filter(card =>
-            card.name.toLowerCase().includes(q)
+            card.name.toLowerCase().includes(q) ||
+            card.annualFee?.toLowerCase().includes(q) ||
+            card.rewardsRate?.toLowerCase().includes(q)
         );
     }, [cards, searchQuery]);
 
@@ -30,7 +33,7 @@ const CardBrowseSection = ({ cards, onSelectCard, selectedCardIds }: CardBrowseS
                         Browse Credit Cards
                     </h2>
                     <p className="text-muted-foreground mb-6">
-                        Search for a card by name or click the + icon to add it to your comparison
+                        Search and add cards to compare features, fees, and benefits
                     </p>
 
                     <div className="relative max-w-xl mx-auto mb-8">
@@ -39,7 +42,7 @@ const CardBrowseSection = ({ cards, onSelectCard, selectedCardIds }: CardBrowseS
                             type="search"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search card name..."
+                            placeholder="Search by bank name, fee, or earn rate..."
                             className="w-full h-12 pl-12 pr-4 border border-input rounded-md bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"
                         />
                     </div>
@@ -123,26 +126,21 @@ const CardBrowseSection = ({ cards, onSelectCard, selectedCardIds }: CardBrowseS
                                                 {card.annualFee || "—"}
                                             </span>
                                         </div>
+
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Credit Score:</span>
+                                            <span className="text-muted-foreground">Salary Transfer:</span>
                                             <span className="font-medium text-neutral-darkest">
                                                 {card.creditScoreText || "—"}
                                             </span>
                                         </div>
-                                    </div>
 
-                                    {card.greatFor?.length > 0 && (
-                                        <div className="mt-4 flex flex-wrap gap-2">
-                                            {card.greatFor.slice(0, 3).map((tag, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="text-xs px-2 py-1 bg-green-lightest text-primary rounded-full font-medium"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Earn Rates:</span>
+                                            <span className="font-medium text-neutral-darkest text-right ml-2 line-clamp-2">
+                                                {card.rewardsRate || "—"}
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             );
                         })}
