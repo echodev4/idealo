@@ -73,17 +73,33 @@ export function ProductProvider({
         /* ============================
            Fetch Product Details
         ============================ */
+
         async function fetchProduct() {
             try {
                 setLoading(true);
 
-                const res = await fetch(
-                    `/api/single-product?product_url=${encodeURIComponent(productUrl)}&sourceName=${encodeURIComponent(sourceName || "")}`
-                );
+                let url = "";
 
+                if (sourceName === "noon") {
+                    url = `/api/product-details?product_url=${encodeURIComponent(
+                        productUrl
+                    )}`;
+                } else {
+                    url = `/api/single-product?product_url=${encodeURIComponent(
+                        productUrl
+                    )}&sourceName=${encodeURIComponent(sourceName || "")}`;
+                }
+
+                const res = await fetch(url);
                 const json = await res.json();
 
-                if (active && json?.success && json?.scraped?.data) {
+                if (!active) return;
+
+                if (sourceName === "noon" && json?.success && json?.data) {
+                    setProduct(json.data);
+                }
+
+                if (sourceName !== "noon" && json?.success && json?.scraped?.data) {
                     setProduct(json.scraped.data);
                 }
             } catch (err) {
@@ -96,6 +112,7 @@ export function ProductProvider({
         /* ============================
            Fetch Related Products
         ============================ */
+
         async function fetchRelated() {
             if (!productName) {
                 setRelatedProducts([]);
@@ -105,9 +122,6 @@ export function ProductProvider({
 
             try {
                 setRelatedLoading(true);
-
-                const qs = new URLSearchParams();
-                qs.set("title", productName);
 
                 const res = await fetch(
                     `/api/products?q=${encodeURIComponent(productName)}&limit=10`,
@@ -136,8 +150,6 @@ export function ProductProvider({
                     });
 
                 setRelatedProducts(mapped);
-                setRelatedLoading(false);
-
             } catch (err) {
                 console.error("❌ Related products fetch error:", err);
             } finally {
@@ -145,15 +157,17 @@ export function ProductProvider({
             }
         }
 
+        /* ============================
+           Run BOTH
+        ============================ */
 
-        /* Run BOTH in parallel */
         fetchProduct();
         fetchRelated();
 
         return () => {
             active = false;
         };
-    }, [productUrl, productName]);
+    }, [productUrl, productName, sourceName]);
 
     return (
         <ProductContext.Provider

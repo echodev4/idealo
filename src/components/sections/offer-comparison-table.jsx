@@ -192,8 +192,6 @@ export default function OfferComparisonTable() {
         return <OfferComparisonTableSkeleton />;
     }
 
-
-
     const offers = relatedProducts
         .map((p) => {
             const price = parseAED(p.price);
@@ -212,9 +210,7 @@ export default function OfferComparisonTable() {
         })
         .filter(Boolean)
 
-    const filtered = showAvailableOnly
-        ? offers.filter((o) => o.available)
-        : offers;
+    const filtered = offers;
 
     const cheapestPrice =
         filtered.length > 0
