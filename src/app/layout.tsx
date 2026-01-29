@@ -5,6 +5,14 @@ import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 import { LanguageProvider } from "@/contexts/language-context";
 import Header from '@/components/sections/header';
+import { Tajawal } from "next/font/google";
+
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  display: "swap",
+});
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -18,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className={`${tajawal.className} antialiased`}>
         <ErrorReporter />
         <Script
           src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
