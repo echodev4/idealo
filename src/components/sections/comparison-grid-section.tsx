@@ -60,9 +60,13 @@ const ExpandableText = ({ text }: { text?: string }) => {
 const FilledCardSlot = ({
     card,
     onRemove,
+    setApplyCard,
+    setOpenApply
 }: {
     card: any;
     onRemove: () => void;
+    setApplyCard: any
+    setOpenApply: any
 }) => {
     return (
         <div className="flex h-[720px] flex-col overflow-hidden rounded-lg border bg-white">
@@ -93,15 +97,16 @@ const FilledCardSlot = ({
                     </span>
                 </p>
 
-                <a
-                    href={"#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary py-3 text-sm font-bold text-primary-foreground hover:opacity-95"
+                <p
+                    onClick={() => {
+                        setApplyCard(card)
+                        setOpenApply(true)
+                    }}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary py-3 text-sm font-bold text-primary-foreground hover:opacity-95 cursor-pointer"
                 >
                     APPLY NOW
                     <ArrowUpRight className="h-4 w-4" />
-                </a>
+                </p>
             </div>
 
             {/* 🔵 SCROLLABLE BODY */}
@@ -161,16 +166,18 @@ interface Props {
     selectedCards: (CardData | null)[];
     onAddCard: (slotIndex: number) => void;
     onRemoveCard: (slotIndex: number) => void;
+    setApplyCard: any
+    setOpenApply: any
 }
 
-const ComparisonGridSection = ({ selectedCards, onAddCard, onRemoveCard }: Props) => (
+const ComparisonGridSection = ({ selectedCards, onAddCard, onRemoveCard, setApplyCard, setOpenApply }: Props) => (
     <section className="bg-white py-4">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6 lg:px-8">
             <div className={styles.comparisonGridContainer}>
                 {selectedCards.map((card, i) => (
                     <div key={i}>
                         {card ? (
-                            <FilledCardSlot card={card} onRemove={() => onRemoveCard(i)} />
+                            <FilledCardSlot setApplyCard={setApplyCard} setOpenApply={setOpenApply} card={card} onRemove={() => onRemoveCard(i)} />
                         ) : (
                             <EmptyCardSlot onClick={() => onAddCard(i)} />
                         )}

@@ -123,6 +123,8 @@ export default function Home() {
                     selectedCards={selectedCards as any}
                     onAddCard={handleAddCard}
                     onRemoveCard={handleRemoveCard}
+                    setApplyCard={setApplyCard}
+                    setOpenApply={setOpenApply}
                 />
             </div>
 
