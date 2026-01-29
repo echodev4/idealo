@@ -7,50 +7,34 @@ import ComparisonGridSection from "@/components/sections/comparison-grid-section
 import CardBrowseSection from "@/components/sections/card-browse-section";
 import type { CardData } from "@/types/card";
 
-function mapDbCard(c: any): any {
-    return {
-        id: c._id,
-        name: `${c.bankName}`,
-        image: c.cardImageUrl,
-
-        rating: 4.2,
-
-        creditScoreText: c.salaryTransferRequired ? "Salary Transfer Required" : "No Salary Transfer",
-
-        greatFor: [],
-
-        annualFee: c.joiningAnnualFee,
-        bonusOffers: c.welcomeBonus,
-        rewardsRate: c.earnRates,
-
-        introAPR: c.pointsRedemption,
-        ongoingAPR: c.apr,
-
-        pros: [],
-        cons: [],
-
-        applyUrl: "#",
-
-        lifestyleBenefits: c.keyLifestyleBenefits,
-        documentsRequired: c.documentsRequired,
-    };
-}
-
 export default function Home() {
     const [cards, setCards] = useState<CardData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string>("");
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
     const [selectedCards, setSelectedCards] = useState<(CardData | null)[]>([null, null, null]);
 
     useEffect(() => {
-        fetch("/api/cards")
-            .then(res => res.json())
-            .then(data => {
-                setCards(data.items.map(mapDbCard));
+        const load = async () => {
+            try {
+                setLoading(true);
+                setError("");
+
+                const res = await fetch("/api/cards");
+                if (!res.ok) throw new Error(`Failed to load cards (${res.status})`);
+
+                const data = await res.json();
+                setCards(data.items || []);
+            } catch (e: any) {
+                setError(e?.message || "Failed to load cards");
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+
+        load();
     }, []);
 
     const handleAddCard = (slotIndex: number) => {
@@ -59,15 +43,30 @@ export default function Home() {
     };
 
     const handleSelectCard = (card: CardData) => {
-        const emptySlotIndex = selectedCards.findIndex(c => c === null);
-        if (emptySlotIndex !== -1) {
-            const next = [...selectedCards];
-            next[emptySlotIndex] = card;
-            setSelectedCards(next);
+        // ❌ Block duplicates (hard safety)
+        if (selectedCards.some((c) => c?._id === card._id)) {
+            setIsModalOpen(false);
+            setSelectedSlotIndex(null);
+            return;
         }
+
+        const next = [...selectedCards];
+
+        if (selectedSlotIndex !== null) {
+            next[selectedSlotIndex] = card;
+        } else {
+            const emptySlotIndex = next.findIndex((c) => c === null);
+            if (emptySlotIndex !== -1) {
+                next[emptySlotIndex] = card;
+            }
+        }
+
+        setSelectedCards(next);
         setIsModalOpen(false);
         setSelectedSlotIndex(null);
     };
+
+
 
     const handleRemoveCard = (slotIndex: number) => {
         const next = [...selectedCards];
@@ -75,13 +74,10 @@ export default function Home() {
         setSelectedCards(next);
     };
 
-    const selectedCardIds = selectedCards
-        .filter(Boolean)
-        .map(c => c!.id);
+    const selectedCardIds = selectedCards.filter(Boolean).map((c) => c!._id);
 
-    if (loading) {
-        return <div className="py-20 text-center">Loading cards…</div>;
-    }
+    if (loading) return <div className="py-20 text-center">Loading cards…</div>;
+    if (error) return <div className="py-20 text-center text-red-600">{error}</div>;
 
     return (
         <main className="flex flex-col">
@@ -89,24 +85,26 @@ export default function Home() {
 
             <div className="py-8 md:py-12 lg:py-16">
                 <ComparisonGridSection
-                    selectedCards={selectedCards}
+                    selectedCards={selectedCards as any}
                     onAddCard={handleAddCard}
                     onRemoveCard={handleRemoveCard}
                 />
             </div>
 
             <CardBrowseSection
-                cards={cards}
-                onSelectCard={handleSelectCard}
+                cards={cards as any}
+                onSelectCard={handleSelectCard as any}
                 selectedCardIds={selectedCardIds}
             />
 
             <CardSelectionModal
                 isOpen={isModalOpen}
                 cards={cards}
+                selectedCardIds={selectedCardIds}
                 onClose={() => setIsModalOpen(false)}
                 onSelectCard={handleSelectCard}
             />
+
         </main>
     );
 }

@@ -1,154 +1,192 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
 import Image from "next/image";
+import { Plus, ChevronDown } from "lucide-react";
 import { CardData } from "@/types/card";
 
-interface CardBrowseSectionProps {
-    cards: (CardData & any)[];
+interface Props {
+    cards: CardData[];
     onSelectCard: (card: CardData) => void;
     selectedCardIds: string[];
 }
 
-const CardBrowseSection = ({ cards, onSelectCard, selectedCardIds }: CardBrowseSectionProps) => {
+/* ---------- helpers ---------- */
+
+const splitList = (text?: string) => {
+    if (!text) return [];
+    return text
+        .split(/\n|;/g)
+        .map((t) => t.trim())
+        .filter(Boolean);
+};
+
+export default function CardBrowseSection({
+    cards,
+    onSelectCard,
+    selectedCardIds,
+}: Props) {
     const [searchQuery, setSearchQuery] = useState("");
+    const [openFeaturesId, setOpenFeaturesId] = useState<string | null>(null);
 
     const filteredCards = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();
         if (!q) return cards;
 
-        return cards.filter(card =>
-            card.name.toLowerCase().includes(q) ||
-            card.annualFee?.toLowerCase().includes(q) ||
-            card.rewardsRate?.toLowerCase().includes(q)
+        return cards.filter(
+            (c) =>
+                c.bankName.toLowerCase().includes(q) ||
+                c.joiningAnnualFee?.toLowerCase().includes(q) ||
+                c.earnRates?.toLowerCase().includes(q)
         );
     }, [cards, searchQuery]);
 
     return (
-        <div className="py-12 bg-white">
-            <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-7xl">
-                <div className="mb-8">
-                    <h2 className="text-2xl md:text-3xl font-semibold text-neutral-darkest mb-4">
+        <section className="bg-white py-12">
+            <div className="mx-auto max-w-7xl px-4">
+                {/* Header */}
+                <div className="mb-8 text-center">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-neutral-darkest">
                         Browse Credit Cards
                     </h2>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-muted-foreground mt-2">
                         Search and add cards to compare features, fees, and benefits
                     </p>
 
-                    <div className="relative max-w-xl mx-auto mb-8">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral" />
-                        <input
-                            type="search"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search by bank name, fee, or earn rate..."
-                            className="w-full h-12 pl-12 pr-4 border border-input rounded-md bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"
-                        />
-                    </div>
+                    <input
+                        type="search"
+                        placeholder="Search by bank name, fee, or earn rate..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="mt-6 w-full max-w-xl mx-auto h-12 px-4 border rounded-md"
+                    />
                 </div>
 
-                {filteredCards.length === 0 ? (
-                    <div className="text-center py-12">
-                        <p className="text-muted-foreground text-lg">
-                            No cards found matching "{searchQuery}"
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredCards.map((card) => {
-                            const isSelected = selectedCardIds.includes(card.id);
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredCards.map((card) => {
+                        const isSelected = selectedCardIds.includes(card._id);
 
-                            return (
-                                <div
-                                    key={card.id}
-                                    className={`relative flex flex-col items-start p-5 border rounded-lg transition-all ${isSelected
-                                            ? "border-primary bg-green-lightest"
-                                            : "border-border hover:border-neutral-light hover:shadow-sm"
-                                        }`}
-                                >
-                                    <div className="relative w-full">
-                                        <Image
-                                            src={card.image}
-                                            alt={card.name}
-                                            width={320}
-                                            height={202}
-                                            className="w-full aspect-[1.586/1] object-cover rounded-md mb-4 bg-muted"
-                                        />
+                        const lifestyle = splitList(card.keyLifestyleBenefits);
+                        const redemption = splitList(card.pointsRedemption);
+                        const earnRates = splitList(card.earnRates);
 
-                                        {!isSelected && (
-                                            <button
-                                                onClick={() => onSelectCard(card)}
-                                                className="absolute top-2 right-2 bg-primary text-white rounded-full p-2 shadow-lg hover:scale-110 transition-all"
-                                            >
-                                                <Plus className="w-5 h-5" />
-                                            </button>
-                                        )}
+                        const pills = [
+                            ...earnRates,
+                            ...lifestyle,
+                            ...redemption,
+                        ].slice(0, 4);
 
-                                        {isSelected && (
-                                            <div className="absolute top-2 right-2 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">
-                                                Selected
-                                            </div>
-                                        )}
-                                    </div>
+                        return (
+                            <div
+                                key={card._id}
+                                className={`relative flex flex-col h-full border rounded-xl bg-white p-4
+    ${isSelected ? "opacity-60 cursor-not-allowed" : ""}`}
+                            >
 
-                                    <h3
-                                        className={`text-base font-semibold line-clamp-2 mb-3 min-h-[3rem] ${isSelected ? "text-primary" : "text-neutral-darkest"
-                                            }`}
+                                {/* Add button */}
+                                {!isSelected && (
+                                    <button
+                                        onClick={() => onSelectCard(card)}
+                                        className="absolute top-3 right-3 bg-orange-500 text-white p-2 rounded-full hover:scale-110 transition"
                                     >
-                                        {card.name}
-                                    </h3>
+                                        <Plus size={18} />
+                                    </button>
+                                )}
 
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="flex items-center gap-1">
-                                            {[...Array(5)].map((_, i) => (
-                                                <svg
-                                                    key={i}
-                                                    className={`w-4 h-4 ${i < Math.floor(card.rating || 0)
-                                                            ? "text-yellow-400 fill-current"
-                                                            : "text-gray-300 fill-current"
-                                                        }`}
-                                                    viewBox="0 0 20 20"
-                                                >
-                                                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                                                </svg>
-                                            ))}
-                                        </div>
-                                        <span className="text-sm font-bold text-neutral-darkest">
-                                            {card.rating || "—"}
-                                        </span>
+                                {isSelected && (
+                                    <span className="absolute top-3 right-3 bg-green-600 text-white text-xs px-3 py-1 rounded-full">
+                                        Selected
+                                    </span>
+                                )}
+
+
+
+
+                                {/* Image */}
+                                <Image
+                                    src={card.cardImageUrl}
+                                    alt={card.bankName}
+                                    width={320}
+                                    height={200}
+                                    className="w-full aspect-[1.6/1] object-cover rounded-md mb-4"
+                                />
+
+                                {/* Bank name */}
+                                <p className="text-xs uppercase text-muted-foreground font-semibold">
+                                    {card.bankName}
+                                </p>
+
+                                {/* Info row */}
+                                <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p className="text-muted-foreground">Salary Transfer</p>
+                                        <p className="font-semibold">
+                                            {card.salaryTransferRequired ? "Required" : "Not Required"}
+                                        </p>
                                     </div>
-
-                                    <div className="w-full space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Annual Fee:</span>
-                                            <span className="font-semibold text-neutral-darkest">
-                                                {card.annualFee || "—"}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Salary Transfer:</span>
-                                            <span className="font-medium text-neutral-darkest">
-                                                {card.creditScoreText || "—"}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Earn Rates:</span>
-                                            <span className="font-medium text-neutral-darkest text-right ml-2 line-clamp-2">
-                                                {card.rewardsRate || "—"}
-                                            </span>
-                                        </div>
+                                    <div>
+                                        <p className="text-muted-foreground">Annual Fee</p>
+                                        <p className="font-semibold">{card.joiningAnnualFee}</p>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
 
-export default CardBrowseSection;
+                                {/* Feature pills */}
+                                <div className="flex flex-wrap gap-2 mt-4">
+                                    {pills.map((item, i) => (
+                                        <span
+                                            key={i}
+                                            className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700"
+                                        >
+                                            {item}
+                                        </span>
+                                    ))}
+                                </div>
+
+                                {/* View features */}
+                                <button
+                                    onClick={() =>
+                                        setOpenFeaturesId(
+                                            openFeaturesId === card._id ? null : card._id
+                                        )
+                                    }
+                                    className="flex items-center justify-between mt-4 text-sm font-medium text-neutral-darkest"
+                                >
+                                    View Features
+                                    <ChevronDown size={16} />
+                                </button>
+
+                                {openFeaturesId === card._id && (
+                                    <div className="mt-3 text-sm text-muted-foreground space-y-2">
+                                        {splitList(card.keyLifestyleBenefits).map((t, i) => (
+                                            <div key={i}>• {t}</div>
+                                        ))}
+                                        {splitList(card.pointsRedemption).map((t, i) => (
+                                            <div key={i}>• {t}</div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* CTA */}
+                                <div className="mt-auto pt-6 grid grid-cols-2 gap-3">
+                                    <a
+                                        href="#"
+                                        className="text-center bg-green-600 text-white py-2 rounded-md font-semibold"
+                                    >
+                                        Apply Now
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="text-center border border-green-600 text-green-600 py-2 rounded-md font-semibold"
+                                    >
+                                        Details →
+                                    </a>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+}

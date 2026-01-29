@@ -1,36 +1,46 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Search } from "lucide-react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
+import { X } from "lucide-react";
 import { CardData } from "@/types/card";
 
-interface CardSelectionModalProps {
+interface Props {
     isOpen: boolean;
-    cards: (CardData & any)[];
+    cards: CardData[];
+    selectedCardIds: string[];   // 👈 add
     onClose: () => void;
     onSelectCard: (card: CardData) => void;
 }
 
-const CardSelectionModal = ({
+
+/* helpers */
+const splitList = (text?: string) =>
+    text
+        ? text.split(/\n|;/g).map((t) => t.trim()).filter(Boolean)
+        : [];
+
+export default function CardSelectionModal({
     isOpen,
     cards,
     onClose,
     onSelectCard,
-}: CardSelectionModalProps) => {
+    selectedCardIds
+}: Props) {
     const [isRendered, setIsRendered] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const modalRef = useRef<HTMLDivElement>(null);
-    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const closeBtnRef = useRef<HTMLButtonElement>(null);
+
 
     const filteredCards = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();
         if (!q) return cards;
 
-        return cards.filter(card =>
-            card.name.toLowerCase().includes(q) ||
-            card.annualFee?.toLowerCase().includes(q) ||
-            card.rewardsRate?.toLowerCase().includes(q)
+        return cards.filter(
+            (c) =>
+                c.bankName.toLowerCase().includes(q) ||
+                c.joiningAnnualFee?.toLowerCase().includes(q) ||
+                c.earnRates?.toLowerCase().includes(q)
         );
     }, [cards, searchQuery]);
 
@@ -38,6 +48,7 @@ const CardSelectionModal = ({
         if (isOpen) {
             setIsRendered(true);
             document.body.style.overflow = "hidden";
+            setTimeout(() => closeBtnRef.current?.focus(), 0);
         } else {
             const t = setTimeout(() => {
                 setIsRendered(false);
@@ -48,123 +59,121 @@ const CardSelectionModal = ({
         }
     }, [isOpen]);
 
-    const handleClose = useCallback(() => {
-        onClose();
-    }, [onClose]);
+    const handleClose = useCallback(() => onClose(), [onClose]);
 
     useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") handleClose();
-        };
-        if (isRendered) {
-            document.addEventListener("keydown", onKeyDown);
-            closeButtonRef.current?.focus();
-        }
-        return () => document.removeEventListener("keydown", onKeyDown);
-    }, [isRendered, handleClose]);
+        const esc = (e: KeyboardEvent) => e.key === "Escape" && handleClose();
+        document.addEventListener("keydown", esc);
+        return () => document.removeEventListener("keydown", esc);
+    }, [handleClose]);
 
     if (!isRendered) return null;
 
-    const overlayClasses = isOpen
-        ? "animate-in fade-in-0 duration-200"
-        : "animate-out fade-out-0 duration-150";
-
-    const modalClasses = isOpen
-        ? "animate-in fade-in-0 zoom-in-95 duration-200"
-        : "animate-out fade-out-0 zoom-out-95 duration-150";
-
     return (
         <div
-            className={`fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 ${overlayClasses}`}
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50"
             onClick={handleClose}
-            role="dialog"
-            aria-modal="true"
         >
             <div
-                ref={modalRef}
-                className={`relative bg-white rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.3)] w-[95vw] max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col ${modalClasses}`}
+                className="bg-white w-[95vw] max-w-[900px] max-h-[90vh] rounded-lg shadow-xl flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-6 border-b border-border">
+                {/* Header */}
+                <div className="p-6 border-b flex items-center justify-between">
+                    <h2 className="text-xl font-semibold">Select a Credit Card</h2>
                     <button
-                        ref={closeButtonRef}
+                        ref={closeBtnRef}
                         onClick={handleClose}
-                        className="absolute top-4 right-4 text-neutral-dark hover:text-neutral focus:outline-none focus:ring-2 focus:ring-ring rounded-sm"
+                        className="p-2 rounded hover:bg-muted"
                     >
-                        <X size={24} />
+                        <X />
                     </button>
-
-                    <h2 className="mb-4 text-2xl font-semibold text-neutral-darkest">
-                        Select a Credit Card
-                    </h2>
-
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <input
-                            type="search"
-                            placeholder="Search by bank, fee, or earn rate..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                    </div>
                 </div>
 
+                {/* Search */}
+                <div className="p-6 border-b">
+                    <input
+                        type="search"
+                        placeholder="Search by bank name, fee, or earn rate..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-11 px-4 border rounded-md"
+                    />
+                </div>
+
+                {/* Cards */}
                 <div className="flex-1 overflow-y-auto p-6">
                     {filteredCards.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-muted-foreground text-lg">
-                                No cards found matching "{searchQuery}"
-                            </p>
-                        </div>
+                        <p className="text-center text-muted-foreground py-12">
+                            No cards found
+                        </p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {filteredCards.map((card) => (
-                                <button
-                                    key={card.id}
-                                    onClick={() => onSelectCard(card)}
-                                    className="flex flex-col items-start p-4 border border-border rounded-lg hover:border-primary hover:bg-accent/50 transition-all text-left group focus:outline-none focus:ring-2 focus:ring-primary"
-                                >
-                                    <Image
-                                        src={card.image}
-                                        alt={card.name}
-                                        width={280}
-                                        height={176}
-                                        className="w-full aspect-[1.586/1] object-cover rounded-md mb-3 bg-muted"
-                                    />
+                            {filteredCards.map((card) => {
+                                const pills = [
+                                    ...splitList(card.earnRates),
+                                    ...splitList(card.keyLifestyleBenefits),
+                                ].slice(0, 3);
+                                const isSelected = selectedCardIds.includes(card._id);
 
-                                    <h3 className="text-base font-semibold text-neutral-darkest line-clamp-2 mb-2 group-hover:text-primary">
-                                        {card.name}
-                                    </h3>
 
-                                    <div className="flex items-center gap-2 text-sm mb-1">
-                                        <span className="text-muted-foreground">Rating:</span>
-                                        <span className="font-bold">{card.rating || "—"}</span>
-                                    </div>
+                                return (
+                                    <button
+                                        key={card._id}
+                                        disabled={isSelected}
+                                        onClick={() => !isSelected && onSelectCard(card)}
+                                        className={`text-left border rounded-lg p-4 flex flex-col transition
+    ${isSelected
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : "hover:border-green-600"}
+  `}
+                                    >
+                                        <Image
+                                            src={card.cardImageUrl}
+                                            alt={card.bankName}
+                                            width={300}
+                                            height={190}
+                                            className="w-full aspect-[1.6/1] object-cover rounded-md mb-3"
+                                        />
 
-                                    <div className="flex items-center gap-2 text-sm mb-1">
-                                        <span className="text-muted-foreground">Annual Fee:</span>
-                                        <span className="font-medium">{card.annualFee || "—"}</span>
-                                    </div>
+                                        <p className="text-xs uppercase text-muted-foreground font-semibold">
+                                            {card.bankName}
+                                        </p>
 
-                                    <div className="flex items-center gap-2 text-sm mb-1">
-                                        <span className="text-muted-foreground">Salary Transfer:</span>
-                                        <span className="font-medium">
-                                            {card.creditScoreText || "—"}
-                                        </span>
-                                    </div>
+                                        <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
+                                            <div>
+                                                <p className="text-muted-foreground">Salary Transfer</p>
+                                                <p className="font-semibold">
+                                                    {card.salaryTransferRequired
+                                                        ? "Required"
+                                                        : "Not Required"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground">Annual Fee</p>
+                                                <p className="font-semibold">
+                                                    {card.joiningAnnualFee}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                                    <div className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                                        {card.rewardsRate || ""}
-                                    </div>
-                                </button>
-                            ))}
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {pills.map((p, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full"
+                                                >
+                                                    {p}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
             </div>
         </div>
     );
-};
-
-export default CardSelectionModal;
+}
