@@ -5,12 +5,12 @@ import mongoose from "mongoose";
 
 export async function GET(
     _req: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         await connectDB();
 
-        const { id } = params;
+        const { id } = await context.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return NextResponse.json(
@@ -30,6 +30,8 @@ export async function GET(
 
         return NextResponse.json({ item });
     } catch (err) {
+        console.error("GET /api/cards/[id] error:", err);
+
         return NextResponse.json(
             { message: "Server error" },
             { status: 500 }

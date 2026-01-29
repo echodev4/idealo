@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import ApplyCardModal from "@/components/apply/ApplyCardModal";
 import Link from "next/link";
 import {
     ChevronRight,
@@ -30,6 +31,7 @@ type Card = {
     cardImageUrl: string;
 };
 
+
 /* =========================
    Helpers
 ========================= */
@@ -51,6 +53,8 @@ export default function CardDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [card, setCard] = useState<Card | null>(null);
     const [error, setError] = useState("");
+    const [openApply, setOpenApply] = useState(false);
+
 
     /* =========================
        Fetch card
@@ -100,6 +104,23 @@ export default function CardDetailsPage() {
 
     return (
         <main className="bg-[#faf7f1] min-h-screen">
+            {card && (
+                <ApplyCardModal
+                    open={openApply}
+                    onClose={() => {
+                        setOpenApply(false);
+                    }}
+                    card={{
+                        _id: card._id,
+                        bankName: card.bankName,
+                        cardImageUrl: card.cardImageUrl,
+                        title: `${card.bankName} Credit Card`,
+                        minSalaryText: "AED 5,000",
+                    }}
+                />
+            )}
+
+
             <div className="max-w-[1100px] mx-auto px-4 py-8">
 
                 {/* ================= Breadcrumb ================= */}
@@ -162,13 +183,13 @@ export default function CardDetailsPage() {
 
                         {/* ================= Apply ================= */}
                         <div className="mt-8">
-                            <a
-                                href="#"
-                                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700"
+                            <p
+                                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 cursor-pointer"
+                                onClick={() => setOpenApply(true)}
                             >
                                 Apply for This Card
                                 <ArrowRight className="w-5 h-5" />
-                            </a>
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -203,7 +224,7 @@ export default function CardDetailsPage() {
                 <div className="flex justify-center mt-12 pb-12">
                     <button
                         onClick={() => router.push("/card-comparison")}
-                        className="px-8 py-3 rounded-md border font-semibold bg-white hover:bg-gray-50"
+                        className="px-8 py-3 rounded-md border font-semibold bg-white hover:bg-gray-50 cursor-pointer"
                     >
                         Go Back
                     </button>

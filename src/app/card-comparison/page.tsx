@@ -5,7 +5,22 @@ import PageHeroTitle from "@/components/sections/page-hero-title";
 import CardSelectionModal from "@/components/sections/card-selection-modal";
 import ComparisonGridSection from "@/components/sections/comparison-grid-section";
 import CardBrowseSection from "@/components/sections/card-browse-section";
+import ApplyCardModal from "@/components/apply/ApplyCardModal";
 import type { CardData } from "@/types/card";
+
+type Card = {
+    _id: string;
+    bankName: string;
+    joiningAnnualFee: string;
+    apr: string;
+    salaryTransferRequired: boolean;
+    welcomeBonus: string;
+    earnRates: string;
+    keyLifestyleBenefits: string;
+    pointsRedemption: string;
+    documentsRequired: string;
+    cardImageUrl: string;
+};
 
 export default function Home() {
     const [cards, setCards] = useState<CardData[]>([]);
@@ -14,7 +29,10 @@ export default function Home() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
-    const [selectedCards, setSelectedCards] = useState<(CardData | null)[]>([null, null, null]);
+    const [selectedCards, setSelectedCards] = useState<(Card | null)[]>([null, null, null]);
+
+    const [applyCard, setApplyCard] = useState<Card | null>(null);
+    const [openApply, setOpenApply] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -43,7 +61,6 @@ export default function Home() {
     };
 
     const handleSelectCard = (card: CardData) => {
-        // ❌ Block duplicates (hard safety)
         if (selectedCards.some((c) => c?._id === card._id)) {
             setIsModalOpen(false);
             setSelectedSlotIndex(null);
@@ -81,6 +98,24 @@ export default function Home() {
 
     return (
         <main className="flex flex-col">
+            {applyCard && (
+                <ApplyCardModal
+                    open={openApply}
+                    onClose={() => {
+                        setOpenApply(false);
+                        setApplyCard(null);
+                    }}
+                    card={{
+                        _id: applyCard._id,
+                        bankName: applyCard.bankName,
+                        cardImageUrl: applyCard.cardImageUrl,
+                        title: `${applyCard.bankName} Credit Card`,
+                        minSalaryText: "AED 5,000",
+                    }}
+                />
+            )}
+
+
             <PageHeroTitle />
 
             <div className="py-8 md:py-12 lg:py-16">
@@ -95,6 +130,8 @@ export default function Home() {
                 cards={cards as any}
                 onSelectCard={handleSelectCard as any}
                 selectedCardIds={selectedCardIds}
+                setApplyCard={setApplyCard}
+                setOpenApply={setOpenApply}
             />
 
             <CardSelectionModal

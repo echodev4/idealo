@@ -188,7 +188,7 @@ const FilledCardSlot = ({ card, onRemove }: { card: CardData & any; onRemove: ()
                 href={card.applyUrl || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full justify-center gap-2 rounded-md bg-primary py-3.5 px-8 text-base font-bold uppercase text-primary-foreground hover:scale-[1.02]"
+                className="flex w-full justify-center gap-2 rounded-md bg-primary py-3.5 px-8 text-base font-bold uppercase text-primary-foreground hover:scale-[1.02] cursor-pointer transition-transform"
             >
                 APPLY NOW
                 <ArrowUpRight className="h-4 w-4" />

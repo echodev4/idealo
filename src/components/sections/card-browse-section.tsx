@@ -13,6 +13,8 @@ interface Props {
     cards: CardData[];
     onSelectCard: (card: CardData) => void;
     selectedCardIds: string[];
+    setApplyCard: (card: CardData) => void;
+    setOpenApply: (open: boolean) => void;
 }
 
 /* ---------- helpers ---------- */
@@ -29,6 +31,8 @@ export default function CardBrowseSection({
     cards,
     onSelectCard,
     selectedCardIds,
+    setApplyCard,
+    setOpenApply
 }: Props) {
     const [searchQuery, setSearchQuery] = useState("");
     const [openFeaturesId, setOpenFeaturesId] = useState<string | null>(null);
@@ -238,12 +242,16 @@ export default function CardBrowseSection({
 
                                 {/* CTA */}
                                 <div className="mt-auto pt-6 grid grid-cols-2 gap-3">
-                                    <a
-                                        href="#"
-                                         className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-green-600 font-bold py-3 bg-green-600 text-white hover:bg-green-700"
+                                    <p
+                                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-green-600 font-bold py-3 bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+                                        onClick={() => {
+                                            setApplyCard(card)
+                                            setOpenApply(true)
+                                        }
+                                        }
                                     >
                                         Apply Now
-                                    </a>
+                                    </p>
 
                                     <Link
                                         href={`/card-comparison/${card._id}`}

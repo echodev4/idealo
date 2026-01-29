@@ -8,7 +8,7 @@ import { CardData } from "@/types/card";
 interface Props {
     isOpen: boolean;
     cards: CardData[];
-    selectedCardIds: string[];   // 👈 add
+    selectedCardIds: string[];
     onClose: () => void;
     onSelectCard: (card: CardData) => void;
 }
@@ -71,7 +71,7 @@ export default function CardSelectionModal({
 
     return (
         <div
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50"
+            className="fixed inset-0 z-[1000000] flex items-center justify-center bg-black/50"
             onClick={handleClose}
         >
             <div
@@ -84,7 +84,7 @@ export default function CardSelectionModal({
                     <button
                         ref={closeBtnRef}
                         onClick={handleClose}
-                        className="p-2 rounded hover:bg-muted"
+                        className="p-2 rounded hover:bg-muted cursor-pointer"
                     >
                         <X />
                     </button>
