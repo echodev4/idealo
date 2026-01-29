@@ -118,13 +118,14 @@ export default function Home() {
 
             <PageHeroTitle />
 
-            <div className="py-8 md:py-12 lg:py-16">
+            <div className="py-4">
                 <ComparisonGridSection
                     selectedCards={selectedCards as any}
                     onAddCard={handleAddCard}
                     onRemoveCard={handleRemoveCard}
                 />
             </div>
+
 
             <CardBrowseSection
                 cards={cards as any}

@@ -4,11 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import {
     Plus,
-    Star,
     Check,
-    X,
     ArrowUpRight,
-    BarChart2,
     ThumbsUp,
     DollarSign,
     Gift,
@@ -20,21 +17,6 @@ import { cn } from "@/lib/utils";
 import { CardData } from "@/types/card";
 import styles from "@/app/card-comparison/comparison-grid-section.module.css";
 
-const StarRating = ({ rating, max = 5 }: { rating: number; max?: number }) => (
-    <div className="flex items-center">
-        {[...Array(max)].map((_, i) => {
-            const fill = Math.max(0, Math.min(1, rating - i));
-            return (
-                <div key={i} className="relative h-4 w-4">
-                    <Star className="absolute text-[#e0e0e0]" fill="#e0e0e0" size={16} />
-                    <div style={{ width: `${fill * 100}%` }} className="absolute overflow-hidden h-4">
-                        <Star className="text-[#ffd700]" fill="#ffd700" size={16} />
-                    </div>
-                </div>
-            );
-        })}
-    </div>
-);
 
 const AttributeRow = ({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) => (
     <div className="border-t border-border py-4">
@@ -73,144 +55,107 @@ const ExpandableText = ({ text }: { text?: string }) => {
     );
 };
 
-const ProsConsList = ({ title, items, type }: { title: string; items?: string[]; type: "pros" | "cons" }) => {
-    if (!items || items.length === 0) return null;
 
-    const Icon = type === "pros" ? Check : X;
-    const color = type === "pros" ? "text-primary" : "text-destructive";
 
+const FilledCardSlot = ({
+    card,
+    onRemove,
+}: {
+    card: any;
+    onRemove: () => void;
+}) => {
     return (
-        <div className="border-t border-border py-4">
-            <div className="flex items-center gap-2 mb-2">
-                <Icon className={cn("h-5 w-5", color)} />
-                <h4 className="text-sm font-semibold text-muted-foreground">{title}</h4>
+        <div className="flex h-[720px] flex-col overflow-hidden rounded-lg border bg-white">
+            <div className="sticky top-0 z-10 bg-white border-b px-4 pt-3 pb-4">
+                <button
+                    onClick={onRemove}
+                    className="ml-auto mb-2 block text-sm text-[#0066cc] hover:underline"
+                >
+                    Remove Card
+                </button>
+
+                <Image
+                    src={card.cardImageUrl}
+                    alt={card.bankName}
+                    width={320}
+                    height={200}
+                    className="mx-auto aspect-[1.586/1] w-full max-w-[260px] rounded-md object-cover bg-gray-100"
+                />
+
+                <h3 className="mt-4 text-center text-base font-semibold leading-snug">
+                    {card.bankName} Credit Card
+                </h3>
+
+                <p className="text-center text-sm text-neutral-500 mt-1">
+                    Salary Transfer:{" "}
+                    <span className="font-semibold text-neutral-800">
+                        {card.salaryTransferRequired ? "Required" : "Not Required"}
+                    </span>
+                </p>
+
+                <a
+                    href={"#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary py-3 text-sm font-bold text-primary-foreground hover:opacity-95"
+                >
+                    APPLY NOW
+                    <ArrowUpRight className="h-4 w-4" />
+                </a>
             </div>
-            <ul className="space-y-2">
-                {items.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                        <Icon className={cn("h-4 w-4 mt-1", color)} />
-                        <span className="text-[15px] leading-relaxed">{item}</span>
-                    </li>
-                ))}
-            </ul>
+
+            {/* 🔵 SCROLLABLE BODY */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+                <AttributeRow icon={DollarSign} label="Annual Fee">
+                    <ExpandableText text={card.joiningAnnualFee} />
+                </AttributeRow>
+
+                {card.welcomeBonus && card.welcomeBonus !== "-" && (
+                    <AttributeRow icon={Gift} label="Welcome Bonus">
+                        <ExpandableText text={card.welcomeBonus} />
+                    </AttributeRow>
+                )}
+
+                <AttributeRow icon={Percent} label="Earn Rates">
+                    <ExpandableText text={card.earnRates} />
+                </AttributeRow>
+
+                <AttributeRow icon={ThumbsUp} label="Lifestyle Benefits">
+                    <ExpandableText text={card.keyLifestyleBenefits} />
+                </AttributeRow>
+
+                <AttributeRow icon={Calendar} label="Points Redemption">
+                    <ExpandableText text={card.pointsRedemption} />
+                </AttributeRow>
+
+                <AttributeRow icon={TrendingUp} label="APR">
+                    {card.apr || "—"}
+                </AttributeRow>
+
+                <AttributeRow icon={Check} label="Documents Required">
+                    <ExpandableText text={card.documentsRequired} />
+                </AttributeRow>
+            </div>
         </div>
     );
 };
 
 
-const FilledCardSlot = ({ card, onRemove }: { card: CardData & any; onRemove: () => void }) => (
-    <div className="flex flex-col h-full bg-white">
-        <div className="p-1">
-            <button onClick={onRemove} className="block text-right text-sm text-[#0066cc] hover:underline mb-1 ml-auto">
-                Remove Card
-            </button>
-
-            <Image
-                src={card.image}
-                alt={card.name}
-                width={380}
-                height={240}
-                className="w-full aspect-[1.586/1] object-cover rounded-lg bg-muted"
-            />
-
-            <h3 className="text-lg font-semibold text-neutral-darkest my-4 line-clamp-2 min-h-[3.25rem]">
-                {card.name}
-            </h3>
-
-            <div className="flex items-center gap-2 mb-4">
-                <StarRating rating={card.rating || 0} />
-                <span className="font-bold text-base">{card.rating || "—"}</span>
-            </div>
-        </div>
-
-        <div className="card-content-section">
-
-            {/* Salary Transfer */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={BarChart2} label="Salary Transfer">
-                    {card.creditScoreText}
-                </AttributeRow>
-            </div>
-
-            {/* Annual Fee */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={DollarSign} label="Annual Fee">
-                    <ExpandableText text={card.annualFee} />
-                </AttributeRow>
-            </div>
-
-            {/* Welcome Bonus */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={Gift} label="Welcome Bonus">
-                    <ExpandableText text={card.bonusOffers} />
-                </AttributeRow>
-            </div>
-
-            {/* Earn Rates */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={Percent} label="Earn Rates">
-                    <ExpandableText text={card.rewardsRate} />
-                </AttributeRow>
-            </div>
-
-            {/* Lifestyle Benefits */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={ThumbsUp} label="Lifestyle Benefits">
-                    <ExpandableText text={card.lifestyleBenefits} />
-                </AttributeRow>
-            </div>
-
-            {/* Points Redemption */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={Calendar} label="Points Redemption">
-                    <ExpandableText text={card.introAPR} />
-                </AttributeRow>
-            </div>
-
-            {/* APR */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={TrendingUp} label="APR">
-                    {card.ongoingAPR || "—"}
-                </AttributeRow>
-            </div>
-
-            {/* Documents Required */}
-            <div className={cn(styles.cardRow)}>
-                <AttributeRow icon={Check} label="Documents Required">
-                    <ExpandableText text={card.documentsRequired} />
-                </AttributeRow>
-            </div>
-
-        </div>
-
-        <div className="mt-6">
-            <a
-                href={card.applyUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-full justify-center gap-2 rounded-md bg-primary py-3.5 px-8 text-base font-bold uppercase text-primary-foreground hover:scale-[1.02] cursor-pointer transition-transform"
-            >
-                APPLY NOW
-                <ArrowUpRight className="h-4 w-4" />
-            </a>
-        </div>
-    </div>
-);
-
 
 const EmptyCardSlot = ({ onClick }: { onClick: () => void }) => (
     <button
         onClick={onClick}
-        className="group flex min-h-[400px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d0d0d0] bg-white py-12 px-6 text-center hover:border-primary"
+        className="group flex min-h-[240px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d0d0d0] bg-white py-8 px-4 text-center hover:border-primary transition"
     >
-        <div className="flex h-12 w-12 items-center justify-center rounded-md border-2 border-dashed">
-            <Plus className="h-8 w-8 text-[#999999] group-hover:text-primary" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-dashed">
+            <Plus className="h-6 w-6 text-[#999999] group-hover:text-primary" />
         </div>
-        <p className="mt-4 text-base font-medium text-[#999999] group-hover:text-primary">
+        <p className="mt-3 text-sm font-medium text-[#999999] group-hover:text-primary">
             Click to add card
         </p>
     </button>
 );
+
 
 interface Props {
     selectedCards: (CardData | null)[];
@@ -219,7 +164,7 @@ interface Props {
 }
 
 const ComparisonGridSection = ({ selectedCards, onAddCard, onRemoveCard }: Props) => (
-    <section className="bg-white">
+    <section className="bg-white py-4">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6 lg:px-8">
             <div className={styles.comparisonGridContainer}>
                 {selectedCards.map((card, i) => (
