@@ -118,7 +118,7 @@ export default function Home() {
 
             <PageHeroTitle />
 
-            <div className="py-4">
+            <div className="mt-2">
                 <ComparisonGridSection
                     selectedCards={selectedCards as any}
                     onAddCard={handleAddCard}
@@ -127,23 +127,27 @@ export default function Home() {
                     setOpenApply={setOpenApply}
                 />
             </div>
+            <div className="mt-2">
+
+                <CardBrowseSection
+                    cards={cards as any}
+                    onSelectCard={handleSelectCard as any}
+                    selectedCardIds={selectedCardIds}
+                    setApplyCard={setApplyCard}
+                    setOpenApply={setOpenApply}
+                />
+            </div>
 
 
-            <CardBrowseSection
-                cards={cards as any}
-                onSelectCard={handleSelectCard as any}
-                selectedCardIds={selectedCardIds}
-                setApplyCard={setApplyCard}
-                setOpenApply={setOpenApply}
-            />
-
-            <CardSelectionModal
-                isOpen={isModalOpen}
-                cards={cards}
-                selectedCardIds={selectedCardIds}
-                onClose={() => setIsModalOpen(false)}
-                onSelectCard={handleSelectCard}
-            />
+            <div className="mt-2">
+                <CardSelectionModal
+                    isOpen={isModalOpen}
+                    cards={cards}
+                    selectedCardIds={selectedCardIds}
+                    onClose={() => setIsModalOpen(false)}
+                    onSelectCard={handleSelectCard}
+                />
+            </div>
 
         </main>
     );

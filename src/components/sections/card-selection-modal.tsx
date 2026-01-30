@@ -125,7 +125,7 @@ export default function CardSelectionModal({
                                         className={`text-left border rounded-lg p-4 flex flex-col transition
     ${isSelected
                                                 ? "opacity-50 cursor-not-allowed"
-                                                : "hover:border-green-600"}
+                                                : "hover:border-green-600 cursor-pointer"}
   `}
                                     >
                                         <Image
