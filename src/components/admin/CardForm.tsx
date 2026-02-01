@@ -106,7 +106,7 @@ export default function CardForm({ mode, initial, id }: Props) {
         <form onSubmit={onSubmit} className="rounded-lg border bg-white p-6 shadow-sm">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field label="Bank Name">
-                    <input className="w-full rounded-md border px-3 py-2" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} />
+                    <input className="w-full rounded-md border px-3 py-2" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} placeholder="e.g. ADCB" />
                 </Field>
                 <Field label="Card Image">
                     <input
@@ -123,7 +123,7 @@ export default function CardForm({ mode, initial, id }: Props) {
 
 
                 <Field label="APR">
-                    <input className="w-full rounded-md border px-3 py-2" value={form.apr} onChange={(e) => set("apr", e.target.value)} />
+                    <input className="w-full rounded-md border px-3 py-2" value={form.apr} onChange={(e) => set("apr", e.target.value)} placeholder="e.g. 3.69% or 18.99%–27.99%" />
                 </Field>
 
                 <Field label="Salary Transfer Required">
@@ -139,26 +139,53 @@ export default function CardForm({ mode, initial, id }: Props) {
 
 
                 <Field label="Welcome Bonus">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[90px]" value={form.welcomeBonus} onChange={(e) => set("welcomeBonus", e.target.value)} />
+                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.welcomeBonus} onChange={(e) => set("welcomeBonus", e.target.value)} placeholder={`Put each condition on a new line:
+• AED 2,000 hotel voucher
+• AED 15,000 spend in 60 days`}
+                    />
                 </Field>
                 <Field label="Joining / Annual Fee">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[90px]" value={form.joiningAnnualFee} onChange={(e) => set("joiningAnnualFee", e.target.value)} />
+                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.joiningAnnualFee} onChange={(e) => set("joiningAnnualFee", e.target.value)} placeholder={`Examples:
+• Free for life
+• Free for 1st year, AED 630 from 2nd year
+• AED 1,575`}
+                    />
                 </Field>
 
                 <Field label="Earn Rates">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[90px]" value={form.earnRates} onChange={(e) => set("earnRates", e.target.value)} />
+                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.earnRates} onChange={(e) => set("earnRates", e.target.value)} placeholder={`One earn rate per line:
+• 10% on flights and hotels
+• 50% on online movies
+• 1.5% on other spends`}
+                    />
                 </Field>
 
                 <Field label="Key Lifestyle Benefits">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[90px]" value={form.keyLifestyleBenefits} onChange={(e) => set("keyLifestyleBenefits", e.target.value)} />
+                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.keyLifestyleBenefits} onChange={(e) => set("keyLifestyleBenefits", e.target.value)}
+                        placeholder={`One benefit per line:
+• Airport lounge access
+• Careem discounts`}
+
+                    />
                 </Field>
 
                 <Field label="Points Redemption">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[90px]" value={form.pointsRedemption} onChange={(e) => set("pointsRedemption", e.target.value)} />
+                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.pointsRedemption} onChange={(e) => set("pointsRedemption", e.target.value)}
+                        placeholder={`One redemption option per line:
+• Redeem via Expedia vouchers
+• Cashback to card statement
+• Airline miles transfer`}
+
+                    />
                 </Field>
 
                 <Field label="Documents Required">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[90px]" value={form.documentsRequired} onChange={(e) => set("documentsRequired", e.target.value)} />
+                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.documentsRequired} onChange={(e) => set("documentsRequired", e.target.value)}
+                        placeholder={`Separate each document with a semicolon (;)
+Example:
+Passport (original + copy); Emirates ID (original + copy); Last 3 months bank statement; Salary certificate (≤ 30 days old)`}
+
+                    />
                 </Field>
             </div>
 
