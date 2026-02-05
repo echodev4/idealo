@@ -4,7 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Products from "@/components/sections/products";
 import ProductCardSkeleton from "@/components/sections/skeleton-product-card";
-import MobileFilterSidebar, { MobileFacetKey, MobileFacets } from "@/components/sections/mobile-filter-sidebar";
+
+import MobileFilterSidebar, {
+  MobileFacetKey,
+  MobileFacets,
+} from "@/components/sections/mobile-filter-sidebar";
+
+import FashionFilterSidebar, {
+  FashionFacetKey,
+  FashionFacets,
+} from "@/components/sections/fashion-filter-sidebar";
 
 type Specs = Record<string, string>;
 
@@ -43,7 +52,9 @@ function norm(s: string) {
   return s.trim().replace(/\s+/g, " ");
 }
 
-// Simple brand extraction
+// --------------------
+// MOBILE HELPERS
+// --------------------
 const KNOWN_BRANDS = [
   "Apple",
   "Samsung",
@@ -65,7 +76,6 @@ function getManufacturer(p: Product): string | null {
   for (const b of KNOWN_BRANDS) {
     if (t.toLowerCase().includes(b.toLowerCase())) return b;
   }
-  // fallback: first word if capitalized
   const first = t.split(" ")[0]?.trim();
   if (first && first.length > 1) return first;
   return null;
@@ -76,6 +86,34 @@ function getSpec(p: Product, key: string): string | null {
   if (!v) return null;
   return norm(v);
 }
+
+// --------------------
+// FASHION HELPERS
+// --------------------
+const FASHION_MAIN_CATEGORY = "Fashion & Accessories";
+
+// Your “common” spec keys list for fashion.
+// We’ll use a curated subset in UI (Department, Size, Colour, Material, Fit, Occasion, Pattern)
+// but you can extend later easily.
+const FASHION_KEYS: FashionFacetKey[] = [
+  "Colour Name",
+  "Department",
+  "Material",
+  "Fit",
+  "Occasion",
+  "Pattern",
+  "Size",
+  "Care Instructions",
+  "Model Name",
+  "Model Number",
+  "Country of Origin",
+  "Material Composition",
+  "Bottom Length",
+  "Waist Type",
+  "Item Pack Quantity",
+  "Weave Type",
+  "Lining Material",
+];
 
 export default function CategoryPage() {
   const params = useParams();
@@ -89,7 +127,8 @@ export default function CategoryPage() {
 
   // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
-  const [defaultPriceRange, setDefaultPriceRange] = useState<[number, number]>([0, 0]);
+  const [defaultPriceRange, setDefaultPriceRange] =
+    useState<[number, number]>([0, 0]);
   const [selected, setSelected] = useState<Record<string, Set<string>>>({});
 
   // Pagination
@@ -103,12 +142,16 @@ export default function CategoryPage() {
         setLoading(true);
 
         const res = await fetch(
-          `/api/category-products?q=${encodeURIComponent(searchedName)}&limit=${API_LIMIT}`,
+          `/api/category-products?q=${encodeURIComponent(
+            searchedName
+          )}&limit=${API_LIMIT}`,
           { cache: "no-store" }
         );
 
         const json = await res.json();
-        const apiProducts: Product[] = Array.isArray(json.products) ? json.products : [];
+        const apiProducts: Product[] = Array.isArray(json.products)
+          ? json.products
+          : [];
 
         if (!isActive) return;
 
@@ -124,8 +167,10 @@ export default function CategoryPage() {
         setSelected({});
         setCurrentPage(1);
 
-        // price bounds
-        const prices = mapped.map((p) => p.numericPrice || 0).filter((x) => x > 0);
+        const prices = mapped
+          .map((p) => p.numericPrice || 0)
+          .filter((x) => x > 0);
+
         if (prices.length) {
           const min = Math.min(...prices);
           const max = Math.max(...prices);
@@ -150,17 +195,44 @@ export default function CategoryPage() {
     };
   }, [searchedName]);
 
-  // Rule: show mobile filters only if 60%+ are exactly this category
+  // 60% Rule (Mobile by category)
   const isMobileCategory = useMemo(() => {
     if (!products.length) return false;
-    const exact = products.filter((p) => p.category === "Mobile Phones & Smartphones").length;
+    const exact = products.filter(
+      (p) => p.category === "Mobile Phones & Smartphones"
+    ).length;
     return exact / products.length >= 0.6;
   }, [products]);
 
-  // Build facet options from products (only when mobile category is dominant)
-  const facets: MobileFacets = useMemo(() => {
+  // 60% Rule (Fashion by main_category)
+  const isFashionCategory = useMemo(() => {
+    if (!products.length) return false;
+    const exact = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY)
+      .length;
+    return exact / products.length >= 0.6;
+  }, [products]);
+
+  // Choose which filter mode is active (mobile wins if both somehow true)
+  const filterMode: "mobile" | "fashion" | "none" = useMemo(() => {
+    if (isMobileCategory) return "mobile";
+    if (isFashionCategory) return "fashion";
+    return "none";
+  }, [isMobileCategory, isFashionCategory]);
+
+  // Reset selections when mode changes (keeps state clean)
+  useEffect(() => {
+    setSelected({});
+    setPriceRange(defaultPriceRange);
+    setCurrentPage(1);
+    setIsSidebarOpen(false);
+  }, [filterMode, defaultPriceRange]);
+
+  // --------------------
+  // MOBILE FACETS
+  // --------------------
+  const mobileFacets: MobileFacets = useMemo(() => {
     const empty: MobileFacets = {
-      "Manufacturer": [],
+      Manufacturer: [],
       "Internal Memory": [],
       "RAM Size": [],
       "Network Type": [],
@@ -169,9 +241,11 @@ export default function CategoryPage() {
       "Colour Name": [],
     };
 
-    if (!isMobileCategory) return empty;
+    if (filterMode !== "mobile") return empty;
 
-    const onlyMobile = products.filter((p) => p.category === "Mobile Phones & Smartphones");
+    const onlyMobile = products.filter(
+      (p) => p.category === "Mobile Phones & Smartphones"
+    );
 
     for (const p of onlyMobile) {
       const m = getManufacturer(p);
@@ -197,14 +271,53 @@ export default function CategoryPage() {
     }
 
     return empty;
-  }, [products, isMobileCategory]);
+  }, [products, filterMode]);
 
-  const getFacetValue = (p: Product, facetKey: MobileFacetKey): string | null => {
+  const getMobileFacetValue = (p: Product, facetKey: MobileFacetKey) => {
     if (facetKey === "Manufacturer") return getManufacturer(p);
     return getSpec(p, facetKey);
   };
 
-  const toggleFacet = (facetKey: MobileFacetKey, value: string) => {
+  const toggleMobileFacet = (facetKey: MobileFacetKey, value: string) => {
+    const v = norm(value);
+    setSelected((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[facetKey] ?? []);
+      if (set.has(v)) set.delete(v);
+      else set.add(v);
+      next[facetKey] = set;
+      return next;
+    });
+  };
+
+  // --------------------
+  // FASHION FACETS
+  // --------------------
+  const fashionFacets: FashionFacets = useMemo(() => {
+    const empty = {} as FashionFacets;
+    for (const k of FASHION_KEYS) empty[k] = [];
+
+    if (filterMode !== "fashion") return empty;
+
+    const onlyFashion = products.filter(
+      (p) => p.main_category === FASHION_MAIN_CATEGORY
+    );
+
+    for (const p of onlyFashion) {
+      for (const k of FASHION_KEYS) {
+        const v = getSpec(p, k);
+        if (v) empty[k].push(v);
+      }
+    }
+
+    return empty;
+  }, [products, filterMode]);
+
+  const getFashionFacetValue = (p: Product, facetKey: FashionFacetKey) => {
+    return getSpec(p, facetKey);
+  };
+
+  const toggleFashionFacet = (facetKey: FashionFacetKey, value: string) => {
     const v = norm(value);
     setSelected((prev) => {
       const next = { ...prev };
@@ -221,38 +334,48 @@ export default function CategoryPage() {
     setPriceRange(defaultPriceRange);
   };
 
-  // Apply filters (only if isMobileCategory; otherwise only price filter)
+  // Apply filters based on active mode
   const filteredProducts = useMemo(() => {
-    const base = isMobileCategory
-      ? products.filter((p) => p.category === "Mobile Phones & Smartphones")
-      : products;
+    let base = products;
+
+    if (filterMode === "mobile") {
+      base = products.filter(
+        (p) => p.category === "Mobile Phones & Smartphones"
+      );
+    } else if (filterMode === "fashion") {
+      base = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY);
+    }
 
     return base.filter((p) => {
-      // price
       const price = p.numericPrice ?? 0;
-      if (priceRange[0] !== 0 || priceRange[1] !== 0) {
-        if (price < priceRange[0] || price > priceRange[1]) return false;
-      }
+      if (price < priceRange[0] || price > priceRange[1]) return false;
 
-      // facets
       for (const k of Object.keys(selected)) {
-        const key = k as MobileFacetKey;
-        const set = selected[key];
+        const set = selected[k];
         if (!set || set.size === 0) continue;
 
-        const val = getFacetValue(p, key);
-        if (!val) return false;
-        if (!set.has(norm(val))) return false;
+        if (filterMode === "mobile") {
+          const key = k as MobileFacetKey;
+          const val = getMobileFacetValue(p, key);
+          if (!val) return false;
+          if (!set.has(norm(val))) return false;
+        }
+
+        if (filterMode === "fashion") {
+          const key = k as FashionFacetKey;
+          const val = getFashionFacetValue(p, key);
+          if (!val) return false;
+          if (!set.has(norm(val))) return false;
+        }
       }
 
       return true;
     });
-  }, [products, selected, priceRange, isMobileCategory]);
+  }, [products, selected, priceRange, filterMode]);
 
-  // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selected, priceRange, isMobileCategory]);
+  }, [selected, priceRange, filterMode]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
@@ -264,8 +387,8 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
-        {/* Mobile Filters button */}
-        {isMobileCategory && (
+        {/* Filters button (mobile + fashion) */}
+        {filterMode !== "none" && (
           <div className="mb-3 md:hidden">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -278,7 +401,7 @@ export default function CategoryPage() {
 
         <div className="flex gap-6">
           {/* Sidebar */}
-          {isMobileCategory && (
+          {filterMode === "mobile" && (
             <MobileFilterSidebar<Product>
               isOpen={isSidebarOpen}
               onClose={() => setIsSidebarOpen(false)}
@@ -286,19 +409,44 @@ export default function CategoryPage() {
               defaultPriceRange={defaultPriceRange}
               onPriceChange={setPriceRange}
               selected={selected}
-              onToggle={toggleFacet}
+              onToggle={toggleMobileFacet}
               onReset={resetFilters}
-              facets={facets}
-              products={products.filter((p) => p.category === "Mobile Phones & Smartphones")}
+              facets={mobileFacets}
+              products={products.filter(
+                (p) => p.category === "Mobile Phones & Smartphones"
+              )}
               filteredProducts={filteredProducts}
-              getFacetValue={getFacetValue}
+              getFacetValue={getMobileFacetValue}
+            />
+          )}
+
+          {filterMode === "fashion" && (
+            <FashionFilterSidebar<Product>
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+              priceRange={priceRange}
+              defaultPriceRange={defaultPriceRange}
+              onPriceChange={setPriceRange}
+              selected={selected}
+              onToggle={toggleFashionFacet}
+              onReset={resetFilters}
+              facets={fashionFacets}
+              products={products.filter(
+                (p) => p.main_category === FASHION_MAIN_CATEGORY
+              )}
+              filteredProducts={filteredProducts}
+              getFacetValue={getFashionFacetValue}
             />
           )}
 
           <main className="flex-1">
             <div className="mb-3">
-              <h2 className="text-2xl font-bold mb-1 capitalize">{searchedName}</h2>
-              <p className="text-gray-500">{filteredProducts.length} products found</p>
+              <h2 className="text-2xl font-bold mb-1 capitalize">
+                {searchedName}
+              </h2>
+              <p className="text-gray-500">
+                {filteredProducts.length} products found
+              </p>
             </div>
 
             {loading ? (
