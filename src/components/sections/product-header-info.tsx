@@ -99,6 +99,23 @@ const ProductHeaderInfo = () => {
       href: p.product_url,
     }));
 
+  function shortenHighlight(text: string, maxChars = 70): string {
+    if (!text) return "";
+    if (text.length <= maxChars) return text;
+    return text.slice(0, maxChars).trimEnd() + " ...";
+  }
+
+  /* -------- Highlights (first 5) -------- */
+  const highlights = ((product.highlights ?? []) as string[])
+    .slice(0, 5)
+    .map((h) => ({
+      full: h,
+      short: shortenHighlight(h, 70),
+    }));
+
+
+
+
   return (
     <div className="w-full">
       {/* TITLE */}
@@ -184,6 +201,29 @@ const ProductHeaderInfo = () => {
           </div>
         </div>
       )}
+
+      {/* HIGHLIGHTS */}
+      {highlights.length > 0 && (
+        <div className="mt-4">
+          <p className="text-sm font-bold text-text-primary">
+            Highlights:
+          </p>
+
+          <div className="flex flex-wrap gap-2 mt-2">
+            {highlights.map((h, idx) => (
+              <p
+                key={idx}
+                title={h.full}
+                className="bg-secondary text-text-primary cursor-default text-[13px] rounded-sm px-2 py-1"
+              >
+                {h.short}
+              </p>
+            ))}
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
