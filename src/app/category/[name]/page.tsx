@@ -5,6 +5,12 @@ import { useParams } from "next/navigation";
 import Products from "@/components/sections/products";
 import ProductCardSkeleton from "@/components/sections/skeleton-product-card";
 
+import BabyFilterSidebar, {
+  BabyFacetKey,
+  BabyFacets,
+} from "@/components/sections/baby-filter-sidebar";
+
+
 import MobileFilterSidebar, {
   MobileFacetKey,
   MobileFacets,
@@ -92,9 +98,6 @@ function getSpec(p: Product, key: string): string | null {
 // --------------------
 const FASHION_MAIN_CATEGORY = "Fashion & Accessories";
 
-// Your “common” spec keys list for fashion.
-// We’ll use a curated subset in UI (Department, Size, Colour, Material, Fit, Occasion, Pattern)
-// but you can extend later easily.
 const FASHION_KEYS: FashionFacetKey[] = [
   "Colour Name",
   "Department",
@@ -114,6 +117,36 @@ const FASHION_KEYS: FashionFacetKey[] = [
   "Weave Type",
   "Lining Material",
 ];
+// --------------------
+// Baby & Child HELPERS
+// --------------------
+const BABY_MAIN_CATEGORY = "Baby & Child";
+
+
+const BABY_KEYS: BabyFacetKey[] = [
+  "Colour Name",
+  "Department",
+  "Age Range",
+  "Target Age Range",
+  "Size",
+  "Material",
+  "Country of Origin",
+  "Item Pack Quantity",
+  "Model Name",
+  "Model Number",
+  "Features",
+  "Item Count",
+  "Set Includes",
+  "Batteries Required",
+  "Capacity",
+  "Maximum Weight Supported",
+  "Stroller Fold Type",
+  "Stroller Canopy Type",
+  "Pattern",
+];
+
+
+
 
 export default function CategoryPage() {
   const params = useParams();
@@ -212,12 +245,21 @@ export default function CategoryPage() {
     return exact / products.length >= 0.6;
   }, [products]);
 
+  const isBabyCategory = useMemo(() => {
+    if (!products.length) return false;
+    const exact = products.filter((p) => p.main_category === BABY_MAIN_CATEGORY).length;
+    return exact / products.length >= 0.6;
+  }, [products]);
+
+
   // Choose which filter mode is active (mobile wins if both somehow true)
-  const filterMode: "mobile" | "fashion" | "none" = useMemo(() => {
+  const filterMode: "mobile" | "fashion" | "baby" | "none" = useMemo(() => {
     if (isMobileCategory) return "mobile";
     if (isFashionCategory) return "fashion";
+    if (isBabyCategory) return "baby";
     return "none";
-  }, [isMobileCategory, isFashionCategory]);
+  }, [isMobileCategory, isFashionCategory, isBabyCategory]);
+
 
   // Reset selections when mode changes (keeps state clean)
   useEffect(() => {
@@ -329,6 +371,43 @@ export default function CategoryPage() {
     });
   };
 
+  // --------------------
+  // BABY FACETS
+  // --------------------
+  const babyFacets: BabyFacets = useMemo(() => {
+    const empty = {} as BabyFacets;
+    for (const k of BABY_KEYS) empty[k] = [];
+
+    if (filterMode !== "baby") return empty;
+
+    const onlyBaby = products.filter((p) => p.main_category === BABY_MAIN_CATEGORY);
+
+    for (const p of onlyBaby) {
+      for (const k of BABY_KEYS) {
+        const v = getSpec(p, k);
+        if (v) empty[k].push(v);
+      }
+    }
+
+    return empty;
+  }, [products, filterMode]);
+
+  const getBabyFacetValue = (p: Product, facetKey: BabyFacetKey) => {
+    return getSpec(p, facetKey);
+  };
+
+  const toggleBabyFacet = (facetKey: BabyFacetKey, value: string) => {
+    const v = norm(value);
+    setSelected((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[facetKey] ?? []);
+      if (set.has(v)) set.delete(v);
+      else set.add(v);
+      next[facetKey] = set;
+      return next;
+    });
+  };
+
   const resetFilters = () => {
     setSelected({});
     setPriceRange(defaultPriceRange);
@@ -342,7 +421,12 @@ export default function CategoryPage() {
       base = products.filter(
         (p) => p.category === "Mobile Phones & Smartphones"
       );
-    } else if (filterMode === "fashion") {
+    }
+    if (filterMode === "baby") {
+      base = products.filter((p) => p.main_category === BABY_MAIN_CATEGORY);
+    }
+
+    if (filterMode === "fashion") {
       base = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY);
     }
 
@@ -367,6 +451,14 @@ export default function CategoryPage() {
           if (!val) return false;
           if (!set.has(norm(val))) return false;
         }
+
+        if (filterMode === "baby") {
+          const key = k as BabyFacetKey;
+          const val = getBabyFacetValue(p, key);
+          if (!val) return false;
+          if (!set.has(norm(val))) return false;
+        }
+
       }
 
       return true;
@@ -438,6 +530,24 @@ export default function CategoryPage() {
               getFacetValue={getFashionFacetValue}
             />
           )}
+
+          {filterMode === "baby" && (
+            <BabyFilterSidebar<Product>
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+              priceRange={priceRange}
+              defaultPriceRange={defaultPriceRange}
+              onPriceChange={setPriceRange}
+              selected={selected}
+              onToggle={toggleBabyFacet}
+              onReset={resetFilters}
+              facets={babyFacets}
+              products={products.filter((p) => p.main_category === BABY_MAIN_CATEGORY)}
+              filteredProducts={filteredProducts}
+              getFacetValue={getBabyFacetValue}
+            />
+          )}
+
 
           <main className="flex-1">
             <div className="mb-3">
