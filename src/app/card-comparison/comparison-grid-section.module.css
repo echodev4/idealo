@@ -4,6 +4,20 @@
     gap: 1.5rem;
 }
 
+.stickyCardHeader {
+    position: sticky;
+    top: calc(var(--site-header-height, 96px) + 8px);
+    z-index: 20;
+    background: white;
+}
+
+
+.comparisonRow {
+    /* Ensures rows line up across columns even if content differs. */
+    min-height: 140px;
+}
+
+
 @media (min-width: 768px) {
     .comparisonGridContainer {
         grid-template-columns: repeat(2, 1fr);
