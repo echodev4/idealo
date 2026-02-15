@@ -21,6 +21,13 @@ import FashionFilterSidebar, {
   FashionFacets,
 } from "@/components/sections/fashion-filter-sidebar";
 
+import PetFilterSidebar, {
+  PetFacetKey,
+  PetFacets,
+} from "@/components/sections/pet-filter-sidebar";
+
+
+
 type Specs = Record<string, string>;
 
 export interface Product {
@@ -146,6 +153,38 @@ const BABY_KEYS: BabyFacetKey[] = [
 ];
 
 
+// --------------------
+// Pet Supplies HELPERS
+// --------------------
+
+const PET_MAIN_CATEGORY = "Pet Supplies";
+
+const PET_KEYS: PetFacetKey[] = [
+  "Department",
+  "Age Range",
+  "Target Age Range",
+  "Size",
+  "Colour Name",
+  "Material",
+  "Dietary Needs",
+  "Item Form",
+  "Item Count",
+  "Item Pack Quantity",
+  "Country of Origin",
+  "Model Name",
+  "Model Number",
+  "What's In The Box",
+  "Care Instructions",
+  "Storage Requirements",
+  "Shelf Life",
+  "Product Weight",
+  "Product Ingredients",
+  "Nutritional Facts",
+  "Allergy Information",
+  "Specialty",
+];
+
+
 
 
 export default function CategoryPage() {
@@ -167,6 +206,25 @@ export default function CategoryPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
 
+  // function logAllUniqueSpecificationKeys(products: Product[]) {
+  //   const uniqueKeys = new Set<string>();
+
+  //   for (const p of products) {
+  //     if (!p.specifications) continue;
+
+  //     for (const key of Object.keys(p.specifications)) {
+  //       uniqueKeys.add(key.trim());
+  //     }
+  //   }
+
+  //   const result = Array.from(uniqueKeys).sort();
+
+  //   console.log("All unique specification keys:");
+  //   console.log(result);
+
+  //   return result;
+  // }
+
   useEffect(() => {
     let isActive = true;
 
@@ -185,6 +243,8 @@ export default function CategoryPage() {
         const apiProducts: Product[] = Array.isArray(json.products)
           ? json.products
           : [];
+
+        // console.log(logAllUniqueSpecificationKeys(json.products))
 
         if (!isActive) return;
 
@@ -228,6 +288,7 @@ export default function CategoryPage() {
     };
   }, [searchedName]);
 
+
   // 60% Rule (Mobile by category)
   const isMobileCategory = useMemo(() => {
     if (!products.length) return false;
@@ -251,14 +312,23 @@ export default function CategoryPage() {
     return exact / products.length >= 0.6;
   }, [products]);
 
+  const isPetCategory = useMemo(() => {
+    if (!products.length) return false;
+    const exact = products.filter((p) => p.main_category === PET_MAIN_CATEGORY).length;
+    return exact / products.length >= 0.6;
+  }, [products]);
+
+
 
   // Choose which filter mode is active (mobile wins if both somehow true)
-  const filterMode: "mobile" | "fashion" | "baby" | "none" = useMemo(() => {
+  const filterMode: "mobile" | "fashion" | "baby" | "pet" | "none" = useMemo(() => {
     if (isMobileCategory) return "mobile";
     if (isFashionCategory) return "fashion";
     if (isBabyCategory) return "baby";
+    if (isPetCategory) return "pet";
     return "none";
-  }, [isMobileCategory, isFashionCategory, isBabyCategory]);
+  }, [isMobileCategory, isFashionCategory, isBabyCategory, isPetCategory]);
+
 
 
   // Reset selections when mode changes (keeps state clean)
@@ -396,6 +466,46 @@ export default function CategoryPage() {
     return getSpec(p, facetKey);
   };
 
+
+  // --------------------
+  // BABY FACETS
+  // --------------------
+  const petFacets: PetFacets = useMemo(() => {
+    const empty = {} as PetFacets;
+    for (const k of PET_KEYS) empty[k] = [];
+
+    if (filterMode !== "pet") return empty;
+
+    const onlyPet = products.filter((p) => p.main_category === PET_MAIN_CATEGORY);
+
+    for (const p of onlyPet) {
+      for (const k of PET_KEYS) {
+        const v = getSpec(p, k);
+        if (v) empty[k].push(v);
+      }
+    }
+
+    return empty;
+  }, [products, filterMode]);
+
+  const getPetFacetValue = (p: Product, facetKey: PetFacetKey) => {
+    return getSpec(p, facetKey);
+  };
+
+  const togglePetFacet = (facetKey: PetFacetKey, value: string) => {
+    const v = norm(value);
+    setSelected((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[facetKey] ?? []);
+      if (set.has(v)) set.delete(v);
+      else set.add(v);
+      next[facetKey] = set;
+      return next;
+    });
+  };
+
+
+
   const toggleBabyFacet = (facetKey: BabyFacetKey, value: string) => {
     const v = norm(value);
     setSelected((prev) => {
@@ -430,6 +540,11 @@ export default function CategoryPage() {
       base = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY);
     }
 
+    if (filterMode === "pet") {
+      base = products.filter((p) => p.main_category === PET_MAIN_CATEGORY);
+    }
+
+
     return base.filter((p) => {
       const price = p.numericPrice ?? 0;
       if (price < priceRange[0] || price > priceRange[1]) return false;
@@ -458,6 +573,14 @@ export default function CategoryPage() {
           if (!val) return false;
           if (!set.has(norm(val))) return false;
         }
+
+        if (filterMode === "pet") {
+          const key = k as PetFacetKey;
+          const val = getPetFacetValue(p, key);
+          if (!val) return false;
+          if (!set.has(norm(val))) return false;
+        }
+
 
       }
 
@@ -547,6 +670,24 @@ export default function CategoryPage() {
               getFacetValue={getBabyFacetValue}
             />
           )}
+
+          {filterMode === "pet" && (
+            <PetFilterSidebar<Product>
+              isOpen={isSidebarOpen}
+              onClose={() => setIsSidebarOpen(false)}
+              priceRange={priceRange}
+              defaultPriceRange={defaultPriceRange}
+              onPriceChange={setPriceRange}
+              selected={selected}
+              onToggle={togglePetFacet}
+              onReset={resetFilters}
+              facets={petFacets}
+              products={products.filter((p) => p.main_category === PET_MAIN_CATEGORY)}
+              filteredProducts={filteredProducts}
+              getFacetValue={getPetFacetValue}
+            />
+          )}
+
 
 
           <main className="flex-1">
