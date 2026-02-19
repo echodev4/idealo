@@ -3,10 +3,25 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Heart, Bell, User2, Search, Loader2, CreditCard, X } from "lucide-react";
+import {
+  Heart,
+  Bell,
+  User2,
+  Search,
+  Loader2,
+  CreditCard,
+  Tag,
+  Plane,
+  Home,
+  Baby,
+  Gamepad2,
+  Car,
+  Shirt,
+  PawPrint,
+  Utensils,
+  Sparkles,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useRouter } from "next/navigation";
 
 // small debounce helper
@@ -24,9 +39,15 @@ const SkipLinks = () => {
   return (
     <nav>
       <ul className="sr-only focus-within:not-sr-only focus-within:absolute focus-within:p-4 focus-within:bg-white focus-within:text-black focus-within:z-50">
-        <li><a href="#i-header-navigation">{t("header.skipLinks.navigation")}</a></li>
-        <li><a href="#i-header-search">{t("header.skipLinks.search")}</a></li>
-        <li><a href="#main">{t("header.skipLinks.main")}</a></li>
+        <li>
+          <a href="#i-header-navigation">{t("header.skipLinks.navigation")}</a>
+        </li>
+        <li>
+          <a href="#i-header-search">{t("header.skipLinks.search")}</a>
+        </li>
+        <li>
+          <a href="#main">{t("header.skipLinks.main")}</a>
+        </li>
       </ul>
     </nav>
   );
@@ -74,6 +95,29 @@ function truncateLabel(s: string, max = 22) {
   return s.slice(0, max - 1) + "…";
 }
 
+function HeaderAction({
+  icon,
+  label,
+  onClick,
+  cursor
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  cursor: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`hidden md:flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 transition ${cursor}`}
+    >
+      <span className="text-white/90">{icon}</span>
+      <span className="text-sm text-white/90">{label}</span>
+    </button>
+  );
+}
+
 export default function Header() {
   const { t, direction } = useLanguage();
   const [query, setQuery] = useState<string>("");
@@ -108,6 +152,22 @@ export default function Header() {
     []
   );
 
+  const navCats = useMemo(
+    () => [
+      { label: "Deals", term: "Deals", icon: <Tag size={18} /> },
+      { label: "Electronics", term: "Electronics", icon: <Sparkles size={18} /> },
+      { label: "Sports & Outdoor", term: "Sports & Outdoor", icon: <Gamepad2 size={18} /> },
+      { label: "Baby & Kids", term: "Baby & Kids", icon: <Baby size={18} /> },
+      { label: "Home & Garden", term: "Home & Garden", icon: <Home size={18} /> },
+      { label: "Food & Drink", term: "Food & Drink", icon: <Utensils size={18} /> },
+      { label: "Automotive", term: "Automotive", icon: <Car size={18} /> },
+      { label: "Fashion", term: "Fashion & Accessories", icon: <Shirt size={18} /> },
+      { label: "Pet Supplies", term: "Pet Supplies", icon: <PawPrint size={18} /> },
+      { label: "Flight", term: "Flight", icon: <Plane size={18} /> },
+    ],
+    []
+  );
+
   const closeDropdown = () => setShowDropdown(false);
 
   const navigateToCategory = (term: string) => {
@@ -131,7 +191,6 @@ export default function Header() {
     );
   };
 
-  // Enter behavior: fetch AI tags (same as dropdown tags) and open grouped view page
   const handleSearchSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const q = query.trim();
@@ -145,17 +204,9 @@ export default function Header() {
       const data = await res.json();
       const tags: string[] = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
 
-      // Store tags in sessionStorage so the category page can render grouped boxes instantly.
-      sessionStorage.setItem(
-        SUGGESTIONS_KEY,
-        JSON.stringify({ q, tags, ts: Date.now() })
-      );
+      sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags, ts: Date.now() }));
     } catch {
-      // If AI fails, the category page can fall back to normal behavior.
-      sessionStorage.setItem(
-        SUGGESTIONS_KEY,
-        JSON.stringify({ q, tags: [], ts: Date.now() })
-      );
+      sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags: [], ts: Date.now() }));
     }
 
     setQuery("");
@@ -163,7 +214,7 @@ export default function Header() {
     router.push(`/category/${q}?view=suggestions`);
   };
 
-  const handleClickLogo = async (event: React.MouseEvent) => {
+  const handleClickLogo = (event: React.MouseEvent) => {
     event.preventDefault();
     router.push(`/`);
   };
@@ -238,55 +289,276 @@ export default function Header() {
   return (
     <>
       <SkipLinks />
-      <header
-        id="header-idealo"
-        className="bg-[#24456f] text-white font-sans sticky top-0 z-[10000]"
-      >
-        <div className="hidden md:block">
-          <div className="container mx-auto flex justify-between items-center text-xs py-1 px-4">
-            <nav id="i-header-navigation">
-              <ul className="flex items-center text-sm" role="menu">
-                <li role="none">
-                  <span
-                    className="font-semibold cursor-default px-2"
-                    onClick={handleClickLogo}
-                  >
-                    {t("header.navigation.shopping")}
-                  </span>
-                </li>
-              </ul>
+
+      <header className="sticky top-0 z-[10000] text-white" style={{ background: "var(--color-idealo-blue)" }}>
+        {/* Top mini row (SHOPPING / FLIGHT / MAGAZINE) */}
+        <div className="hidden md:block border-b" style={{ borderColor: "var(--color-idealo-divider)" }}>
+          <div className="mx-auto max-w-[1280px] px-4 h-10 flex items-center justify-between">
+            <nav id="i-header-navigation" className="flex items-center gap-6 text-sm">
+              <button className="font-semibold underline underline-offset-4" type="button">
+                SHOPPING
+              </button>
+              <button className="opacity-90 hover:opacity-100" type="button">
+                FLIGHT
+              </button>
+              <button className="opacity-90 hover:opacity-100" type="button">
+                MAGAZINE
+              </button>
             </nav>
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher variant="compact" />
-            </div>
           </div>
         </div>
 
-        <div className="container mx-auto flex items-center justify-between px-4 h-16 relative">
-          <div
-            className="flex-1 max-w-xl mx-4 hidden md:block relative"
-            ref={dropdownRef}
-          >
-            <form
-              id="i-header-search"
-              role="search"
-              className="relative"
-              autoComplete="off"
-              onSubmit={handleSearchSubmit}
+        {/* Main header row */}
+        <div className="mx-auto max-w-[1280px] px-4">
+          {/* Row 1: logo + actions */}
+          <div className="h-14 md:h-16 flex items-center justify-between gap-3">
+            {/* Logo (left) */}
+            <button
+              type="button"
+              onClick={handleClickLogo}
+              className="flex items-center gap-2"
+              aria-label="Home"
             >
+              <span className="text-3xl font-extrabold tracking-tight leading-none cursor-pointer">
+                idealo
+              </span>
+            </button>
+
+            <div className="hidden md:block flex-1 max-w-[680px] relative mx-4" ref={dropdownRef}>
+              <form
+                id="i-header-search"
+                role="search"
+                className="relative"
+                autoComplete="off"
+                onSubmit={handleSearchSubmit}
+              >
+                <Input
+                  type="search"
+                  placeholder={t("header.search.placeholder")}
+                  className="bg-white text-gray-900 rounded-md h-11 w-full pl-4 pr-14 text-base"
+                  aria-label={t("header.search.placeholder")}
+                  name="search"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  dir={direction}
+                  value={query}
+                  onFocus={() => setShowDropdown(true)}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                />
+
+                <button
+                  type="submit"
+                  className={`absolute top-1/2 -translate-y-1/2 h-9 w-12 rounded-md flex items-center justify-center ${direction === "rtl" ? "left-1" : "right-1"
+                    }`}
+                  style={{ background: "var(--color-primary)" }}
+                  aria-label={t("header.search.searchButton")}
+                >
+                  <Search size={18} className="text-white" />
+                </button>
+              </form>
+
+              {/* Dropdown (desktop) */}
+              {showDropdown && (
+                <div className="absolute mt-2 w-full bg-white text-black shadow-lg rounded-md overflow-hidden z-50 border border-gray-200">
+                  {showPopularAndRecent && (
+                    <div className="p-4 space-y-4">
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
+                          Popular Searches
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {popularSearches.map((term) => (
+                            <button
+                              key={term}
+                              type="button"
+                              title={term}
+                              onClick={() => navigateToCategory(term)}
+                              className="text-sm px-3 py-1 rounded"
+                              style={{
+                                background: "var(--color-idealo-chip-bg)",
+                                color: "var(--color-idealo-chip-text)",
+                              }}
+                            >
+                              {truncateLabel(term, 24)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
+                          Recently Searched
+                        </div>
+                        {recent.length === 0 ? (
+                          <div className="text-sm text-gray-500">No recent searches</div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {recent.slice(0, 8).map((term) => (
+                              <button
+                                key={term}
+                                type="button"
+                                title={term}
+                                onClick={() => navigateToCategory(term)}
+                                className="text-sm px-3 py-1 rounded"
+                                style={{
+                                  background: "var(--color-idealo-chip-bg)",
+                                  color: "var(--color-idealo-chip-text)",
+                                }}
+                              >
+                                {truncateLabel(term, 24)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {showTypedResults && (
+                    <div className="max-h-[420px] overflow-y-auto">
+                      {loading ? (
+                        <div className="flex items-center justify-center p-4 text-gray-500">
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Loading...
+                        </div>
+                      ) : (
+                        <div className="p-2">
+                          {query.trim().length >= 3 && (
+                            <div className="px-2 pt-2 pb-2">
+                              <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
+                                Suggestions
+                              </div>
+
+                              {aiTags.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {aiTags.map((item, index) => (
+                                    <li key={`${item}-${index}`}>
+                                      <button
+                                        type="button"
+                                        title={item}
+                                        className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 truncate"
+                                        onClick={() => navigateToCategory(item)}
+                                      >
+                                        {item}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div className="px-3 py-2 text-sm text-gray-500">
+                                  No suggestions found
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="px-2 pt-3 pb-2 border-t border-gray-100">
+                            <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
+                              Products
+                            </div>
+
+                            {realProducts.length > 0 ? (
+                              <ul className="space-y-1">
+                                {realProducts.map((p) => (
+                                  <li key={`${p.source}-${p.product_url}`}>
+                                    <button
+                                      type="button"
+                                      className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 flex items-center gap-3"
+                                      onClick={() => navigateToProduct(p)}
+                                      title={p.product_name}
+                                    >
+                                      <div className="h-10 w-10 bg-gray-50 rounded overflow-hidden flex-shrink-0 relative">
+                                        {p.image_url ? (
+                                          <Image
+                                            src={p.image_url}
+                                            alt={p.product_name}
+                                            fill
+                                            className="object-contain"
+                                          />
+                                        ) : null}
+                                      </div>
+
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-medium truncate">
+                                          {p.product_name}
+                                        </div>
+                                        <div className="text-xs text-gray-500 truncate">
+                                          {p.source} • {p.price}
+                                        </div>
+                                      </div>
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <div className="px-3 py-2 text-sm text-gray-500">
+                                No products found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Desktop actions */}
+            <div className="hidden md:flex items-center gap-1">
+              <HeaderAction icon={<Heart size={18} />} label={t("header.userActions.wishlist")} cursor="not-allowed" />
+              <HeaderAction icon={<Bell size={18} />} label={t("header.userActions.priceAlert")} cursor="not-allowed" />
+              <HeaderAction icon={<User2 size={18} />} label={t("header.userActions.login")} cursor="not-allowed" />
+              <HeaderAction
+                icon={<CreditCard size={18} />}
+                label={t("header.userActions.card")}
+                onClick={() => router.push("/card-comparison")}
+                cursor="cursor-pointer"
+              />
+            </div>
+
+            {/* Mobile actions (3 icons) */}
+            <div className="md:hidden flex items-center gap-1">
+              <button
+                type="button"
+                className="p-2 rounded hover:bg-white/10"
+                aria-label={t("header.userActions.card")}
+                onClick={() => router.push("/card-comparison")}
+              >
+                <CreditCard size={22} />
+              </button>
+
+              <button
+                type="button"
+                className="p-2 rounded hover:bg-white/10"
+                aria-label={t("header.userActions.wishlist")}
+              >
+                <Heart size={22} />
+              </button>
+
+              <button
+                type="button"
+                className="p-2 rounded hover:bg-white/10"
+                aria-label={t("header.userActions.login")}
+              >
+                <User2 size={22} />
+              </button>
+            </div>
+          </div>
+
+          <div className="md:hidden pb-3" ref={dropdownRef}>
+            <form role="search" className="relative" autoComplete="off" onSubmit={handleSearchSubmit}>
               <Input
                 type="search"
-                id="i-search-input"
                 placeholder={t("header.search.placeholder")}
-                className="bg-white text-gray-900 rounded-md h-11 w-full pl-4 pr-24 text-base"
-                aria-label={t("header.search.placeholder")}
-                name="search"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck={false}
-                dir={direction}
+                className="bg-white text-gray-900 rounded-md h-11 w-full pl-4 pr-14 text-base"
                 value={query}
+                dir={direction}
                 onFocus={() => setShowDropdown(true)}
                 onChange={(e) => {
                   setQuery(e.target.value);
@@ -294,24 +566,23 @@ export default function Header() {
                 }}
               />
 
-              <Button
+              <button
                 type="submit"
-                className={`absolute ${direction === "rtl" ? "left-1" : "right-1"
-                  } top-1/2 -translate-y-1/2 h-9 w-[82px] bg-[#FF6600] hover:bg-orange-600 rounded-md flex items-center justify-center p-0`}
-                aria-label={t("header.search.searchButton")}
+                className={`absolute top-1/2 -translate-y-1/2 h-9 w-12 rounded-md flex items-center justify-center ${direction === "rtl" ? "left-1" : "right-1"
+                  }`}
+                style={{ background: "var(--color-primary)" }}
               >
-                <Search size={20} className="text-white" />
-              </Button>
+                <Search size={18} className="text-white" />
+              </button>
             </form>
 
-            {/* Dropdown */}
+            {/* Mobile dropdown */}
             {showDropdown && (
-              <div className="absolute mt-2 w-full bg-white text-black shadow-lg rounded-md overflow-hidden z-50">
-                {/* Empty input: Popular + Recent */}
+              <div className="mt-2 w-full bg-white text-black shadow-lg rounded-md overflow-hidden z-50 border border-gray-200">
                 {showPopularAndRecent && (
                   <div className="p-4 space-y-4">
                     <div>
-                      <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                      <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
                         Popular Searches
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -321,7 +592,11 @@ export default function Header() {
                             type="button"
                             title={term}
                             onClick={() => navigateToCategory(term)}
-                            className="bg-gray-100 hover:bg-gray-200 text-[#24456f] text-sm px-3 py-1 rounded"
+                            className="text-sm px-3 py-1 rounded"
+                            style={{
+                              background: "var(--color-idealo-chip-bg)",
+                              color: "var(--color-idealo-chip-text)",
+                            }}
                           >
                             {truncateLabel(term, 24)}
                           </button>
@@ -330,7 +605,7 @@ export default function Header() {
                     </div>
 
                     <div>
-                      <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                      <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
                         Recently Searched
                       </div>
                       {recent.length === 0 ? (
@@ -343,7 +618,11 @@ export default function Header() {
                               type="button"
                               title={term}
                               onClick={() => navigateToCategory(term)}
-                              className="bg-gray-100 hover:bg-gray-200 text-[#24456f] text-sm px-3 py-1 rounded"
+                              className="text-sm px-3 py-1 rounded"
+                              style={{
+                                background: "var(--color-idealo-chip-bg)",
+                                color: "var(--color-idealo-chip-text)",
+                              }}
                             >
                               {truncateLabel(term, 24)}
                             </button>
@@ -354,9 +633,8 @@ export default function Header() {
                   </div>
                 )}
 
-                {/* Typed input: AI tags + products */}
                 {showTypedResults && (
-                  <div className="max-h-[420px] overflow-y-auto">
+                  <div className="max-h-[320px] overflow-y-auto">
                     {loading ? (
                       <div className="flex items-center justify-center p-4 text-gray-500">
                         <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -364,13 +642,11 @@ export default function Header() {
                       </div>
                     ) : (
                       <div className="p-2">
-                        {/* AI tags */}
                         {query.trim().length >= 3 && (
-                          <div className="px-2 pt-2 pb-1">
-                            <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                          <div className="px-2 pt-2 pb-2">
+                            <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
                               Suggestions
                             </div>
-
                             {aiTags.length > 0 ? (
                               <ul className="space-y-1">
                                 {aiTags.map((item, index) => (
@@ -394,12 +670,10 @@ export default function Header() {
                           </div>
                         )}
 
-                        {/* Real products */}
                         <div className="px-2 pt-3 pb-2 border-t border-gray-100">
-                          <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                          <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
                             Products
                           </div>
-
                           {realProducts.length > 0 ? (
                             <ul className="space-y-1">
                               {realProducts.map((p) => (
@@ -446,40 +720,25 @@ export default function Header() {
               </div>
             )}
           </div>
+        </div>
 
-          <div
-            className={`flex items-center space-x-2 md:space-x-4 ${direction === "rtl" ? "flex-row-reverse space-x-reverse" : ""
-              }`}
-          >
-            <button className="md:hidden p-1" aria-label={t("header.search.searchButton")}>
-              <Search size={24} />
-            </button>
 
-            <p
-              className="hidden md:flex flex-col items-center cursor-pointer space-y-1 text-xs hover:opacity-80 transition-opacity"
-              onClick={() => router.push("/card-comparison")}
-            >
-              <CreditCard size={24} />
-              <span>{t("header.userActions.card")}</span>
-            </p>
+        {/* Second nav row (categories) */}
+        <div style={{ background: "var(--color-idealo-blue-2)" }} className="border-t" >
+          <div className="mx-auto max-w-[1280px] px-4">
+            <div className="h-12 flex items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap no-scrollbar">
+              {navCats.map((c) => (
+                <button
+                  key={c.label}
+                  type="button"
+                  onClick={() => navigateToCategory(c.term)}
+                  className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 transition whitespace-nowrap text-sm text-white/90 cursor-pointer"
 
-            <p className="hidden md:flex flex-col items-center cursor-pointer space-y-1 text-xs hover:opacity-80 transition-opacity">
-              <Heart size={24} />
-              <span>{t("header.userActions.wishlist")}</span>
-            </p>
-
-            <p className="hidden md:flex flex-col items-center cursor-pointer space-y-1 text-xs hover:opacity-80 transition-opacity">
-              <Bell size={24} />
-              <span>{t("header.userActions.priceAlert")}</span>
-            </p>
-
-            <p className="hidden md:flex flex-col cursor-pointer items-center space-y-1 text-xs hover:opacity-80 transition-opacity">
-              <User2 size={24} />
-              <span>{t("header.userActions.login")}</span>
-            </p>
-
-            <div className="md:hidden">
-              <LanguageSwitcher variant="compact" />
+                >
+                  <span className="opacity-90">{c.icon}</span>
+                  <span>{c.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>

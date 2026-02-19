@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 
-import CategoryNavigation from "@/components/sections/category-navigation";
 import HeroCircles from "@/components/sections/hero-circles";
 import CurrentDeals_ from "@/components/sections/current-deals";
 import BestsellersGrid from "@/components/sections/bestsellers-grid";
@@ -111,7 +110,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CategoryNavigation />
 
       <main id="main" className="flex-1">
         <section className="bg-background py-8">
