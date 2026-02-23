@@ -36,18 +36,18 @@ async function fetchFaissByVector(vector: number[], limit = 8) {
 
   const products = Array.isArray(data.products)
     ? data.products.filter((p: any) => {
-        return (
-          typeof p._id === "string" &&
-          typeof p.product_url === "string" &&
-          p.product_url.startsWith("http") &&
-          typeof p.source === "string" &&
-          typeof p.product_name === "string" &&
-          typeof p.image_url === "string" &&
-          p.image_url.startsWith("http") &&
-          typeof p.price === "string" &&
-          p.price.trim() !== ""
-        );
-      })
+      return (
+        typeof p._id === "string" &&
+        typeof p.product_url === "string" &&
+        p.product_url.startsWith("http") &&
+        typeof p.source === "string" &&
+        typeof p.product_name === "string" &&
+        typeof p.image_url === "string" &&
+        p.image_url.startsWith("http") &&
+        typeof p.price === "string" &&
+        p.price.trim() !== ""
+      );
+    })
     : [];
 
   return products;
@@ -57,13 +57,15 @@ async function fetchFaissByVector(vector: number[], limit = 8) {
    ROUTE
 ========================= */
 
+const LIMIT = 12;
+
 export async function GET() {
   try {
     const [iphoneDeals, dairyProducts, fashionProducts] =
       await Promise.all([
-        fetchFaissByVector(LANDING_EMBEDDINGS.iphoneDeals, 8),
-        fetchFaissByVector(LANDING_EMBEDDINGS.dairyProducts, 8),
-        fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, 8),
+        fetchFaissByVector(LANDING_EMBEDDINGS.iphoneDeals, LIMIT),
+        fetchFaissByVector(LANDING_EMBEDDINGS.dairyProducts, LIMIT),
+        fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, LIMIT),
       ]);
 
     return NextResponse.json({

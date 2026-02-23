@@ -35,6 +35,93 @@ export const translations: Record<Locale, any> = {
       },
     },
 
+
+    categoryBar: {
+      "ariaLabel": "Category bar",
+      "prev": "Previous",
+      "next": "Next",
+      "disabled": "Not available",
+      "items": {
+        "deals": "Deals",
+        "electronics": "Electronics",
+        "sport": "Sports & Outdoor",
+        "baby": "Baby & Kids",
+        "home": "Home & Garden",
+        "food": "Food & Drink",
+        "gaming": "Gaming & Toys",
+        "health": "Health & Beauty",
+        "auto": "Automotive",
+        "fashion": "Fashion & Accessories",
+        "pets": "Pet Supplies",
+        "flight": "Flight"
+      }
+    },
+
+
+    "landing": {
+      "hero": {
+        "title": "Popular products",
+        "badge": "Featured",
+        "bannerAlt": "Campaign banner",
+        "bannerTitle": "Special picks",
+        "bannerCta": "Coming soon"
+      },
+      "newsletter": {
+        "title": "Get deals & updates by email",
+        "cta": "Subscribe to newsletter"
+      },
+      "carousel": {
+        "badge": "Featured"
+      },
+      "common": {
+        "from": "from",
+        "rating": "Rating",
+        "reviews": "Reviews",
+        "wishlist": "Wishlist",
+        "comingSoon": "Coming soon",
+        "prev": "Previous",
+        "next": "Next"
+      }
+    },
+
+
+
+    "footer": {
+      "brand": "SubsFaraz",
+      "ctaLine": "Compare offers across stores and find the best price.",
+
+      "about": "About us",
+      "sustainability": "Sustainability",
+      "press": "Press",
+      "jobs": "Jobs",
+      "blog": "Blog",
+
+      "shopping": "Shopping",
+      "comparePrices": "Compare prices",
+
+      "support": "Customer service",
+      "help": "Help center",
+      "contact": "Contact us",
+
+      "business": "Business",
+      "retailers": "Retailers",
+      "partners": "Partners",
+      "registerShop": "Shop registration",
+      "affiliates": "Affiliate program",
+
+      "follow": "Follow us",
+      "newsletter": "Newsletter",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "youtube": "YouTube",
+
+      "imprint": "Imprint",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "cookies": "Cookies"
+    },
+
+
     // Category Navigation
     categories: {
       electronics: 'Electronics',
@@ -209,16 +296,7 @@ export const translations: Record<Locale, any> = {
     },
 
     // Footer
-    footer: {
-      company: 'Company',
-      customerService: 'Customer Service',
-      quickLinks: 'Quick Links',
-      followUs: 'Follow Us',
-      newsletter: 'Newsletter',
-      subscribe: 'Subscribe',
-      copyright: 'All rights reserved',
-      legal: 'Legal',
-    },
+
     footerDisclaimer: {
       text1:
         'All prices in Euro incl. VAT, plus shipping if applicable. Prices, ranking, delivery times, and shipping costs may change in the meantime. Delivery times are in working days (Mon–Fri, excluding holidays).',
@@ -441,6 +519,89 @@ export const translations: Record<Locale, any> = {
       },
     },
 
+    "landing": {
+      "hero": {
+        "title": "منتجات شائعة",
+        "badge": "مُميّز",
+        "bannerAlt": "لافتة الحملة",
+        "bannerTitle": "اختيارات خاصة",
+        "bannerCta": "قريباً"
+      },
+      "newsletter": {
+        "title": "احصل على العروض والأخبار عبر البريد",
+        "cta": "اشترك في النشرة"
+      },
+      "carousel": {
+        "badge": "مُميّز"
+      },
+      "common": {
+        "from": "ابتداءً من",
+        "rating": "التقييم",
+        "reviews": "المراجعات",
+        "wishlist": "المفضلة",
+        "comingSoon": "قريباً",
+        "prev": "السابق",
+        "next": "التالي"
+      }
+    },
+
+    "footer": {
+      "brand": "سبس فراز",
+      "ctaLine": "قارن العروض بين المتاجر واعثر على أفضل سعر.",
+
+      "about": "من نحن",
+      "sustainability": "الاستدامة",
+      "press": "الصحافة",
+      "jobs": "الوظائف",
+      "blog": "المدونة",
+
+      "shopping": "التسوق",
+      "comparePrices": "مقارنة الأسعار",
+
+      "support": "خدمة العملاء",
+      "help": "مركز المساعدة",
+      "contact": "تواصل معنا",
+
+      "business": "الأعمال",
+      "retailers": "التجار",
+      "partners": "الشركاء",
+      "registerShop": "تسجيل متجر",
+      "affiliates": "برنامج الشركاء",
+
+      "follow": "تابعنا",
+      "newsletter": "النشرة البريدية",
+      "instagram": "إنستغرام",
+      "facebook": "فيسبوك",
+      "youtube": "يوتيوب",
+
+      "imprint": "بيانات الموقع",
+      "privacy": "الخصوصية",
+      "terms": "الشروط",
+      "cookies": "ملفات تعريف الارتباط"
+    },
+
+
+    categoryBar: {
+      "ariaLabel": "شريط الفئات",
+      "prev": "السابق",
+      "next": "التالي",
+      "disabled": "غير متاح",
+      "items": {
+        "deals": "عروض",
+        "electronics": "إلكترونيات",
+        "sport": "رياضة وخارجية",
+        "baby": "الأطفال",
+        "home": "المنزل والحديقة",
+        "food": "طعام وشراب",
+        "gaming": "ألعاب",
+        "health": "صحة وجمال",
+        "auto": "سيارات",
+        "fashion": "موضة وإكسسوارات",
+        "pets": "مستلزمات الحيوانات",
+        "flight": "رحلات"
+      }
+    },
+
     // Category Navigation - Arabic
     categories: {
       deals: 'العروض المميزة',
@@ -615,17 +776,6 @@ export const translations: Record<Locale, any> = {
       breadcrumb: 'أنت هنا',
     },
 
-    // Footer - Arabic
-    footer: {
-      company: 'الشركة',
-      customerService: 'خدمة العملاء',
-      quickLinks: 'روابط سريعة',
-      followUs: 'تابعنا',
-      newsletter: 'النشرة الإخبارية',
-      subscribe: 'اشترك',
-      copyright: 'جميع الحقوق محفوظة',
-      legal: 'قانوني',
-    },
     footerDisclaimer: {
       text1:
         'جميع الأسعار باليورو شاملة ضريبة القيمة المضافة، وقد تُضاف رسوم الشحن عند الاقتضاء. قد تتغير الأسعار، الترتيب، أوقات التسليم وتكاليف الشحن بمرور الوقت. أوقات التسليم بالأيام (من الاثنين إلى الجمعة باستثناء العطل الرسمية).',
