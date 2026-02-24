@@ -165,13 +165,11 @@ export default function RelatedCategories({
           <div className="hidden xl:block xl:col-span-4">
             <div className="card-idealo p-0 overflow-hidden h-full min-h-[520px] relative">
               <Image
-                src={promoImage}
-                alt={t("landing.promo.alt", "Promotion")}
+                src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/XL_NEWandXXL_NEW_544_767be007-308d-4fdc-a491-014d8-28.jpg"
+                alt="Ab auf die Piste"
                 fill
-                quality={90}
-                sizes="(min-width: 1280px) 420px, 33vw"
+                sizes="33vw"
                 className="object-cover"
-                priority={false}
               />
 
               <div className="absolute inset-0 bg-black/10 flex flex-col justify-end p-8">

@@ -19,7 +19,7 @@ export const translations: Record<Locale, any> = {
         wishlist: 'Wishlist',
         priceAlert: 'Price Alert',
         card: 'Cards',
-        login: 'Sign In',
+        login: 'Cards',
         register: 'Register',
         account: 'My Account',
         logout: 'Sign Out',

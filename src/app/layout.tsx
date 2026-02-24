@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { VisualEditsMessenger } from "orchids-visual-edits";
 import { LanguageProvider } from "@/contexts/language-context";
+import Header from "@/components/sections/header";
+import Footer from "@/components/sections/footer";
+
 
 export const metadata: Metadata = {
   title: "Price Comparison",
@@ -19,7 +22,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased font-sans">
         <LanguageProvider>
+          <Header />
           {children}
+          <Footer />
         </LanguageProvider>
         <VisualEditsMessenger />
       </body>

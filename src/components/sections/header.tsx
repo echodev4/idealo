@@ -15,6 +15,7 @@ import {
   Leaf,
   X,
   Loader2,
+  CardSim
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -279,17 +280,6 @@ export default function Header() {
           <div className="grid grid-cols-[auto_1fr_auto] gap-x-4 lg:gap-x-8 items-center">
             {/* Left: menu + logo */}
             <div className="flex items-center gap-4">
-              <button
-                type="button"
-                className="flex flex-col items-center justify-center cursor-not-allowed"
-                aria-label={t("header.search.categories")}
-              >
-                <Menu size={24} className="text-white" />
-                <span className="text-[10px] font-semibold uppercase mt-1 hidden md:block">
-                  {t("header.search.categories")}
-                </span>
-              </button>
-
               <Link href="/" className="block" aria-label="Home">
                 <div className="flex items-baseline">
                   <span className="text-[32px] font-bold tracking-tighter leading-none">
@@ -515,30 +505,19 @@ export default function Header() {
                 </span>
               </Link>
 
+             
               <Link
                 href="/pricealerts"
                 className="flex flex-col items-center justify-center cursor-not-allowed"
                 aria-label={t("header.userActions.priceAlert")}
                 onClick={(e) => e.preventDefault()}
               >
-                <Bell size={24} className="text-white" />
-                <span className="text-[10px] font-semibold uppercase mt-1 hidden lg:block">
-                  {t("header.userActions.priceAlert")}
-                </span>
-              </Link>
-
-              <button type="button" className="flex flex-col items-center justify-center cursor-not-allowed" aria-label={t("header.userActions.login")}>
-                <User size={24} className="text-white" />
+                <CardSim size={24} className="text-white" />
                 <span className="text-[10px] font-semibold uppercase mt-1 hidden lg:block">
                   {t("header.userActions.login")}
                 </span>
-              </button>
+              </Link>
             </div>
-          </div>
-
-          {/* Mobile language switcher placement */}
-          <div className="mt-2 lg:hidden flex justify-end">
-            <LanguageSwitcher variant="compact" />
           </div>
         </div>
       </header>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Header from "@/components/sections/header";
 import CategoryBar from "@/components/sections/category-bar";
 import HeroTeaser from "@/components/sections/hero-teaser";
 import NewsletterCTA from "@/components/sections/newsletter-cta";
@@ -10,7 +9,6 @@ import RelatedCategories from "@/components/sections/related-categories";
 import TrendingProducts from "@/components/sections/trending-products";
 import FlightsDeals from "@/components/sections/flights-deals";
 import TransparencyTrust from "@/components/sections/transparency-trust";
-import Footer from "@/components/sections/footer";
 
 type LandingProduct = {
     _id: string;
@@ -86,7 +84,6 @@ export default function Landing() {
     return (
         <div className="min-h-screen bg-[var(--background)]">
             <div className="sticky top-0 z-40 w-full">
-                <Header />
                 <CategoryBar />
             </div>
 
@@ -103,9 +100,11 @@ export default function Landing() {
                 <TrendingProducts />
                 <FlightsDeals />
                 <TransparencyTrust />
-                <Footer />
             </main>
 
         </div>
     );
 }
+
+
+
