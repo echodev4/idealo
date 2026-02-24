@@ -86,13 +86,12 @@ export default function Landing() {
 
             <main className="pb-16 md:pb-0">
                 <HeroTeaser products={data.iphoneDeals} loading={loading} />
-                <NewsletterCTA />
                 <BestsellersCarousel
-                    titleKey="landing.sections.dairy"
                     fallbackTitle="Dairy deals"
                     products={data.dairyProducts}
                     loading={loading}
                 />
+                <NewsletterCTA />
                 <RelatedCategories products={data.fashionProducts} loading={loading} />
                 <TrendingProducts />
                 <FlightsDeals />

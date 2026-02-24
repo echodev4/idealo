@@ -1,9 +1,9 @@
-// components/sections/bestsellers-carousel.tsx
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, Star, ChevronLeft, ChevronRight } from "lucide-react";
-import React, { useMemo, useRef } from "react";
-import { useLanguage } from "@/contexts/language-context";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Product = {
     _id: string;
@@ -21,42 +21,85 @@ function parsePriceToNumber(price?: string) {
     return Number.isFinite(num) ? num : null;
 }
 
-function useHorizontalScrollHelpers() {
+function clamp(n: number, min: number, max: number) {
+    return Math.max(min, Math.min(max, n));
+}
+
+export default function BestsellersCarousel({
+    products,
+    loading,
+    fallbackTitle = "Dairy deals",
+}: {
+    products: Product[];
+    loading: boolean;
+    fallbackTitle?: string;
+}) {
+    const items = useMemo(() => (Array.isArray(products) ? products : []), [products]);
     const ref = useRef<HTMLDivElement | null>(null);
 
-    const dragging = useRef(false);
-    const startX = useRef(0);
-    const startLeft = useRef(0);
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
 
-    const scrollBy = (dx: number) => {
-        ref.current?.scrollBy({ left: dx, behavior: "smooth" });
+    const updateArrows = () => {
+        const el = ref.current;
+        if (!el) return;
+
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        const left = el.scrollLeft;
+        const eps = 2;
+
+        setCanLeft(left > eps);
+        setCanRight(left < maxScroll - eps);
+    };
+
+    useEffect(() => {
+        updateArrows();
+        const el = ref.current;
+        if (!el) return;
+
+        const onScroll = () => updateArrows();
+        el.addEventListener("scroll", onScroll, { passive: true });
+
+        const ro = new ResizeObserver(() => updateArrows());
+        ro.observe(el);
+
+        return () => {
+            el.removeEventListener("scroll", onScroll);
+            ro.disconnect();
+        };
+    }, [items.length, loading]);
+
+    const scrollByAmount = (dir: "left" | "right") => {
+        const el = ref.current;
+        if (!el) return;
+        const amount = Math.round(el.clientWidth * 0.85);
+        const next = dir === "left" ? el.scrollLeft - amount : el.scrollLeft + amount;
+        el.scrollTo({ left: clamp(next, 0, el.scrollWidth), behavior: "smooth" });
     };
 
     const onWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
         const el = ref.current;
         if (!el) return;
-
-        // If user is already scrolling horizontally (trackpad), don't interfere.
         if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-
         el.scrollLeft += e.deltaY;
     };
+
+    const dragging = useRef(false);
+    const startX = useRef(0);
+    const startLeft = useRef(0);
 
     const onPointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
         const el = ref.current;
         if (!el) return;
-
         dragging.current = true;
         startX.current = e.clientX;
         startLeft.current = el.scrollLeft;
-
         el.setPointerCapture(e.pointerId);
     };
 
     const onPointerMove: React.PointerEventHandler<HTMLDivElement> = (e) => {
         const el = ref.current;
         if (!el || !dragging.current) return;
-
         const dx = e.clientX - startX.current;
         el.scrollLeft = startLeft.current - dx;
     };
@@ -65,160 +108,120 @@ function useHorizontalScrollHelpers() {
         dragging.current = false;
     };
 
-    const onPointerUp: React.PointerEventHandler<HTMLDivElement> = () => endDrag();
-    const onPointerCancel: React.PointerEventHandler<HTMLDivElement> = () => endDrag();
-    const onPointerLeave: React.PointerEventHandler<HTMLDivElement> = () => endDrag();
-
-    return {
-        ref,
-        scrollBy,
-        onWheel,
-        onPointerDown,
-        onPointerMove,
-        onPointerUp,
-        onPointerCancel,
-        onPointerLeave,
-    };
-}
-
-export default function BestsellersCarousel({
-    products,
-    loading,
-    titleKey = "landing.carousel.title",
-    fallbackTitle = "Featured products",
-}: {
-    products: Product[];
-    loading: boolean;
-    titleKey?: string;
-    fallbackTitle?: string;
-}) {
-    const { t } = useLanguage();
-    const items = useMemo(() => (Array.isArray(products) ? products : []), [products]);
-
-    const {
-        ref,
-        scrollBy,
-        onWheel,
-        onPointerDown,
-        onPointerMove,
-        onPointerUp,
-        onPointerCancel,
-        onPointerLeave,
-    } = useHorizontalScrollHelpers();
-
     return (
-        <section className="bg-[var(--background)] home-band">
-            <div className="container">
-                <h2 className="text-[20px] font-bold text-[#000000] mb-4 leading-[1.25]">
-                    {t(titleKey, fallbackTitle)}
+        <section className="bg-[#DCEAF6] py-10">
+            <div className="container max-w-[1280px] mx-auto">
+                <h2 className="text-[22px] font-bold text-[#212121] mb-4 leading-[1.25] m-0">
+                    {fallbackTitle}
                 </h2>
 
-                <div className="relative group">
+                <div className="relative">
                     {loading ? (
-                        <div className="flex overflow-x-auto gap-2 pb-4 hide-scrollbar">
+                        <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar">
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <div
                                     key={i}
-                                    className="flex-none w-[170px] sm:w-[210px] card-idealo relative flex flex-col p-3 animate-pulse"
+                                    className="flex-none w-[220px] sm:w-[240px] bg-white border border-[#E0E0E0] rounded-[4px] shadow-card p-4 h-[360px] animate-pulse"
                                 >
-                                    <div className="h-4 w-24 bg-[#E9ECEF] rounded mb-2" />
-                                    <div className="w-full aspect-square bg-[#F1F3F5] rounded mb-3" />
-                                    <div className="h-4 w-full bg-[#E9ECEF] rounded mb-2" />
+                                    <div className="h-[190px] bg-[#F1F3F5] rounded mb-4" />
+                                    <div className="h-4 w-20 bg-[#E9ECEF] rounded mb-2" />
+                                    <div className="h-5 w-full bg-[#E9ECEF] rounded mb-2" />
                                     <div className="h-4 w-3/4 bg-[#E9ECEF] rounded mb-4" />
-                                    <div className="h-5 w-24 bg-[#E9ECEF] rounded" />
+                                    <div className="h-6 w-24 bg-[#E9ECEF] rounded" />
                                 </div>
                             ))}
                         </div>
                     ) : (
                         <div
                             ref={ref}
-                            className="flex overflow-x-auto gap-2 pb-4 hide-scrollbar snap-x snap-mandatory select-none scroll-smooth touch-pan-x overscroll-x-contain"
+                            className="flex overflow-x-auto gap-4 pb-3 hide-scrollbar select-none scroll-smooth touch-pan-x overscroll-x-contain"
                             onWheel={onWheel}
                             onPointerDown={onPointerDown}
                             onPointerMove={onPointerMove}
-                            onPointerUp={onPointerUp}
-                            onPointerCancel={onPointerCancel}
-                            onPointerLeave={onPointerLeave}
+                            onPointerUp={endDrag}
+                            onPointerCancel={endDrag}
+                            onPointerLeave={endDrag}
                         >
-                            {items.map((p) => {
+                            {items.map((p, idx) => {
                                 const name = p.product_name;
                                 const price = parsePriceToNumber(p.price);
                                 const encodedUrl = encodeURIComponent(p.product_url);
 
+                                const grade = idx % 3 === 0 ? "1.4" : idx % 3 === 1 ? "1.5" : "";
+                                const starsFilled = 4;
+                                const count = "10";
+
                                 return (
                                     <Link
                                         key={p._id ?? p.product_url}
-                                        href={`/product/${encodedUrl}?product_name=${encodeURIComponent(
-                                            name
-                                        )}&source=${encodeURIComponent(p.source)}`}
-                                        className="flex-none w-[170px] sm:w-[210px] card-idealo relative flex flex-col p-3 snap-start hover:no-underline"
+                                        href={`/product/${encodedUrl}?product_name=${encodeURIComponent(name)}&source=${encodeURIComponent(
+                                            p.source
+                                        )}`}
+                                        className="flex-none w-[230px] sm:w-[250px] bg-white border border-[#E0E0E0] rounded-[4px] shadow-card p-4 flex flex-col relative no-underline hover:no-underline"
                                     >
                                         <button
-                                            aria-label={t("landing.common.wishlist", "Wishlist")}
-                                            className="absolute top-2 right-2 z-10 p-1 text-[var(--color-link)] hover:text-[var(--color-link)]/80 transition-colors"
+                                            type="button"
+                                            aria-label="Wishlist"
+                                            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border border-[#E0E0E0] flex items-center justify-center text-[#0474BA]"
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
                                             }}
                                         >
-                                            <Heart className="w-5 h-5" />
+                                            <Heart size={20} strokeWidth={2} />
                                         </button>
 
-                                        <div className="relative w-full aspect-square mb-3 flex items-center justify-center">
+                                        <div className="relative h-[190px] w-full mb-3 flex items-center justify-center">
                                             <Image
                                                 src={p.image_url}
                                                 alt={name}
-                                                width={160}
-                                                height={160}
-                                                className="object-contain max-h-full max-w-full"
+                                                fill
+                                                sizes="(max-width: 640px) 70vw, 240px"
+                                                className="object-contain"
                                             />
                                         </div>
 
-                                        <div className="flex flex-col flex-grow">
-                                            <div className="flex items-baseline gap-1 mb-1">
-                                                <span className="bg-[var(--color-link)] text-white text-[10px] font-bold uppercase px-1 leading-tight rounded-[2px]">
-                                                    {t("landing.carousel.badge", "Featured")}
-                                                </span>
-                                                <span className="text-[#666666] text-[10px] truncate max-w-[90px]">
-                                                    {p.source}
-                                                </span>
-                                            </div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
+                                                featured
+                                            </span>
+                                            <span className="text-[#666666] text-[14px] truncate">in {p.source}</span>
+                                        </div>
 
-                                            <h3 className="text-[14px] text-[#212121] leading-[1.4] mb-2 font-normal line-clamp-2 min-h-[40px]">
-                                                <span className="text-inherit hover:underline border-none">{name}</span>
-                                            </h3>
+                                        <div className="text-[#212121] text-[14px] leading-[1.35] font-normal line-clamp-2 min-h-[38px] mb-3">
+                                            {name}
+                                        </div>
 
-                                            <div
-                                                className="mt-auto flex flex-wrap items-center gap-2 mb-2 cursor-not-allowed"
-                                                title={t("landing.common.comingSoon", "Coming soon")}
-                                            >
-                                                <span className="bg-[#EBF5FB] text-[var(--color-link)] text-[10px] font-medium px-1.5 py-0.5 rounded-[3px] whitespace-nowrap">
-                                                    {t("landing.common.rating", "Rating")}
-                                                </span>
-
-                                                <div className="flex items-center">
-                                                    <div className="flex mr-1">
-                                                        {Array.from({ length: 5 }).map((_, i) => (
-                                                            <Star
-                                                                key={i}
-                                                                className={`w-2.5 h-2.5 ${i < 4
-                                                                    ? "fill-[#666666] text-[#666666]"
-                                                                    : "text-[#E0E0E0] fill-[#E0E0E0]"
-                                                                    }`}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                    <span className="text-[#666666] text-[10px]">
-                                                        {t("landing.common.reviews", "Reviews")}
+                                        <div className="mt-auto">
+                                            <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none">
+                                                {grade ? (
+                                                    <span className="text-[12px] px-2 py-1 rounded-full bg-[#EBF5FB] text-[#0474BA]">
+                                                        Average grade {grade}
                                                     </span>
+                                                ) : (
+                                                    <span className="text-[12px] px-2 py-1 rounded-full bg-[#F1F3F5] text-[#666666]">
+                                                        Rating
+                                                    </span>
+                                                )}
+
+                                                <div className="flex items-center gap-0.5">
+                                                    {Array.from({ length: 5 }).map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            size={13}
+                                                            fill={i < starsFilled ? "#212121" : "none"}
+                                                            color={i < starsFilled ? "#212121" : "#CFCFCF"}
+                                                            strokeWidth={2}
+                                                        />
+                                                    ))}
                                                 </div>
+
+                                                <span className="text-[12px] text-[#666666]">{count}</span>
                                             </div>
 
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-[#666666] text-[12px]">
-                                                    {t("landing.common.from", "from")}
-                                                </span>
-                                                <span className="text-[16px] font-bold text-[#212121]">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-[14px] text-[#666666]">from</span>
+                                                <span className="text-[18px] font-bold text-[#212121]">
                                                     {price !== null ? `AED ${price}` : `AED ${p.price}`}
                                                 </span>
                                             </div>
@@ -229,23 +232,27 @@ export default function BestsellersCarousel({
                         </div>
                     )}
 
-                    <button
-                        type="button"
-                        aria-label={t("landing.common.prev", "Previous")}
-                        className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
-                        onClick={() => scrollBy(-360)}
-                    >
-                        <ChevronLeft size={20} />
-                    </button>
+                    {canLeft && (
+                        <button
+                            type="button"
+                            aria-label="Previous"
+                            className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                            onClick={() => scrollByAmount("left")}
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                    )}
 
-                    <button
-                        type="button"
-                        aria-label={t("landing.common.next", "Next")}
-                        className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
-                        onClick={() => scrollBy(360)}
-                    >
-                        <ChevronRight size={20} />
-                    </button>
+                    {canRight && (
+                        <button
+                            type="button"
+                            aria-label="Next"
+                            className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                            onClick={() => scrollByAmount("right")}
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    )}
                 </div>
             </div>
         </section>
