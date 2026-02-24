@@ -54,7 +54,7 @@ export interface Product {
   numericOldPrice?: number;
 }
 
-const ITEMS_PER_PAGE = 18;
+const ITEMS_PER_PAGE = 20;
 const API_LIMIT = 100;
 
 function cleanPrice(p?: string): number {
@@ -599,6 +599,8 @@ export default function CategoryPage() {
     return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredProducts, currentPage]);
 
+  console.log(paginatedProducts)
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
@@ -711,24 +713,37 @@ export default function CategoryPage() {
                 <Products products={paginatedProducts} landingPage={false} />
 
                 {totalPages > 1 && (
-                  <div className="flex justify-center gap-2 flex-wrap mt-4">
-                    {Array.from({ length: totalPages }).map((_, i) => {
-                      const page = i + 1;
-                      const active = page === currentPage;
+                  <div className="mt-6 flex items-center justify-end gap-2">
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalPages }).map((_, i) => {
+                        const page = i + 1;
+                        const active = page === currentPage;
 
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-4 py-2 rounded border text-sm ${active
-                            ? "bg-[#0066CC] text-white border-[#0066CC]"
-                            : "border-gray-300 hover:bg-gray-100"
-                            }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`h-10 w-10 rounded border text-sm font-medium ${active
+                                ? "bg-[#0b63c8] text-white border-[#0b63c8]"
+                                : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
+                              }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
+                          ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
+                          : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
+                        }`}
+                      disabled={currentPage === totalPages}
+                    >
+                      →
+                    </button>
                   </div>
                 )}
               </>
