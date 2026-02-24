@@ -8,7 +8,7 @@ import Footer from "@/components/sections/footer";
 
 
 export const metadata: Metadata = {
-  title: "Price Comparison",
+  title: "Idealo - The No.1 Price Comparison Platform",
   description: "Find the best prices across categories.",
 };
 

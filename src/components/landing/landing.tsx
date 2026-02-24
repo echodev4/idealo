@@ -83,9 +83,6 @@ export default function Landing() {
 
     return (
         <div className="min-h-screen bg-[var(--background)]">
-            <div className="sticky top-0 z-40 w-full">
-                <CategoryBar />
-            </div>
 
             <main className="pb-16 md:pb-0">
                 <HeroTeaser products={data.iphoneDeals} loading={loading} />
