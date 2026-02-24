@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import Products from "@/components/sections/products";
 import ProductCardSkeleton from "@/components/sections/skeleton-product-card";
+import { Home, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
 import BabyFilterSidebar, {
   BabyFacetKey,
   BabyFacets,
 } from "@/components/sections/baby-filter-sidebar";
-
 
 import MobileFilterSidebar, {
   MobileFacetKey,
@@ -26,8 +27,6 @@ import PetFilterSidebar, {
   PetFacets,
 } from "@/components/sections/pet-filter-sidebar";
 
-
-
 type Specs = Record<string, string>;
 
 export interface Product {
@@ -38,6 +37,7 @@ export interface Product {
   currentPrice: string;
   previousPrice?: string;
   discountPercentage?: string;
+  rating?: string;
   ratingCount?: string;
   images: { src: string; alt?: string }[];
 
@@ -52,6 +52,8 @@ export interface Product {
 
   numericPrice?: number;
   numericOldPrice?: number;
+
+  scraped_at?: any;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -65,9 +67,6 @@ function norm(s: string) {
   return s.trim().replace(/\s+/g, " ");
 }
 
-// --------------------
-// MOBILE HELPERS
-// --------------------
 const KNOWN_BRANDS = [
   "Apple",
   "Samsung",
@@ -100,9 +99,6 @@ function getSpec(p: Product, key: string): string | null {
   return norm(v);
 }
 
-// --------------------
-// FASHION HELPERS
-// --------------------
 const FASHION_MAIN_CATEGORY = "Fashion & Accessories";
 
 const FASHION_KEYS: FashionFacetKey[] = [
@@ -124,11 +120,8 @@ const FASHION_KEYS: FashionFacetKey[] = [
   "Weave Type",
   "Lining Material",
 ];
-// --------------------
-// Baby & Child HELPERS
-// --------------------
-const BABY_MAIN_CATEGORY = "Baby & Child";
 
+const BABY_MAIN_CATEGORY = "Baby & Child";
 
 const BABY_KEYS: BabyFacetKey[] = [
   "Colour Name",
@@ -151,11 +144,6 @@ const BABY_KEYS: BabyFacetKey[] = [
   "Stroller Canopy Type",
   "Pattern",
 ];
-
-
-// --------------------
-// Pet Supplies HELPERS
-// --------------------
 
 const PET_MAIN_CATEGORY = "Pet Supplies";
 
@@ -184,8 +172,47 @@ const PET_KEYS: PetFacetKey[] = [
   "Specialty",
 ];
 
+function getScrapedAtMs(p: Product) {
+  const v: any = (p as any)?.scraped_at;
+  const d = v?.$date ?? v;
+  const ms = d ? Date.parse(String(d)) : 0;
+  return Number.isFinite(ms) ? ms : 0;
+}
 
+type SortKey = "popular" | "savings" | "cheap" | "high" | "new";
+type ViewMode = "grid" | "list";
 
+function GridIcon({ active }: { active: boolean }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" className={active ? "fill-current" : "fill-current"}>
+      <path d="M20 22h-5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2m-9-2v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2M22 9V4a2 2 0 0 0-2-2h-5a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2M11 9V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2" />
+    </svg>
+  );
+}
+
+function ListIcon({ active }: { active: boolean }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" className={active ? "fill-current" : "fill-current"}>
+      <path d="M20 11H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2m2 9v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2" />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" className="fill-current">
+      <path d="M12 3l9 8h-3v10h-5v-6H11v6H6V11H3l9-8z" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" className="fill-current">
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
 
 export default function CategoryPage() {
   const params = useParams();
@@ -194,36 +221,19 @@ export default function CategoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Sidebar
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
-  const [defaultPriceRange, setDefaultPriceRange] =
-    useState<[number, number]>([0, 0]);
+  const [defaultPriceRange, setDefaultPriceRange] = useState<[number, number]>([0, 0]);
   const [selected, setSelected] = useState<Record<string, Set<string>>>({});
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
 
-  // function logAllUniqueSpecificationKeys(products: Product[]) {
-  //   const uniqueKeys = new Set<string>();
+  const [sortKey, setSortKey] = useState<SortKey>("popular");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement | null>(null);
 
-  //   for (const p of products) {
-  //     if (!p.specifications) continue;
-
-  //     for (const key of Object.keys(p.specifications)) {
-  //       uniqueKeys.add(key.trim());
-  //     }
-  //   }
-
-  //   const result = Array.from(uniqueKeys).sort();
-
-  //   console.log("All unique specification keys:");
-  //   console.log(result);
-
-  //   return result;
-  // }
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   useEffect(() => {
     let isActive = true;
@@ -233,18 +243,12 @@ export default function CategoryPage() {
         setLoading(true);
 
         const res = await fetch(
-          `/api/category-products?q=${encodeURIComponent(
-            searchedName
-          )}&limit=${API_LIMIT}`,
+          `/api/category-products?q=${encodeURIComponent(searchedName)}&limit=${API_LIMIT}`,
           { cache: "no-store" }
         );
 
         const json = await res.json();
-        const apiProducts: Product[] = Array.isArray(json.products)
-          ? json.products
-          : [];
-
-        // console.log(logAllUniqueSpecificationKeys(json.products))
+        const apiProducts: Product[] = Array.isArray(json.products) ? json.products : [];
 
         if (!isActive) return;
 
@@ -259,10 +263,10 @@ export default function CategoryPage() {
         setProducts(mapped);
         setSelected({});
         setCurrentPage(1);
+        setSortKey("popular");
+        setViewMode("grid");
 
-        const prices = mapped
-          .map((p) => p.numericPrice || 0)
-          .filter((x) => x > 0);
+        const prices = mapped.map((p) => p.numericPrice || 0).filter((x) => x > 0);
 
         if (prices.length) {
           const min = Math.min(...prices);
@@ -288,21 +292,25 @@ export default function CategoryPage() {
     };
   }, [searchedName]);
 
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!sortRef.current) return;
+      if (!sortRef.current.contains(e.target as Node)) setSortOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [sortOpen]);
 
-  // 60% Rule (Mobile by category)
   const isMobileCategory = useMemo(() => {
     if (!products.length) return false;
-    const exact = products.filter(
-      (p) => p.category === "Mobile Phones & Smartphones"
-    ).length;
+    const exact = products.filter((p) => p.category === "Mobile Phones & Smartphones").length;
     return exact / products.length >= 0.6;
   }, [products]);
 
-  // 60% Rule (Fashion by main_category)
   const isFashionCategory = useMemo(() => {
     if (!products.length) return false;
-    const exact = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY)
-      .length;
+    const exact = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY).length;
     return exact / products.length >= 0.6;
   }, [products]);
 
@@ -318,9 +326,6 @@ export default function CategoryPage() {
     return exact / products.length >= 0.6;
   }, [products]);
 
-
-
-  // Choose which filter mode is active (mobile wins if both somehow true)
   const filterMode: "mobile" | "fashion" | "baby" | "pet" | "none" = useMemo(() => {
     if (isMobileCategory) return "mobile";
     if (isFashionCategory) return "fashion";
@@ -329,9 +334,6 @@ export default function CategoryPage() {
     return "none";
   }, [isMobileCategory, isFashionCategory, isBabyCategory, isPetCategory]);
 
-
-
-  // Reset selections when mode changes (keeps state clean)
   useEffect(() => {
     setSelected({});
     setPriceRange(defaultPriceRange);
@@ -339,9 +341,6 @@ export default function CategoryPage() {
     setIsSidebarOpen(false);
   }, [filterMode, defaultPriceRange]);
 
-  // --------------------
-  // MOBILE FACETS
-  // --------------------
   const mobileFacets: MobileFacets = useMemo(() => {
     const empty: MobileFacets = {
       Manufacturer: [],
@@ -355,9 +354,7 @@ export default function CategoryPage() {
 
     if (filterMode !== "mobile") return empty;
 
-    const onlyMobile = products.filter(
-      (p) => p.category === "Mobile Phones & Smartphones"
-    );
+    const onlyMobile = products.filter((p) => p.category === "Mobile Phones & Smartphones");
 
     for (const p of onlyMobile) {
       const m = getManufacturer(p);
@@ -402,18 +399,13 @@ export default function CategoryPage() {
     });
   };
 
-  // --------------------
-  // FASHION FACETS
-  // --------------------
   const fashionFacets: FashionFacets = useMemo(() => {
     const empty = {} as FashionFacets;
     for (const k of FASHION_KEYS) empty[k] = [];
 
     if (filterMode !== "fashion") return empty;
 
-    const onlyFashion = products.filter(
-      (p) => p.main_category === FASHION_MAIN_CATEGORY
-    );
+    const onlyFashion = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY);
 
     for (const p of onlyFashion) {
       for (const k of FASHION_KEYS) {
@@ -441,9 +433,6 @@ export default function CategoryPage() {
     });
   };
 
-  // --------------------
-  // BABY FACETS
-  // --------------------
   const babyFacets: BabyFacets = useMemo(() => {
     const empty = {} as BabyFacets;
     for (const k of BABY_KEYS) empty[k] = [];
@@ -466,10 +455,6 @@ export default function CategoryPage() {
     return getSpec(p, facetKey);
   };
 
-
-  // --------------------
-  // BABY FACETS
-  // --------------------
   const petFacets: PetFacets = useMemo(() => {
     const empty = {} as PetFacets;
     for (const k of PET_KEYS) empty[k] = [];
@@ -504,8 +489,6 @@ export default function CategoryPage() {
     });
   };
 
-
-
   const toggleBabyFacet = (facetKey: BabyFacetKey, value: string) => {
     const v = norm(value);
     setSelected((prev) => {
@@ -523,27 +506,21 @@ export default function CategoryPage() {
     setPriceRange(defaultPriceRange);
   };
 
-  // Apply filters based on active mode
   const filteredProducts = useMemo(() => {
     let base = products;
 
     if (filterMode === "mobile") {
-      base = products.filter(
-        (p) => p.category === "Mobile Phones & Smartphones"
-      );
+      base = products.filter((p) => p.category === "Mobile Phones & Smartphones");
     }
     if (filterMode === "baby") {
       base = products.filter((p) => p.main_category === BABY_MAIN_CATEGORY);
     }
-
     if (filterMode === "fashion") {
       base = products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY);
     }
-
     if (filterMode === "pet") {
       base = products.filter((p) => p.main_category === PET_MAIN_CATEGORY);
     }
-
 
     return base.filter((p) => {
       const price = p.numericPrice ?? 0;
@@ -580,8 +557,6 @@ export default function CategoryPage() {
           if (!val) return false;
           if (!set.has(norm(val))) return false;
         }
-
-
       }
 
       return true;
@@ -590,34 +565,222 @@ export default function CategoryPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selected, priceRange, filterMode]);
+  }, [selected, priceRange, filterMode, sortKey, viewMode]);
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const sortedProducts = useMemo(() => {
+    const arr = [...filteredProducts];
+
+    const popA = (p: Product) => Number((p.ratingCount || "").toString().replace(/[^\d]/g, "")) || 0;
+    const savings = (p: Product) => Math.max(0, (p.numericOldPrice || 0) - (p.numericPrice || 0));
+    const price = (p: Product) => p.numericPrice || 0;
+
+    arr.sort((a, b) => {
+      if (sortKey === "popular") return popA(b) - popA(a);
+      if (sortKey === "savings") return savings(b) - savings(a);
+      if (sortKey === "cheap") return price(a) - price(b);
+      if (sortKey === "high") return price(b) - price(a);
+      if (sortKey === "new") return getScrapedAtMs(b) - getScrapedAtMs(a);
+      return 0;
+    });
+
+    return arr;
+  }, [filteredProducts, sortKey]);
+
+  const totalPages = Math.ceil(sortedProducts.length / ITEMS_PER_PAGE);
 
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
+    return sortedProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [sortedProducts, currentPage]);
 
-  console.log(paginatedProducts)
+  const sortLabel = useMemo(() => {
+    if (sortKey === "popular") return "Most popular first";
+    if (sortKey === "savings") return "Biggest savings first";
+    if (sortKey === "cheap") return "Price: Cheapest first";
+    if (sortKey === "high") return "Price: Highest first";
+    return "Newest first";
+  }, [sortKey]);
+
+  const pageButtons = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => String(i + 1));
+    const set = new Set<number>([1, 2, 3, totalPages - 1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+    const nums = Array.from(set).filter((n) => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+
+    const out: string[] = [];
+    for (let i = 0; i < nums.length; i++) {
+      const n = nums[i];
+      const prev = nums[i - 1];
+      if (i > 0 && prev && n - prev > 1) out.push("…");
+      out.push(String(n));
+    }
+    return out;
+  }, [totalPages, currentPage]);
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6">
-        {/* Filters button (mobile + fashion) */}
-        {filterMode !== "none" && (
-          <div className="mb-3 md:hidden">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="px-4 py-2 rounded border text-sm border-gray-300 hover:bg-gray-100"
-            >
-              Filters
-            </button>
-          </div>
-        )}
+    <div className="min-h-screen bg-[#eef2f6]">
+      <div className="max-w-[1280px] mx-auto px-3 lg:px-0 py-5">
+        <div className="mb-3 flex items-center gap-2 text-[13px] text-gray-600">
+          <Link href="/" className="inline-flex items-center gap-2 text-[#0b63c8] hover:underline">
+            <Home className="h-4 w-4" />
+          </Link>
 
-        <div className="flex gap-6">
-          {/* Sidebar */}
+          <ChevronRight className="h-4 w-4 text-gray-400" />
+
+          <span className="cursor-not-allowed text-gray-600 capitalize">{searchedName}</span>
+        </div>
+
+
+
+        <div className="hidden md:flex items-center justify-between gap-3 mb-3">
+          <div className="mb-3 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-[28px] font-semibold leading-tight text-gray-900 capitalize">{searchedName}</h1>
+              <div className="mt-1 text-[14px] text-gray-600">{sortedProducts.length} products found</div>
+              <div className="mb-3 flex flex-col gap-2 md:hidden">
+                <div className="flex items-center justify-between gap-2">
+                  {filterMode !== "none" ? (
+                    <button
+                      onClick={() => setIsSidebarOpen(true)}
+                      className="h-10 rounded border border-[#cfd6dd] bg-white px-4 text-[13px] font-medium text-[#0b63c8] hover:bg-[#f2f6fb]"
+                    >
+                      Filters
+                    </button>
+                  ) : (
+                    <div />
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <div ref={sortRef} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setSortOpen((v) => !v)}
+                        className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
+                      >
+                        <span className="text-[#0b63c8]">{sortLabel}</span>
+                        {sortOpen ? (
+                          <ChevronUp className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        )}                      </button>
+
+                      {sortOpen ? (
+                        <div className="absolute right-0 top-[44px] z-30 w-[240px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+                          {[
+                            { k: "popular", t: "Most popular first" },
+                            { k: "savings", t: "Biggest savings first" },
+                            { k: "cheap", t: "Price: Cheapest first" },
+                            { k: "high", t: "Price: Highest first" },
+                            { k: "new", t: "Newest first" },
+                          ].map((o) => {
+                            const active = sortKey === (o.k as SortKey);
+                            return (
+                              <button
+                                key={o.k}
+                                type="button"
+                                onClick={() => {
+                                  setSortKey(o.k as SortKey);
+                                  setSortOpen(false);
+                                }}
+                                className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                                  }`}
+                              >
+                                <span>{o.t}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex items-center overflow-hidden rounded border border-[#cfd6dd] bg-white">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("grid")}
+                        className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                          }`}
+                      >
+                        <GridIcon active={viewMode === "grid"} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("list")}
+                        className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                          }`}
+                      >
+                        <ListIcon active={viewMode === "list"} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div ref={sortRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setSortOpen((v) => !v)}
+                className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
+              >
+                <span className="text-[#0b63c8]">{sortLabel}</span>
+                {sortOpen ? (
+                  <ChevronUp className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                )}              </button>
+
+              {sortOpen ? (
+                <div className="absolute right-0 top-[44px] z-30 w-[260px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+                  {[
+                    { k: "popular", t: "Most popular first" },
+                    { k: "savings", t: "Biggest savings first" },
+                    { k: "cheap", t: "Price: Cheapest first" },
+                    { k: "high", t: "Price: Highest first" },
+                    { k: "new", t: "Newest first" },
+                  ].map((o) => {
+                    const active = sortKey === (o.k as SortKey);
+                    return (
+                      <button
+                        key={o.k}
+                        type="button"
+                        onClick={() => {
+                          setSortKey(o.k as SortKey);
+                          setSortOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                          }`}
+                      >
+                        <span>{o.t}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex items-center overflow-hidden rounded border border-[#cfd6dd] bg-white">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                  }`}
+              >
+                <GridIcon active={viewMode === "grid"} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                  }`}
+              >
+                <ListIcon active={viewMode === "list"} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+        <div className="flex gap-4">
           {filterMode === "mobile" && (
             <MobileFilterSidebar<Product>
               isOpen={isSidebarOpen}
@@ -629,10 +792,8 @@ export default function CategoryPage() {
               onToggle={toggleMobileFacet}
               onReset={resetFilters}
               facets={mobileFacets}
-              products={products.filter(
-                (p) => p.category === "Mobile Phones & Smartphones"
-              )}
-              filteredProducts={filteredProducts}
+              products={products.filter((p) => p.category === "Mobile Phones & Smartphones")}
+              filteredProducts={sortedProducts}
               getFacetValue={getMobileFacetValue}
             />
           )}
@@ -648,10 +809,8 @@ export default function CategoryPage() {
               onToggle={toggleFashionFacet}
               onReset={resetFilters}
               facets={fashionFacets}
-              products={products.filter(
-                (p) => p.main_category === FASHION_MAIN_CATEGORY
-              )}
-              filteredProducts={filteredProducts}
+              products={products.filter((p) => p.main_category === FASHION_MAIN_CATEGORY)}
+              filteredProducts={sortedProducts}
               getFacetValue={getFashionFacetValue}
             />
           )}
@@ -668,7 +827,7 @@ export default function CategoryPage() {
               onReset={resetFilters}
               facets={babyFacets}
               products={products.filter((p) => p.main_category === BABY_MAIN_CATEGORY)}
-              filteredProducts={filteredProducts}
+              filteredProducts={sortedProducts}
               getFacetValue={getBabyFacetValue}
             />
           )}
@@ -685,47 +844,46 @@ export default function CategoryPage() {
               onReset={resetFilters}
               facets={petFacets}
               products={products.filter((p) => p.main_category === PET_MAIN_CATEGORY)}
-              filteredProducts={filteredProducts}
+              filteredProducts={sortedProducts}
               getFacetValue={getPetFacetValue}
             />
           )}
 
+          <main className="min-w-0 flex-1">
 
-
-          <main className="flex-1">
-            <div className="mb-3">
-              <h2 className="text-2xl font-bold mb-1 capitalize">
-                {searchedName}
-              </h2>
-              <p className="text-gray-500">
-                {filteredProducts.length} products found
-              </p>
-            </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(12)].map((_, i) => (
-                  <ProductCardSkeleton key={i} />
-                ))}
+              <div className="w-full bg-[#cfd6dd] p-px">
+                <div className="grid grid-cols-2 gap-px sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {[...Array(12)].map((_, i) => (
+                    <div key={i} className="bg-white p-4">
+                      <ProductCardSkeleton />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <>
-                <Products products={paginatedProducts} landingPage={false} />
+                <Products products={paginatedProducts as any} landingPage={false} view={viewMode} />
 
-                {totalPages > 1 && (
+                {totalPages > 1 ? (
                   <div className="mt-6 flex items-center justify-end gap-2">
                     <div className="flex items-center gap-2">
-                      {Array.from({ length: totalPages }).map((_, i) => {
-                        const page = i + 1;
+                      {pageButtons.map((t, idx) => {
+                        if (t === "…") {
+                          return (
+                            <div key={`e-${idx}`} className="h-10 w-10 grid place-items-center text-[14px] text-gray-500">
+                              …
+                            </div>
+                          );
+                        }
+                        const page = Number(t);
                         const active = page === currentPage;
-
                         return (
                           <button
                             key={page}
                             onClick={() => setCurrentPage(page)}
-                            className={`h-10 w-10 rounded border text-sm font-medium ${active
-                                ? "bg-[#0b63c8] text-white border-[#0b63c8]"
-                                : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
+                            className={`h-10 w-10 rounded border text-sm font-medium ${active ? "bg-[#0b63c8] text-white border-[#0b63c8]" : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
                               }`}
                           >
                             {page}
@@ -737,15 +895,15 @@ export default function CategoryPage() {
                     <button
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
-                          ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
-                          : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
+                        ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
+                        : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
                         }`}
                       disabled={currentPage === totalPages}
                     >
                       →
                     </button>
                   </div>
-                )}
+                ) : null}
               </>
             )}
           </main>
