@@ -97,7 +97,7 @@ export default function Home() {
     if (error) return <div className="py-20 text-center text-red-600">{error}</div>;
 
     return (
-        <main className="flex flex-col">
+        <main className="flex flex-col bg-white">
             {applyCard && (
                 <ApplyCardModal
                     open={openApply}

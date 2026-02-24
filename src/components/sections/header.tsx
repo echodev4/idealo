@@ -278,7 +278,7 @@ export default function Header() {
     <>
       <SkipLinks />
 
-      <header className="sticky top-0 z-40 text-white [&_a:hover]:no-underline">
+      <header className="z-40 text-white [&_a:hover]:no-underline">
         <div className="bg-[#0A3761]">
           <div className="mx-auto max-w-[1280px] px-3">
             <div className="grid h-[40px] grid-cols-[1fr_auto_1fr] items-center">
