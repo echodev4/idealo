@@ -65,7 +65,7 @@ export async function GET() {
       await Promise.all([
         fetchFaissByVector(LANDING_EMBEDDINGS.iphoneDeals, LIMIT),
         fetchFaissByVector(LANDING_EMBEDDINGS.dairyProducts, LIMIT),
-        fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, 6),
+        fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, 18),
       ]);
 
     return NextResponse.json({

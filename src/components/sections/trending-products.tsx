@@ -1,94 +1,153 @@
-import React from "react";
+"use client";
+
 import Image from "next/image";
-import { useLanguage } from "@/contexts/language-context";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
 const trendingItems = [
     {
-        id: 1,
-        titleKey: "landing.trending.item1",
-        fallback: "Snow shovel",
-        image:
-            "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/240x200-29.jpg",
+        name: "Shopping bags",
+        slug: "shopping-bags",
+        image: "https://cdn.idealo.com/images/category/de_DE/16352/240x200.jpg",
     },
     {
-        id: 2,
-        titleKey: "landing.trending.item2",
-        fallback: "Snow blower",
-        image:
-            "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/240x200-30.jpg",
+        name: "Trading cards",
+        slug: "trading-cards",
+        image: "https://cdn.idealo.com/images/category/de_DE/18448/240x200.jpg",
     },
     {
-        id: 3,
-        titleKey: "landing.trending.item3",
-        fallback: "Game consoles",
-        image:
-            "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/roborock-saros-10r-21.jpg",
+        name: "Children's shoes",
+        slug: "childrens-shoes",
+        image: "https://cdn.idealo.com/images/category/de_DE/11595/240x200.jpg",
     },
     {
-        id: 4,
-        titleKey: "landing.trending.item4",
-        fallback: "Study books",
-        image:
-            "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/240x200-29.jpg",
+        name: "Fertilizer",
+        slug: "fertilizer",
+        image: "https://cdn.idealo.com/images/category/de_DE/9848/240x200.jpg",
     },
     {
-        id: 5,
-        titleKey: "landing.trending.item5",
-        fallback: "Cookbooks",
-        image:
-            "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/240x200-30.jpg",
+        name: "Hedge trimmers",
+        slug: "hedge-trimmers",
+        image: "https://cdn.idealo.com/images/category/de_DE/11274/240x200.jpg",
     },
     {
-        id: 6,
-        titleKey: "landing.trending.item6",
-        fallback: "Storage drives",
-        image:
-            "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/c4edb08b-0b16-4a29-bec7-c89ea14040c9-idealo-de/assets/images/roborock-saros-10r-21.jpg",
+        name: "Robotic lawnmower",
+        slug: "robotic-lawnmower",
+        image: "https://cdn.idealo.com/images/category/de_DE/32794/240x200.jpg",
+    },
+    {
+        name: "Bicycle carrier",
+        slug: "bicycle-carrier",
+        image: "https://cdn.idealo.com/images/category/de_DE/18357/240x200.jpg",
+    },
+    {
+        name: "Jerseys",
+        slug: "jerseys",
+        image: "https://cdn.idealo.com/images/category/de_DE/15073/240x200.jpg",
     },
 ];
 
-const TrendingProducts = () => {
-    const { t } = useLanguage();
+function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
+
+    const update = () => {
+        const el = ref.current;
+        if (!el) return;
+        const max = el.scrollWidth - el.clientWidth;
+        setCanLeft(el.scrollLeft > 2);
+        setCanRight(el.scrollLeft < max - 2);
+    };
+
+    useEffect(() => {
+        update();
+        const el = ref.current;
+        if (!el) return;
+
+        const onScroll = () => update();
+        const onResize = () => update();
+
+        el.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onResize);
+
+        return () => {
+            el.removeEventListener("scroll", onScroll);
+            window.removeEventListener("resize", onResize);
+        };
+    }, [ref]);
+
+    const scrollBy = (dx: number) => {
+        ref.current?.scrollBy({ left: dx, behavior: "smooth" });
+    };
+
+    return { canLeft, canRight, scrollBy };
+}
+
+export default function TrendingProducts() {
+    const ref = useRef<HTMLDivElement | any>(null);
+    const { canLeft, canRight, scrollBy } = useHorizontalScroll(ref);
 
     return (
-        <section className="home-band bg-white overflow-hidden">
-            <div className="container">
+        <section className="bg-white py-8">
+            <div className="container max-w-[1280px] mx-auto px-3 lg:px-0">
                 <h2 className="text-[20px] font-bold text-[#212121] mb-4">
-                    {t("landing.trending.title", "Trending now")}
+                    Currently trending
                 </h2>
 
-                <div className="relative group">
-                    <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar scroll-smooth">
+                <div className="relative">
+                    {canLeft && (
+                        <button
+                            type="button"
+                            aria-label="Previous"
+                            onClick={() => scrollBy(-420)}
+                            className="hidden md:flex absolute left-[-14px] top-[86px] w-8 h-8 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                    )}
+
+                    {canRight && (
+                        <button
+                            type="button"
+                            aria-label="Next"
+                            onClick={() => scrollBy(420)}
+                            className="hidden md:flex absolute right-[-14px] top-[86px] w-8 h-8 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    )}
+
+                    <div
+                        ref={ref}
+                        className="flex gap-6 overflow-x-auto pb-2 hide-scrollbar scroll-smooth touch-pan-x overscroll-x-contain"
+                    >
                         {trendingItems.map((item) => (
-                            <button
-                                key={item.id}
-                                type="button"
-                                className="flex-shrink-0 w-[140px] md:w-[160px] cursor-not-allowed group/item text-left"
-                                aria-disabled="true"
-                                title={t("landing.common.comingSoon", "Coming soon")}
+                            <Link
+                                key={item.slug}
+                                href={`/category/${encodeURIComponent(item.slug)}`}
+                                className="flex-none w-[150px] md:w-[170px] no-underline hover:no-underline"
                             >
-                                <div className="relative w-full aspect-square mb-2 bg-[var(--background)] rounded-[4px] border border-[#E0E0E0] p-4 flex items-center justify-center transition-shadow hover:shadow-card">
-                                    <div className="w-full h-full relative">
+                                <div className="w-full aspect-square rounded-[999px] bg-[#F5F5F5] flex items-center justify-center overflow-hidden">
+                                    <div className="relative w-[110px] h-[110px] md:w-[120px] md:h-[120px]">
                                         <Image
                                             src={item.image}
-                                            alt={t(item.titleKey, item.fallback)}
+                                            alt={item.name}
                                             fill
-                                            className="object-contain mix-blend-multiply"
-                                            sizes="(max-width: 768px) 140px, 160px"
+                                            sizes="170px"
+                                            className="object-contain"
                                         />
                                     </div>
                                 </div>
 
-                                <p className="text-[14px] leading-[1.4] text-center text-[#212121] group-hover/item:text-[var(--color-link)] transition-colors line-clamp-2">
-                                    {t(item.titleKey, item.fallback)}
-                                </p>
-                            </button>
+                                <div className="mt-3 text-center text-[14px] text-[#212121] leading-[1.3]">
+                                    {item.name}
+                                </div>
+                            </Link>
                         ))}
                     </div>
                 </div>
             </div>
         </section>
     );
-};
-
-export default TrendingProducts;
+}
