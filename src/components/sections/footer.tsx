@@ -1,8 +1,6 @@
 "use client";
 
-
 import React from "react";
-import { useLanguage } from "@/contexts/language-context";
 import {
     Accordion,
     AccordionContent,
@@ -10,177 +8,124 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const Footer = () => {
-    const { t } = useLanguage();
+type FooterLink = { label: string; href: string };
 
-    const left = {
-        title: t("footer.brand", "SubsFaraz"),
-        links: [
-            { label: t("footer.about", "About us"), href: "#" },
-            { label: t("footer.sustainability", "Sustainability"), href: "#" },
-            { label: t("footer.press", "Press"), href: "#" },
-            { label: t("footer.jobs", "Jobs"), href: "#" },
-            { label: t("footer.blog", "Blog"), href: "#" },
-        ],
-    };
+const PreventLink = ({
+    href,
+    className,
+    children,
+}: {
+    href: string;
+    className: string;
+    children: React.ReactNode;
+}) => (
+    <a
+        href={href}
+        className={className}
+        aria-disabled="true"
+        onClick={(e) => e.preventDefault()}
+    >
+        {children}
+    </a>
+);
 
-    const middle = [
+export default function Footer() {
+    const cols: Array<{ title: string; links: FooterLink[] }> = [
         {
-            title: t("footer.shopping", "Shopping"),
-            links: [{ label: t("footer.comparePrices", "Compare prices"), href: "#" }],
+            title: "idealo",
+            links: [
+                { label: "About Us", href: "#" },
+                { label: "sustainability", href: "#" },
+                { label: "Disposal of old appliances", href: "#" },
+                { label: "press", href: "#" },
+                { label: "Jobs", href: "#" },
+                { label: "Friends", href: "#" },
+            ],
         },
         {
-            title: t("footer.support", "Customer service"),
+            title: "Trip",
+            links: [{ label: "Flight price comparison", href: "#" }],
+        },
+        {
+            title: "Business",
             links: [
-                { label: t("footer.help", "Help center"), href: "#" },
-                { label: t("footer.contact", "Contact us"), href: "#" },
+                { label: "dealers", href: "#" },
+                { label: "service provider", href: "#" },
+                { label: "Shop registration", href: "#" },
+                { label: "Affiliate Partner Program", href: "#" },
+                { label: "idealo Partner Magazine", href: "#" },
+            ],
+        },
+        {
+            title: "Follow us",
+            links: [
+                { label: "Newsletter", href: "#" },
+                { label: "idealo magazine", href: "#" },
+                { label: "Facebook", href: "#" },
+                { label: "Instagram", href: "#" },
             ],
         },
     ];
 
-    const right = {
-        title: t("footer.business", "Business"),
-        links: [
-            { label: t("footer.retailers", "Retailers"), href: "#" },
-            { label: t("footer.partners", "Partners"), href: "#" },
-            { label: t("footer.registerShop", "Shop registration"), href: "#" },
-            { label: t("footer.affiliates", "Affiliate program"), href: "#" },
-        ],
-    };
+    const legalLinks: FooterLink[] = [
+        { label: "Data protection", href: "#" },
+        { label: "Privacy", href: "#" },
+        { label: "Legal Notice / Terms and Conditions", href: "#" },
+        { label: "Accessibility", href: "#" },
+    ];
 
-    const follow = {
-        title: t("footer.follow", "Follow us"),
-        links: [
-            { label: t("footer.newsletter", "Newsletter"), href: "#" },
-            { label: t("footer.instagram", "Instagram"), href: "#" },
-            { label: t("footer.facebook", "Facebook"), href: "#" },
-            { label: t("footer.youtube", "YouTube"), href: "#" },
-        ],
-    };
-
-    const mobileColumns = [left, ...middle, right, follow];
+    const countries: FooterLink[] = [
+        { label: "Austria", href: "#" },
+        { label: "Great Britain", href: "#" },
+        { label: "Spain", href: "#" },
+        { label: "France", href: "#" },
+        { label: "Italy", href: "#" },
+    ];
 
     return (
         <footer className="w-full bg-[#0A3761] text-white">
-            <div className="border-b border-white/10">
-                <div className="container py-4">
-                    <p className="text-center text-[13px] leading-[1.4] text-white/90">
-                        {t(
-                            "footer.ctaLine",
-                            "Compare offers across stores and find the best price."
-                        )}
-                    </p>
-                </div>
-            </div>
-
-            <div className="container py-10">
-                <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-8">
-                    <div>
-                        <div className="text-[20px] font-bold tracking-tight mb-4">
-                            {left.title}
+            <div className="container max-w-[1280px] mx-auto px-3 lg:px-0 pt-10 lg:pt-12 pb-8">
+                <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-x-14 gap-y-10">
+                    {cols.map((col) => (
+                        <div key={col.title}>
+                            <div className="text-[16px] font-bold mb-5">{col.title}</div>
+                            <ul className="space-y-3">
+                                {col.links.map((l) => (
+                                    <li key={l.label}>
+                                        <PreventLink
+                                            href={l.href}
+                                            className="text-[15px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
+                                        >
+                                            {l.label}
+                                        </PreventLink>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <ul className="space-y-2">
-                            {left.links.map((l) => (
-                                <li key={l.label}>
-                                    <a
-                                        className="text-[13px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
-                                        href={l.href}
-                                        aria-disabled="true"
-                                        onClick={(e) => e.preventDefault()}
-                                    >
-                                        {l.label}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="space-y-8">
-                        {middle.map((col) => (
-                            <div key={col.title}>
-                                <div className="text-[14px] font-bold mb-3">{col.title}</div>
-                                <ul className="space-y-2">
-                                    {col.links.map((l) => (
-                                        <li key={l.label}>
-                                            <a
-                                                className="text-[13px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
-                                                href={l.href}
-                                                aria-disabled="true"
-                                                onClick={(e) => e.preventDefault()}
-                                            >
-                                                {l.label}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div>
-                        <div className="text-[14px] font-bold mb-3">{right.title}</div>
-                        <ul className="space-y-2">
-                            {right.links.map((l) => (
-                                <li key={l.label}>
-                                    <a
-                                        className="text-[13px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
-                                        href={l.href}
-                                        aria-disabled="true"
-                                        onClick={(e) => e.preventDefault()}
-                                    >
-                                        {l.label}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div>
-                        <div className="text-[14px] font-bold mb-3">{follow.title}</div>
-                        <ul className="space-y-2">
-                            {follow.links.map((l) => (
-                                <li key={l.label}>
-                                    <a
-                                        className="text-[13px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
-                                        href={l.href}
-                                        aria-disabled="true"
-                                        onClick={(e) => e.preventDefault()}
-                                    >
-                                        {l.label}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    ))}
                 </div>
 
                 <div className="md:hidden">
-                    <div className="text-[20px] font-bold tracking-tight mb-4">
-                        {t("footer.brand", "SubsFaraz")}
-                    </div>
-
                     <Accordion type="single" collapsible className="w-full">
-                        {mobileColumns.map((col) => (
+                        {cols.map((col) => (
                             <AccordionItem
                                 key={col.title}
                                 value={col.title}
                                 className="border-white/10"
                             >
-                                <AccordionTrigger className="text-left text-[14px] font-bold text-white hover:no-underline">
+                                <AccordionTrigger className="text-left text-[15px] font-bold text-white hover:no-underline py-3">
                                     {col.title}
                                 </AccordionTrigger>
                                 <AccordionContent>
-                                    <ul className="space-y-2 pb-2">
+                                    <ul className="space-y-3 pb-3">
                                         {col.links.map((l) => (
                                             <li key={l.label}>
-                                                <a
-                                                    className="text-[13px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
+                                                <PreventLink
                                                     href={l.href}
-                                                    aria-disabled="true"
-                                                    onClick={(e) => e.preventDefault()}
+                                                    className="text-[15px] text-white/80 hover:text-white hover:underline cursor-not-allowed"
                                                 >
                                                     {l.label}
-                                                </a>
+                                                </PreventLink>
                                             </li>
                                         ))}
                                     </ul>
@@ -189,32 +134,59 @@ const Footer = () => {
                         ))}
                     </Accordion>
                 </div>
-            </div>
 
-            <div className="border-t border-white/10">
-                <div className="container py-5">
-                    <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[12px] text-white/70">
-                        {[
-                            { key: "footer.imprint", fallback: "Imprint" },
-                            { key: "footer.privacy", fallback: "Privacy" },
-                            { key: "footer.terms", fallback: "Terms" },
-                            { key: "footer.cookies", fallback: "Cookies" },
-                        ].map((item) => (
-                            <a
-                                key={item.key}
-                                href="#"
-                                className="hover:text-white transition-colors cursor-not-allowed"
-                                aria-disabled="true"
-                                onClick={(e) => e.preventDefault()}
-                            >
-                                {t(item.key, item.fallback)}
-                            </a>
+                <div className="mt-10">
+                    <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 text-[13px] text-white/75">
+                        {legalLinks.map((l, i) => (
+                            <React.Fragment key={l.label}>
+                                <PreventLink
+                                    href={l.href}
+                                    className="hover:text-white hover:underline cursor-not-allowed"
+                                >
+                                    {l.label}
+                                </PreventLink>
+                                {i !== legalLinks.length - 1 && (
+                                    <span className="px-1 text-white/40">·</span>
+                                )}
+                            </React.Fragment>
                         ))}
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap justify-center gap-x-2 gap-y-2 text-[13px] text-white/75">
+                        {countries.map((c, i) => (
+                            <React.Fragment key={c.label}>
+                                <PreventLink
+                                    href={c.href}
+                                    className="hover:text-white hover:underline cursor-not-allowed"
+                                >
+                                    {c.label}
+                                </PreventLink>
+                                {i !== countries.length - 1 && (
+                                    <span className="px-1 text-white/40">·</span>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+
+                    <div className="mt-7 text-center text-[12px] leading-[1.55] text-white/70 max-w-[980px] mx-auto">
+                        <p className="m-0">
+                            All prices are in euros including VAT, plus shipping if applicable.
+                            Prices, rankings, delivery times, and shipping costs are subject to
+                            change. Delivery times are in days (Monday-Friday, excluding public
+                            holidays).
+                        </p>
+                        <p className="m-0 mt-3">
+                            We publish consumer reviews (product opinions) on our website. We have
+                            not verified whether these reviews are from consumers who have actually
+                            used or purchased the reviewed product, unless the review is marked as
+                            "verified opinion."
+                        </p>
+                        <p className="m-0 mt-3">
+                            Further information can be found on the respective product detail page.
+                        </p>
                     </div>
                 </div>
             </div>
         </footer>
     );
-};
-
-export default Footer;
+}

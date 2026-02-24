@@ -1,108 +1,106 @@
-import React from "react";
-import { Check, Award, Tag } from "lucide-react";
-import { useLanguage } from "@/contexts/language-context";
+"use client";
 
-const TransparencyTrust = () => {
-    const { t } = useLanguage();
+import Image from "next/image";
+import { Tag, Award, Trophy, Check } from "lucide-react";
 
+export default function TransparencyTrust() {
     return (
-        <section className="bg-white home-band border-t border-[#E0E0E0]">
-            <div className="container">
-                <h2 className="text-[20px] font-bold text-[#000000] text-center mb-[40px] leading-[1.25]">
-                    {t("landing.trust.title", "Trusted price comparison")}
+        <section className="bg-white border-t border-[#E0E0E0]">
+            <div className="container max-w-[1280px] mx-auto px-3 lg:px-0 py-10 lg:py-14">
+                <h2 className="text-[22px] lg:text-[30px] font-normal text-[#6B6B6B] text-center mb-10 lg:mb-14">
+                    idealo – The No. 1 in price comparison
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-[32px] mb-[48px]">
-                    <div className="flex flex-col items-center text-center">
-                        <div className="mb-[20px] text-[#666666]">
-                            <Tag size={48} strokeWidth={1.5} className="rotate-[135deg]" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-12">
+                    <div className="text-center">
+                        <div className="flex justify-center mb-5 text-[#9DB4CC]">
+                            <Tag size={54} strokeWidth={1.5} className="rotate-[135deg]" />
                         </div>
-                        <h3 className="text-[16px] font-bold text-[#000000] mb-[12px]">
-                            {t("landing.trust.pillar1Title", "Transparent results")}
-                        </h3>
-                        <p className="text-[14px] leading-[1.6] text-[#666666] max-w-[360px]">
-                            {t(
-                                "landing.trust.pillar1Body",
-                                "We help you compare prices across many stores so you can make confident choices."
-                            )}
+                        <h3 className="text-[16px] font-bold text-[#1F1F1F] mb-3">Transparency for you</h3>
+                        <p className="text-[14px] leading-[1.7] text-[#6B6B6B] max-w-[360px] mx-auto">
+                            It&apos;s important to us that you always feel good about your shopping experience. Our mission is to
+                            create transparency for you among millions of online offers. Ensuring you can always confidently make the
+                            best purchase decision for everything you need is our top priority. We don&apos;t have to sell you
+                            anything and we don&apos;t have a warehouse to clear. That&apos;s why we always give you objective
+                            advice. The retailers listed with us pay a small commission for our service. Using idealo is free for you,
+                            and it will stay that way.
                         </p>
                     </div>
 
-                    <div className="flex flex-col items-center text-center">
-                        <div className="mb-[20px] text-[#666666]">
-                            <Award size={48} strokeWidth={1.5} />
+                    <div className="text-center">
+                        <div className="flex justify-center mb-5 text-[#9DB4CC]">
+                            <Award size={54} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-[16px] font-bold text-[#000000] mb-[12px]">
-                            {t("landing.trust.pillar2Title", "Plenty of options")}
-                        </h3>
-                        <p className="text-[14px] leading-[1.6] text-[#666666] max-w-[360px]">
-                            {t(
-                                "landing.trust.pillar2Body",
-                                "Explore products, compare offers, and find the best value for what you need."
-                            )}
+                        <h3 className="text-[16px] font-bold text-[#1F1F1F] mb-3">Endless possibilities</h3>
+                        <p className="text-[14px] leading-[1.7] text-[#6B6B6B] max-w-[360px] mx-auto">
+                            With over 600 million offers from around 50,000 retailers in our price comparison tool, you have a
+                            comprehensive overview of the market. Whatever you&apos;re looking for, we&apos;re sure to have it. At
+                            the best price. Finding your perfect offer is easy thanks to our extensive filter and sorting functions.
+                            Our test reports, user reviews, and buying guides ensure you&apos;re always making the best purchase
+                            decision, because quality, just like price, is essential. Wishlists and price alerts make shopping for
+                            bargains simple and convenient. You decide what you want to buy and from whom. Use our app on the go.
                         </p>
                     </div>
 
-                    <div className="flex flex-col items-center text-center">
-                        <div className="mb-[20px] text-[#666666]">
-                            <Award size={48} strokeWidth={1.5} className="fill-current opacity-30" />
+                    <div className="text-center">
+                        <div className="flex justify-center mb-5 text-[#9DB4CC]">
+                            <Trophy size={54} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-[16px] font-bold text-[#000000] mb-[12px]">
-                            {t("landing.trust.pillar3Title", "Quality & reliability")}
-                        </h3>
-                        <p className="text-[14px] leading-[1.6] text-[#666666] max-w-[360px]">
-                            {t(
-                                "landing.trust.pillar3Body",
-                                "We focus on up-to-date offers and a smooth experience across devices."
-                            )}
+                        <h3 className="text-[16px] font-bold text-[#1F1F1F] mb-3">Excellent</h3>
+                        <p className="text-[14px] leading-[1.7] text-[#6B6B6B] max-w-[360px] mx-auto">
+                            We excel at what we do and consistently win awards for our reliability and service. Furthermore, TÜV
+                            Saarland awarded us the &quot;Certified Comparison Portal&quot; seal for transparency, up-to-dateness,
+                            data protection, and quality (06/2024), making us the first price comparison site to receive this
+                            distinction. We are delighted that TÜV has certified our work as a price comparison platform. This
+                            doesn&apos;t change the fact that around 700 employees from nearly 60 nations work daily to make shopping
+                            easy, worry-free, and secure for you, and to continuously improve idealo.
                         </p>
                     </div>
                 </div>
+            </div>
 
-                <div className="bg-[#F8F9FA] rounded-[4px] p-[24px] flex flex-col md:flex-row items-center justify-center gap-[32px] border border-[#E0E0E0]">
-                    <div className="border-[2px] border-black bg-white flex flex-col items-center justify-between p-[8px] min-w-[120px] h-[90px] cursor-not-allowed">
-                        <div className="text-[18px] font-bold flex items-center leading-none">
-                            {t("landing.trust.badgeTop", "CERT")}
-                            <span className="text-[10px] ml-1 font-normal">{t("landing.trust.badgeSub", "QUALITY")}</span>
+            <div className="bg-[#9FB6CD] border-t border-[#0A2B45]">
+                <div className="container max-w-[1280px] mx-auto px-3 lg:px-0 py-8 lg:py-10">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-8 lg:gap-12">
+                        <div className="relative w-[180px] h-[90px] md:w-[210px] md:h-[105px] flex-shrink-0 bg-white/20">
+                            <Image
+                                src="https://cdn.idealo.com/storage/ids-assets/png/tuev_saarland_202406.png"
+                                alt="TÜV Saarland"
+                                fill
+                                sizes="210px"
+                                className="object-contain"
+                            />
                         </div>
-                        <div className="text-[8px] font-bold text-center border-y border-black py-0.5 w-full">
-                            {t("landing.trust.badgeMid", "Verified")}
-                        </div>
-                        <div className="text-[7px] text-center">{t("landing.trust.badgeBottom", "Details coming soon")}</div>
-                    </div>
 
-                    <div className="flex flex-col gap-[8px]">
-                        <h4 className="text-[16px] font-bold text-[#000000] mb-[4px]">
-                            {t("landing.trust.qualityTitle", "Certified quality")}
-                        </h4>
+                        <div className="flex-1">
+                            <div className="text-[#0A2B45] text-[18px] font-bold mb-3">certified quality</div>
 
-                        <div className="grid grid-cols-2 gap-x-[32px] gap-y-[4px]">
-                            {[
-                                t("landing.trust.q1", "Transparency"),
-                                t("landing.trust.q2", "Privacy"),
-                                t("landing.trust.q3", "Fresh data"),
-                                t("landing.trust.q4", "Search tools"),
-                            ].map((label) => (
-                                <div key={label} className="flex items-center gap-[8px] text-[14px] text-[#212121]">
-                                    <Check size={16} className="text-[#2E7D32]" strokeWidth={3} />
-                                    <span>{label}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-10 text-[#0A2B45] text-[14px]">
+                                <div className="flex items-center gap-2">
+                                    <Check size={16} className="text-[#0A2B45]" strokeWidth={3} />
+                                    <span>transparency</span>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="flex items-center gap-2">
+                                    <Check size={16} className="text-[#0A2B45]" strokeWidth={3} />
+                                    <span>Data protection</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Check size={16} className="text-[#0A2B45]" strokeWidth={3} />
+                                    <span>Timeliness</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Check size={16} className="text-[#0A2B45]" strokeWidth={3} />
+                                    <span>Search options</span>
+                                </div>
+                            </div>
 
-                        <button
-                            type="button"
-                            className="text-[14px] text-[var(--color-link)] font-medium hover:underline mt-[8px] flex items-center gap-[4px] w-fit cursor-not-allowed"
-                            aria-disabled="true"
-                            title={t("landing.common.comingSoon", "Coming soon")}
-                        >
-                            {t("landing.trust.more", "Learn more")}
-                        </button>
+                            <div className="mt-3">
+                                <span className="text-[#0A2B45] underline cursor-not-allowed select-none">More information</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     );
-};
-
-export default TransparencyTrust;
+}
