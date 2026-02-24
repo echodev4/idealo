@@ -335,7 +335,7 @@ export default function Header() {
                   </button>
 
                   <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">                    <div className="leading-none">
-                    <div className="text-[40px] font-bold tracking-tight">idealo</div>
+                    <div className="text-[40px] font-bold tracking-tight text-white">idealo</div>
                     <div className="mt-1 h-[5px] w-[92px] bg-[#FF6600]" />
                   </div>
                   </Link>
