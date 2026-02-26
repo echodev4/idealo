@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import {
@@ -11,7 +11,6 @@ import {
   Heart,
   Bell,
   User,
-  Menu,
   Leaf,
   X,
   Loader2,
@@ -108,6 +107,8 @@ function clampText(s: string, max = 34) {
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const { t, direction } = useLanguage();
 
   const [query, setQuery] = useState("");
@@ -206,13 +207,20 @@ export default function Header() {
     };
   }, [debouncedQuery]);
 
+  const searchWrapRef = useRef<HTMLDivElement | null>(null);
+  const dropdownPanelRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
       const target = e.target as Node;
-      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
-        setIsOpen(false);
-      }
+
+      const insideSearch =
+        searchWrapRef.current?.contains(target) ||
+        dropdownPanelRef.current?.contains(target);
+
+      if (!insideSearch) setIsOpen(false);
     }
+
     document.addEventListener("mousedown", onDocMouseDown);
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, []);
@@ -235,9 +243,7 @@ export default function Header() {
     close();
 
     router.push(
-      `/product/${encodedUrl}?product_name=${encodeURIComponent(p.product_name)}&source=${encodeURIComponent(
-        p.source
-      )}`
+      `/product/${encodedUrl}?product_name=${encodeURIComponent(p.product_name)}&source=${encodeURIComponent(p.source)}`
     );
   };
 
@@ -274,242 +280,262 @@ export default function Header() {
     categoriesRef.current?.scrollBy({ left: -260, behavior: "smooth" });
   };
 
+  const SearchField = ({ variant }: { variant: "desktop" | "mobile" }) => {
+    const isMobile = variant === "mobile";
+    const inputH = isMobile ? "h-[46px]" : "h-[44px]";
+    const inputRadius = "rounded-[4px]";
+    const buttonSize = isMobile ? "h-10 w-10" : "h-9 w-9";
+    const iconColor = isHome ? "text-[#FF6600]" : "text-[#BDBDBD]";
+    const buttonHover = isHome ? "hover:bg-[#FF6600]/10" : "hover:bg-black/5";
+
+    return (
+      <div
+        className={isMobile ? "mt-3 relative z-50" : "min-w-0 flex-1 relative z-50"}
+        ref={searchWrapRef}
+      >
+        <form
+          id="i-header-search"
+          role="search"
+          className="relative z-50"
+          autoComplete="off"
+          onSubmit={handleSubmit}
+        >
+          <Input
+            type="text"
+            placeholder={t("header.search.placeholder")}
+            value={query}
+            dir={direction}
+            onChange={(e) => {
+              console.log(e.target.value);
+              setQuery(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            className={`${inputH} w-full ${inputRadius} relative z-50 border-0 bg-white pl-4 pr-[64px] text-[16px] text-[#212121] shadow-none focus-visible:ring-0`}
+
+          />
+
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className={`flex ${buttonSize} items-center justify-center rounded-full text-[#666] ${buttonHover}`}
+                aria-label="Clear search"
+              >
+                <X size={18} />
+              </button>
+            )}
+            <button
+              type="submit"
+              className={`flex ${buttonSize} items-center justify-center rounded-full bg-transparent ${iconColor} ${buttonHover}`}
+              aria-label={t("header.search.searchButton")}
+            >
+              <Search size={20} />
+            </button>
+          </div>
+        </form>
+
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30"
+            onClick={close}
+            aria-hidden="true"
+          />
+        )}
+        {isOpen && (
+          <div
+                ref={dropdownPanelRef}
+
+            className={`absolute z-40 top-[calc(100%-4px)] ${direction === "rtl" ? "right-0" : "left-0"
+              } w-full overflow-hidden rounded-b-[4px] bg-white text-[#212121] shadow-lg`}
+          >
+            {showPopularAndRecent && (
+              <>
+                <div className="px-4 py-3 border-b border-[#eee]">
+                  <span className="text-[14px] font-bold text-[#666]">Popular searches</span>
+                </div>
+
+                <div className="px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {popularSearches.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => navigateToCategory(term)}
+                        className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
+                        title={term}
+                      >
+                        {clampText(term, 26)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-4 py-3 border-t border-[#eee]">
+                  <span className="text-[14px] font-bold text-[#666]">Recently searched</span>
+                </div>
+
+                <div className="px-4 pb-4">
+                  {recent.length === 0 ? (
+                    <div className="py-2 text-[13px] text-[#666]">No recent searches</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {recent.slice(0, RECENT_LIMIT).map((term) => (
+                        <button
+                          key={term}
+                          type="button"
+                          onClick={() => navigateToCategory(term)}
+                          className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
+                          title={term}
+                        >
+                          {clampText(term, 26)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {showTypedResults && (
+              <div className="max-h-[420px] overflow-y-auto">
+                {loading ? (
+                  <div className="flex items-center gap-2 px-4 py-4 text-[#666]">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-[13px]">Loading…</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="px-4 py-3 border-b border-[#eee]">
+                      <span className="text-[14px] font-bold text-[#666]">Suggestions</span>
+                    </div>
+
+                    <ol className="m-0 list-none p-0">
+                      {(aiTags?.length ? aiTags : []).map((item, idx) => (
+                        <li key={`${item}-${idx}`}>
+                          <button
+                            type="button"
+                            onClick={() => navigateToCategory(item)}
+                            className="flex w-full items-center px-4 py-2 text-left text-[14px] transition-colors hover:bg-[#f1f3f5]"
+                            title={item}
+                          >
+                            <Search size={14} className="mr-3 text-[#666]" />
+                            <span className="truncate">{item}</span>
+                          </button>
+                        </li>
+                      ))}
+
+                      {query.trim().length >= 3 && aiTags.length === 0 && (
+                        <li className="px-4 py-2 text-[13px] text-[#666]">No suggestions found</li>
+                      )}
+                    </ol>
+
+                    <div className="px-4 py-3 border-t border-[#eee]">
+                      <span className="text-[14px] font-bold text-[#666]">Products</span>
+                    </div>
+
+                    <div className="px-2 pb-2">
+                      {realProducts.length === 0 ? (
+                        <div className="px-2 py-2 text-[13px] text-[#666]">No products found</div>
+                      ) : (
+                        <ul className="m-0 list-none p-0">
+                          {realProducts.map((p) => (
+                            <li key={`${p.source}-${p.product_url}`}>
+                              <button
+                                type="button"
+                                onClick={() => navigateToProduct(p)}
+                                className="flex w-full items-center gap-3 rounded px-2 py-2 text-left transition-colors hover:bg-[#f1f3f5]"
+                                title={p.product_name}
+                              >
+                                <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded border border-[#E0E0E0] bg-white">
+                                  <Image src={p.image_url} alt={p.product_name} fill className="object-contain" />
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate text-[14px] font-medium">{p.product_name}</div>
+                                  <div className="truncate text-[12px] text-[#666]">
+                                    {p.source} • {p.price}
+                                  </div>
+                                </div>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       <SkipLinks />
 
       <header className="z-40 text-white [&_a:hover]:no-underline">
         <div className="bg-[#0A3761]">
-          <div className="mx-auto max-w-[1280px] px-3">
-            <div className="grid h-[40px] grid-cols-[1fr_auto_1fr] items-center">
-              <div />
-              <ul
-                id="i-header-navigation"
-                className="flex h-full items-center justify-center gap-0"
-                role="menu"
-              >
-                <li role="none" className="h-full">
-                  <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide">
-                    {t("header.navigation.shopping")}
-                    <span className="absolute bottom-[8px] left-3 right-3 h-[3px] bg-[#FF6600]" />
-                  </span>
-                </li>
-                <li role="none" className="h-full">
-                  <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide cursor-not-allowed opacity-90">
-                    {t("header.navigation.flight")}
-                  </span>
-                </li>
-                <li role="none" className="h-full">
-                  <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide cursor-not-allowed opacity-90">
-                    {t("header.navigation.magazine")}
-                  </span>
-                </li>
-              </ul>
+          {isHome && (
+            <div className="border-b border-white/10">
+              <div className="mx-auto max-w-[1280px] px-3">
+                <div className="grid h-[40px] grid-cols-[1fr_auto_1fr] items-center">
+                  <div />
+                  <ul id="i-header-navigation" className="flex h-full items-center justify-center gap-0" role="menu">
+                    <li role="none" className="h-full">
+                      <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide">
+                        {t("header.navigation.shopping")}
+                        <span className="absolute bottom-[8px] left-3 right-3 h-[3px] bg-[#FF6600]" />
+                      </span>
+                    </li>
+                    <li role="none" className="h-full">
+                      <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide cursor-not-allowed opacity-90">
+                        {t("header.navigation.flight")}
+                      </span>
+                    </li>
+                    <li role="none" className="h-full">
+                      <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide cursor-not-allowed opacity-90">
+                        {t("header.navigation.magazine")}
+                      </span>
+                    </li>
+                  </ul>
 
-              <div className="flex items-center justify-end gap-2">
-                <span className="hidden md:inline text-[13px] font-semibold opacity-95">
-                  {t("header.sustainability")} {t("header.atIdealo") ?? ""}
-                </span>
-                <div className="flex items-center gap-1">
-                  <div className="flex h-6 w-6 items-center justify-center rounded bg-[#2E7D32] cursor-not-allowed">
-                    <Leaf size={14} className="text-white fill-white" />
+                  <div className="hidden md:flex items-center justify-end gap-2">
+                    <span className="text-[13px] font-semibold opacity-95">
+                      {t("header.sustainability")} {t("header.atIdealo") ?? ""}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <div className="flex h-6 w-6 items-center justify-center rounded bg-[#2E7D32] cursor-not-allowed">
+                        <Leaf size={14} className="text-white fill-white" />
+                      </div>
+                      <div className="flex h-6 w-6 items-center justify-center rounded bg-[#2E7D32] cursor-not-allowed">
+                        <Leaf size={14} className="text-white fill-white" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex h-6 w-6 items-center justify-center rounded bg-[#2E7D32] cursor-not-allowed">
-                    <Leaf size={14} className="text-white fill-white" />
-                  </div>
+
+                  <div className="md:hidden" />
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="border-t border-white/10">
-            <div className="mx-auto max-w-[1280px] px-3 py-3">
+          <div className="mx-auto max-w-[1280px] px-3">
+            <div className="py-3 lg:py-4">
               <div className="hidden lg:flex items-center gap-6">
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10"
-                    aria-label="Menu"
-                  >
-                    <Menu size={22} />
-                  </button>
-
-                  <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">                    <div className="leading-none">
+                <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">
+                  <div className="leading-none">
                     <div className="text-[40px] font-bold tracking-tight text-white">idealo</div>
                     <div className="mt-1 h-[5px] w-[92px] bg-[#FF6600]" />
                   </div>
-                  </Link>
-                </div>
+                </Link>
 
-                <div className="min-w-0 flex-1 relative z-50" ref={dropdownRef}>
-                  <form
-                    id="i-header-search"
-                    role="search"
-                    className="relative"
-                    autoComplete="off"
-                    onSubmit={handleSubmit}
-                  >
-                    <Input
-                      type="text"
-                      placeholder={t("header.search.placeholder")}
-                      value={query}
-                      dir={direction}
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setIsOpen(true);
-                      }}
-                      onFocus={() => setIsOpen(true)}
-                      className="h-[44px] w-full rounded-[4px] border-0 bg-white pl-4 pr-[84px] text-[16px] text-[#212121] shadow-none focus-visible:ring-0"
-                    />
-
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                      {query && (
-                        <button
-                          type="button"
-                          onClick={() => setQuery("")}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-[#666] hover:bg-black/5"
-                          aria-label="Clear search"
-                        >
-                          <X size={18} />
-                        </button>
-                      )}
-                      <button
-                        type="submit"
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D0D0D0] text-[#BDBDBD] hover:border-[#FF6600] hover:text-[#FF6600] bg-white"
-                        aria-label={t("header.search.searchButton")}
-                      >
-                        <Search size={20} />
-                      </button>
-                    </div>
-                  </form>
-
-                  {isOpen && <div className="fixed inset-0 bg-black/50" onClick={close} aria-hidden="true" />}
-
-                  {isOpen && (
-                    <div
-                      className={`absolute top-[calc(100%-4px)] ${direction === "rtl" ? "right-0" : "left-0"
-                        } w-full overflow-hidden rounded-b-[4px] bg-white text-[#212121] shadow-lg`}
-                    >
-                      {showPopularAndRecent && (
-                        <>
-                          <div className="px-4 py-3 border-b border-[#eee]">
-                            <span className="text-[14px] font-bold text-[#666]">Popular searches</span>
-                          </div>
-
-                          <div className="px-4 py-3">
-                            <div className="flex flex-wrap gap-2">
-                              {popularSearches.map((term) => (
-                                <button
-                                  key={term}
-                                  type="button"
-                                  onClick={() => navigateToCategory(term)}
-                                  className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
-                                  title={term}
-                                >
-                                  {clampText(term, 26)}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="px-4 py-3 border-t border-[#eee]">
-                            <span className="text-[14px] font-bold text-[#666]">Recently searched</span>
-                          </div>
-
-                          <div className="px-4 pb-4">
-                            {recent.length === 0 ? (
-                              <div className="py-2 text-[13px] text-[#666]">No recent searches</div>
-                            ) : (
-                              <div className="flex flex-wrap gap-2">
-                                {recent.slice(0, RECENT_LIMIT).map((term) => (
-                                  <button
-                                    key={term}
-                                    type="button"
-                                    onClick={() => navigateToCategory(term)}
-                                    className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
-                                    title={term}
-                                  >
-                                    {clampText(term, 26)}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
-
-                      {showTypedResults && (
-                        <div className="max-h-[420px] overflow-y-auto">
-                          {loading ? (
-                            <div className="flex items-center gap-2 px-4 py-4 text-[#666]">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <span className="text-[13px]">Loading…</span>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="px-4 py-3 border-b border-[#eee]">
-                                <span className="text-[14px] font-bold text-[#666]">Suggestions</span>
-                              </div>
-
-                              <ol className="m-0 list-none p-0">
-                                {(aiTags?.length ? aiTags : []).map((item, idx) => (
-                                  <li key={`${item}-${idx}`}>
-                                    <button
-                                      type="button"
-                                      onClick={() => navigateToCategory(item)}
-                                      className="flex w-full items-center px-4 py-2 text-left text-[14px] transition-colors hover:bg-[#f1f3f5]"
-                                      title={item}
-                                    >
-                                      <Search size={14} className="mr-3 text-[#666]" />
-                                      <span className="truncate">{item}</span>
-                                    </button>
-                                  </li>
-                                ))}
-
-                                {query.trim().length >= 3 && aiTags.length === 0 && (
-                                  <li className="px-4 py-2 text-[13px] text-[#666]">No suggestions found</li>
-                                )}
-                              </ol>
-
-                              <div className="px-4 py-3 border-t border-[#eee]">
-                                <span className="text-[14px] font-bold text-[#666]">Products</span>
-                              </div>
-
-                              <div className="px-2 pb-2">
-                                {realProducts.length === 0 ? (
-                                  <div className="px-2 py-2 text-[13px] text-[#666]">No products found</div>
-                                ) : (
-                                  <ul className="m-0 list-none p-0">
-                                    {realProducts.map((p) => (
-                                      <li key={`${p.source}-${p.product_url}`}>
-                                        <button
-                                          type="button"
-                                          onClick={() => navigateToProduct(p)}
-                                          className="flex w-full items-center gap-3 rounded px-2 py-2 text-left transition-colors hover:bg-[#f1f3f5]"
-                                          title={p.product_name}
-                                        >
-                                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded border border-[#E0E0E0] bg-white">
-                                            <Image src={p.image_url} alt={p.product_name} fill className="object-contain" />
-                                          </div>
-
-                                          <div className="min-w-0 flex-1">
-                                            <div className="truncate text-[14px] font-medium">{p.product_name}</div>
-                                            <div className="truncate text-[12px] text-[#666]">
-                                              {p.source} • {p.price}
-                                            </div>
-                                          </div>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div className="min-w-0 flex-1">
+                  <SearchField variant="desktop" />
                 </div>
 
                 <div className="flex items-center gap-0">
@@ -528,38 +554,50 @@ export default function Header() {
 
                   <div className="mx-3 h-7 w-px bg-white/25" />
 
-                  <span className="flex items-center gap-2 rounded px-3 py-2 cursor-not-allowed opacity-90 select-none">
-                    <Bell size={22} />
-                    <span className="text-[14px] font-semibold">Price alert</span>
-                  </span>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 cursor-not-allowed opacity-95"
+                    aria-label="Notepad"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <Heart size={22} />
+                    <span className="text-[14px] font-semibold">Notepad</span>
+                  </button>
 
                   <div className="mx-3 h-7 w-px bg-white/25" />
 
-                  <span className="flex items-center gap-2 rounded px-3 py-2 cursor-not-allowed opacity-90 select-none">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 cursor-not-allowed opacity-95"
+                    aria-label="Price alert"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <Bell size={22} />
+                    <span className="text-[14px] font-semibold">Price alert</span>
+                  </button>
+
+                  <div className="mx-3 h-7 w-px bg-white/25" />
+
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 cursor-not-allowed opacity-95"
+                    aria-label="Register"
+                    onClick={(e) => e.preventDefault()}
+                  >
                     <User size={22} />
                     <span className="text-[14px] font-semibold">Register</span>
-                  </span>
+                  </button>
                 </div>
               </div>
 
               <div className="lg:hidden">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10"
-                      aria-label="Menu"
-                    >
-                      <Menu size={22} />
-                    </button>
-
-                    <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">
-                      <div className="leading-none">
-                        <div className="text-[34px] font-bold tracking-tight">idealo</div>
-                        <div className="mt-1 h-[5px] w-[78px] bg-[#FF6600]" />
-                      </div>
-                    </Link>
-                  </div>
+                  <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">
+                    <div className="leading-none">
+                      <div className="text-[34px] font-bold tracking-tight">idealo</div>
+                      <div className="mt-1 h-[5px] w-[78px] bg-[#FF6600]" />
+                    </div>
+                  </Link>
 
                   <div className="flex items-center gap-2">
                     <Link
@@ -572,7 +610,7 @@ export default function Header() {
 
                     <button
                       type="button"
-                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-90"
+                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-95"
                       aria-label={t("header.userActions.wishlist")}
                       onClick={(e) => e.preventDefault()}
                     >
@@ -581,7 +619,7 @@ export default function Header() {
 
                     <button
                       type="button"
-                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-90"
+                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-95"
                       aria-label="Price alert"
                       onClick={(e) => e.preventDefault()}
                     >
@@ -590,7 +628,7 @@ export default function Header() {
 
                     <button
                       type="button"
-                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-90"
+                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-95"
                       aria-label="Register"
                       onClick={(e) => e.preventDefault()}
                     >
@@ -603,179 +641,18 @@ export default function Header() {
                   </div>
                 </div>
 
-                <div className="mt-3 relative z-50" ref={dropdownRef}>
-                  <form id="i-header-search" role="search" className="relative" autoComplete="off" onSubmit={handleSubmit}>
-                    <Input
-                      type="text"
-                      placeholder={t("header.search.placeholder")}
-                      value={query}
-                      dir={direction}
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setIsOpen(true);
-                      }}
-                      onFocus={() => setIsOpen(true)}
-                      className="h-[46px] w-full rounded-[4px] border-0 bg-white pl-4 pr-[84px] text-[16px] text-[#212121] shadow-none focus-visible:ring-0"
-                    />
-
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                      {query && (
-                        <button
-                          type="button"
-                          onClick={() => setQuery("")}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-[#666] hover:bg-black/5"
-                          aria-label="Clear search"
-                        >
-                          <X size={18} />
-                        </button>
-                      )}
-                      <button
-                        type="submit"
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#FF6600] text-[#FF6600] hover:bg-[#FF6600] hover:text-white"
-                        aria-label={t("header.search.searchButton")}
-                      >
-                        <Search size={20} />
-                      </button>
-                    </div>
-                  </form>
-
-                  {isOpen && <div className="fixed inset-0 bg-black/50" onClick={close} aria-hidden="true" />}
-
-                  {isOpen && (
-                    <div
-                      className={`absolute top-[calc(100%-4px)] ${direction === "rtl" ? "right-0" : "left-0"
-                        } w-full overflow-hidden rounded-b-[4px] bg-white text-[#212121] shadow-lg`}
-                    >
-                      {showPopularAndRecent && (
-                        <>
-                          <div className="px-4 py-3 border-b border-[#eee]">
-                            <span className="text-[14px] font-bold text-[#666]">Popular searches</span>
-                          </div>
-
-                          <div className="px-4 py-3">
-                            <div className="flex flex-wrap gap-2">
-                              {popularSearches.map((term) => (
-                                <button
-                                  key={term}
-                                  type="button"
-                                  onClick={() => navigateToCategory(term)}
-                                  className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
-                                  title={term}
-                                >
-                                  {clampText(term, 26)}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="px-4 py-3 border-t border-[#eee]">
-                            <span className="text-[14px] font-bold text-[#666]">Recently searched</span>
-                          </div>
-
-                          <div className="px-4 pb-4">
-                            {recent.length === 0 ? (
-                              <div className="py-2 text-[13px] text-[#666]">No recent searches</div>
-                            ) : (
-                              <div className="flex flex-wrap gap-2">
-                                {recent.slice(0, RECENT_LIMIT).map((term) => (
-                                  <button
-                                    key={term}
-                                    type="button"
-                                    onClick={() => navigateToCategory(term)}
-                                    className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
-                                    title={term}
-                                  >
-                                    {clampText(term, 26)}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
-
-                      {showTypedResults && (
-                        <div className="max-h-[420px] overflow-y-auto">
-                          {loading ? (
-                            <div className="flex items-center gap-2 px-4 py-4 text-[#666]">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <span className="text-[13px]">Loading…</span>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="px-4 py-3 border-b border-[#eee]">
-                                <span className="text-[14px] font-bold text-[#666]">Suggestions</span>
-                              </div>
-
-                              <ol className="m-0 list-none p-0">
-                                {(aiTags?.length ? aiTags : []).map((item, idx) => (
-                                  <li key={`${item}-${idx}`}>
-                                    <button
-                                      type="button"
-                                      onClick={() => navigateToCategory(item)}
-                                      className="flex w-full items-center px-4 py-2 text-left text-[14px] transition-colors hover:bg-[#f1f3f5]"
-                                      title={item}
-                                    >
-                                      <Search size={14} className="mr-3 text-[#666]" />
-                                      <span className="truncate">{item}</span>
-                                    </button>
-                                  </li>
-                                ))}
-
-                                {query.trim().length >= 3 && aiTags.length === 0 && (
-                                  <li className="px-4 py-2 text-[13px] text-[#666]">No suggestions found</li>
-                                )}
-                              </ol>
-
-                              <div className="px-4 py-3 border-t border-[#eee]">
-                                <span className="text-[14px] font-bold text-[#666]">Products</span>
-                              </div>
-
-                              <div className="px-2 pb-2">
-                                {realProducts.length === 0 ? (
-                                  <div className="px-2 py-2 text-[13px] text-[#666]">No products found</div>
-                                ) : (
-                                  <ul className="m-0 list-none p-0">
-                                    {realProducts.map((p) => (
-                                      <li key={`${p.source}-${p.product_url}`}>
-                                        <button
-                                          type="button"
-                                          onClick={() => navigateToProduct(p)}
-                                          className="flex w-full items-center gap-3 rounded px-2 py-2 text-left transition-colors hover:bg-[#f1f3f5]"
-                                          title={p.product_name}
-                                        >
-                                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded border border-[#E0E0E0] bg-white">
-                                            <Image src={p.image_url} alt={p.product_name} fill className="object-contain" />
-                                          </div>
-
-                                          <div className="min-w-0 flex-1">
-                                            <div className="truncate text-[14px] font-medium">{p.product_name}</div>
-                                            <div className="truncate text-[12px] text-[#666]">
-                                              {p.source} • {p.price}
-                                            </div>
-                                          </div>
-                                        </button>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <SearchField variant="mobile" />
               </div>
             </div>
+          </div>
 
-            <div className="bg-[#2F5672]">
+          {isHome && (
+            <div className="border-t border-white/10 bg-[#2F5672]">
               <div className="mx-auto max-w-[1280px] px-3">
                 <div className="relative flex items-stretch">
                   <div
                     ref={categoriesRef}
-                    className="flex w-full gap-0 overflow-x-auto py-2 pl-10 pr-10 hide-scrollbar"
+                    className="flex w-full items-stretch gap-0 overflow-x-auto py-2 pl-10 pr-10 hide-scrollbar"
                     role="navigation"
                     aria-label="Categories"
                   >
@@ -786,47 +663,44 @@ export default function Header() {
                           key={c.label}
                           type="button"
                           onClick={() => navigateToCategory(c.label)}
-                          className="min-w-[108px] flex-shrink-0 px-2 py-2 text-center hover:bg-white/10"
+                          className="min-w-[102px] flex-shrink-0 px-2 py-2 text-center hover:bg-white/10"
                         >
                           <div className="mx-auto flex h-6 w-6 items-center justify-center">
-                            <Icon size={22} className={c.active ? "text-white" : "text-white"} />
+                            <Icon size={22} className="text-white" />
                           </div>
-                          <div className="mt-1 text-[12px] font-semibold leading-4 text-white">
-                            {c.label}
-                          </div>
-                          {c.active && <div className="mx-auto mt-1 h-[3px] w-8 bg-[#FF6600]" />}
+                          <div className="mt-1 text-[12px] font-semibold leading-4 text-white">{c.label}</div>
+                          {c.active && <div className="mx-auto mt-1 h-[3px] w-9 bg-[#FF6600]" />}
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 z-10 bg-gradient-to-r from-[#2F5672] to-transparent">
+                  <div className="lg:hidden pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 z-10 bg-gradient-to-r from-[#2F5672] to-transparent">
                     <button
                       type="button"
                       onClick={scrollCategoriesLeft}
-                      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded bg-white/10 hover:bg-white/15"
+                      className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded bg-white/10 hover:bg-white/15"
                       aria-label="Scroll categories left"
                     >
-                      <ChevronRight className="rotate-180" size={20} />
+                      <ChevronRight className="rotate-180" size={22} />
                     </button>
                   </div>
 
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 z-10 bg-gradient-to-l from-[#2F5672] to-transparent">
+                  <div className="lg:hidden pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 z-10 bg-gradient-to-l from-[#2F5672] to-transparent">
                     <button
                       type="button"
                       onClick={scrollCategoriesRight}
-                      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded bg-white/10 hover:bg-white/15"
+                      className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded bg-white/10 hover:bg-white/15"
                       aria-label="Scroll categories right"
                     >
-                      <ChevronRight size={20} />
+                      <ChevronRight size={22} />
                     </button>
                   </div>
                 </div>
               </div>
+              <div className="h-[1px] bg-black/10" />
             </div>
-
-            <div className="h-[1px] bg-black/10" />
-          </div>
+          )}
         </div>
       </header>
     </>
