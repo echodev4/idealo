@@ -73,8 +73,9 @@ export default function BestsellersCarousel({
         const el = ref.current;
         if (!el) return;
         const amount = Math.round(el.clientWidth * 0.85);
+        const maxScroll = el.scrollWidth - el.clientWidth;
         const next = dir === "left" ? el.scrollLeft - amount : el.scrollLeft + amount;
-        el.scrollTo({ left: clamp(next, 0, el.scrollWidth), behavior: "smooth" });
+        el.scrollTo({ left: clamp(next, 0, maxScroll), behavior: "smooth" });
     };
 
     const onWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
@@ -108,16 +109,25 @@ export default function BestsellersCarousel({
         dragging.current = false;
     };
 
+    const scrollerClass =
+        "flex overflow-x-auto gap-4 pb-3 select-none scroll-smooth touch-pan-x overscroll-x-contain " +
+        "[scrollbar-width:none] [-ms-overflow-style:none] " +
+        "[&::-webkit-scrollbar]:h-0 [&::-webkit-scrollbar]:bg-transparent " +
+        "group-hover:[scrollbar-width:thin] group-hover:[&::-webkit-scrollbar]:h-[8px] " +
+        "[&::-webkit-scrollbar-track]:bg-transparent " +
+        "[&::-webkit-scrollbar-thumb]:bg-[#9AA6B2]/70 [&::-webkit-scrollbar-thumb]:rounded-full " +
+        "group-hover:[&::-webkit-scrollbar-thumb]:bg-[#9AA6B2]/90";
+
     return (
         <section className="bg-[#DCEAF6] py-10">
-            <div className="container max-w-[1280px] mx-auto">
+            <div className="max-w-[1280px] mx-auto px-3 lg:px-0">
                 <h2 className="text-[22px] font-bold text-[#212121] mb-4 leading-[1.25] m-0">
                     {fallbackTitle}
                 </h2>
 
-                <div className="relative">
+                <div className="relative group">
                     {loading ? (
-                        <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar">
+                        <div className={scrollerClass}>
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <div
                                     key={i}
@@ -134,7 +144,7 @@ export default function BestsellersCarousel({
                     ) : (
                         <div
                             ref={ref}
-                            className="flex overflow-x-auto gap-4 pb-3 hide-scrollbar select-none scroll-smooth touch-pan-x overscroll-x-contain"
+                            className={scrollerClass}
                             onWheel={onWheel}
                             onPointerDown={onPointerDown}
                             onPointerMove={onPointerMove}
@@ -194,15 +204,7 @@ export default function BestsellersCarousel({
 
                                         <div className="mt-auto">
                                             <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none">
-                                                {grade ? (
-                                                    <span className="text-[12px] px-2 py-1 rounded-full bg-[#EBF5FB] text-[#0474BA]">
-                                                        Average grade {grade}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[12px] px-2 py-1 rounded-full bg-[#F1F3F5] text-[#666666]">
-                                                        Rating
-                                                    </span>
-                                                )}
+                                                
 
                                                 <div className="flex items-center gap-0.5">
                                                     {Array.from({ length: 5 }).map((_, i) => (
@@ -236,10 +238,11 @@ export default function BestsellersCarousel({
                         <button
                             type="button"
                             aria-label="Previous"
-                            className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 bg-[#AEB7C2] items-center justify-center z-20
+              opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                             onClick={() => scrollByAmount("left")}
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={22} className="text-white" />
                         </button>
                     )}
 
@@ -247,10 +250,11 @@ export default function BestsellersCarousel({
                         <button
                             type="button"
                             aria-label="Next"
-                            className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 bg-[#AEB7C2] items-center justify-center z-20
+              opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                             onClick={() => scrollByAmount("right")}
                         >
-                            <ChevronRight size={20} />
+                            <ChevronRight size={22} className="text-white" />
                         </button>
                     )}
                 </div>

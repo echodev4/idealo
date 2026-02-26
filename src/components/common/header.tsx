@@ -345,7 +345,7 @@ export default function Header() {
         )}
         {isOpen && (
           <div
-                ref={dropdownPanelRef}
+            ref={dropdownPanelRef}
 
             className={`absolute z-40 top-[calc(100%-4px)] ${direction === "rtl" ? "right-0" : "left-0"
               } w-full overflow-hidden rounded-b-[4px] bg-white text-[#212121] shadow-lg`}
@@ -607,24 +607,6 @@ export default function Header() {
                     >
                       <CreditCard size={22} />
                     </Link>
-
-                    <button
-                      type="button"
-                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-95"
-                      aria-label={t("header.userActions.wishlist")}
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Heart size={22} />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-95"
-                      aria-label="Price alert"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Bell size={22} />
-                    </button>
 
                     <button
                       type="button"
