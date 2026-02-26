@@ -39,6 +39,8 @@ export default function BestsellersCarousel({
 
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
+    const [thumbLeft, setThumbLeft] = useState(0);
+    const [thumbWidth, setThumbWidth] = useState(0);
 
     const updateArrows = () => {
         const el = ref.current;
@@ -50,6 +52,20 @@ export default function BestsellersCarousel({
 
         setCanLeft(left > eps);
         setCanRight(left < maxScroll - eps);
+
+        if (el.scrollWidth <= el.clientWidth || maxScroll <= 0) {
+            setThumbLeft(0);
+            setThumbWidth(0);
+            return;
+        }
+
+        const ratio = el.clientWidth / el.scrollWidth;
+        const w = Math.max(64, Math.round(el.clientWidth * ratio));
+        const maxLeft = el.clientWidth - w;
+        const l = Math.round((left / maxScroll) * maxLeft);
+
+        setThumbWidth(w);
+        setThumbLeft(l);
     };
 
     useEffect(() => {
@@ -110,20 +126,14 @@ export default function BestsellersCarousel({
     };
 
     const scrollerClass =
-        "flex overflow-x-auto gap-4 pb-3 select-none scroll-smooth touch-pan-x overscroll-x-contain " +
-        "[scrollbar-width:none] [-ms-overflow-style:none] " +
-        "[&::-webkit-scrollbar]:h-0 [&::-webkit-scrollbar]:bg-transparent " +
-        "group-hover:[scrollbar-width:thin] group-hover:[&::-webkit-scrollbar]:h-[8px] " +
-        "[&::-webkit-scrollbar-track]:bg-transparent " +
-        "[&::-webkit-scrollbar-thumb]:bg-[#9AA6B2]/70 [&::-webkit-scrollbar-thumb]:rounded-full " +
-        "group-hover:[&::-webkit-scrollbar-thumb]:bg-[#9AA6B2]/90";
+        "flex overflow-x-auto gap-4 pb-4 select-none scroll-smooth touch-pan-x overscroll-x-contain " +
+        "[-ms-overflow-style:none] [scrollbar-width:none] " +
+        "[&::-webkit-scrollbar]:hidden";
 
     return (
         <section className="bg-[#DCEAF6] py-10">
             <div className="max-w-[1280px] mx-auto px-3 lg:px-0">
-                <h2 className="text-[22px] font-bold text-[#212121] mb-4 leading-[1.25] m-0">
-                    {fallbackTitle}
-                </h2>
+                <h2 className="text-[22px] font-bold text-[#212121] mb-4 leading-[1.25] m-0">{fallbackTitle}</h2>
 
                 <div className="relative group">
                     {loading ? (
@@ -131,13 +141,15 @@ export default function BestsellersCarousel({
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <div
                                     key={i}
-                                    className="flex-none w-[220px] sm:w-[240px] bg-white border border-[#E0E0E0] rounded-[4px] shadow-card p-4 h-[360px] animate-pulse"
+                                    className="flex-none w-[220px] sm:w-[240px] bg-white border border-[#E0E0E0] rounded-[4px] shadow-card overflow-hidden h-[360px] animate-pulse"
                                 >
-                                    <div className="h-[190px] bg-[#F1F3F5] rounded mb-4" />
-                                    <div className="h-4 w-20 bg-[#E9ECEF] rounded mb-2" />
-                                    <div className="h-5 w-full bg-[#E9ECEF] rounded mb-2" />
-                                    <div className="h-4 w-3/4 bg-[#E9ECEF] rounded mb-4" />
-                                    <div className="h-6 w-24 bg-[#E9ECEF] rounded" />
+                                    <div className="h-[210px] bg-[#F1F3F5]" />
+                                    <div className="p-4">
+                                        <div className="h-4 w-20 bg-[#E9ECEF] rounded mb-2" />
+                                        <div className="h-5 w-full bg-[#E9ECEF] rounded mb-2" />
+                                        <div className="h-4 w-3/4 bg-[#E9ECEF] rounded mb-4" />
+                                        <div className="h-6 w-24 bg-[#E9ECEF] rounded" />
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -157,7 +169,6 @@ export default function BestsellersCarousel({
                                 const price = parsePriceToNumber(p.price);
                                 const encodedUrl = encodeURIComponent(p.product_url);
 
-                                const grade = idx % 3 === 0 ? "1.4" : idx % 3 === 1 ? "1.5" : "";
                                 const starsFilled = 4;
                                 const count = "10";
 
@@ -167,65 +178,66 @@ export default function BestsellersCarousel({
                                         href={`/product/${encodedUrl}?product_name=${encodeURIComponent(name)}&source=${encodeURIComponent(
                                             p.source
                                         )}`}
-                                        className="flex-none w-[230px] sm:w-[250px] bg-white border border-[#E0E0E0] rounded-[4px] shadow-card p-4 flex flex-col relative no-underline hover:no-underline"
+                                        className="flex-none w-[230px] sm:w-[250px] border border-[#DADADA] rounded-[4px] shadow-card overflow-hidden flex flex-col no-underline hover:no-underline bg-white"
                                     >
-                                        <button
-                                            type="button"
-                                            aria-label="Wishlist"
-                                            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border border-[#E0E0E0] flex items-center justify-center text-[#0474BA]"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                            }}
-                                        >
-                                            <Heart size={20} strokeWidth={2} />
-                                        </button>
+                                        <div className="relative bg-[#F1F3F5] px-4 pt-4 pb-2">
+                                            <button
+                                                type="button"
+                                                aria-label="Wishlist"
+                                                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border border-[#E0E0E0] flex items-center justify-center text-[#0B62B3]"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                }}
+                                            >
+                                                <Heart size={20} strokeWidth={2} />
+                                            </button>
 
-                                        <div className="relative h-[190px] w-full mb-3 flex items-center justify-center">
-                                            <Image
-                                                src={p.image_url}
-                                                alt={name}
-                                                fill
-                                                sizes="(max-width: 640px) 70vw, 240px"
-                                                className="object-contain"
-                                            />
+                                            <div className="relative h-[170px] w-full flex items-center justify-center">
+                                                <Image
+                                                    src={p.image_url}
+                                                    alt={name}
+                                                    fill
+                                                    sizes="(max-width: 640px) 70vw, 240px"
+                                                    className="object-contain"
+                                                />
+                                            </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
-                                                featured
-                                            </span>
-                                            <span className="text-[#666666] text-[14px] truncate">in {p.source}</span>
-                                        </div>
-
-                                        <div className="text-[#212121] text-[14px] leading-[1.35] font-normal line-clamp-2 min-h-[38px] mb-3">
-                                            {name}
-                                        </div>
-
-                                        <div className="mt-auto">
-                                            <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none">
-                                                
-
-                                                <div className="flex items-center gap-0.5">
-                                                    {Array.from({ length: 5 }).map((_, i) => (
-                                                        <Star
-                                                            key={i}
-                                                            size={13}
-                                                            fill={i < starsFilled ? "#212121" : "none"}
-                                                            color={i < starsFilled ? "#212121" : "#CFCFCF"}
-                                                            strokeWidth={2}
-                                                        />
-                                                    ))}
-                                                </div>
-
-                                                <span className="text-[12px] text-[#666666]">{count}</span>
+                                        <div className="bg-white px-4 pt-3 pb-4 flex flex-col flex-1">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
+                                                    featured
+                                                </span>
+                                                <span className="text-[#666666] text-[14px] truncate">in {p.source}</span>
                                             </div>
 
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-[14px] text-[#666666]">from</span>
-                                                <span className="text-[18px] font-bold text-[#212121]">
-                                                    {price !== null ? `AED ${price}` : `AED ${p.price}`}
-                                                </span>
+                                            <div className="text-[#212121] text-[14px] leading-[1.35] font-normal line-clamp-2 min-h-[38px] mb-3">
+                                                {name}
+                                            </div>
+
+                                            <div className="mt-auto">
+                                                <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none">
+                                                    <div className="flex items-center gap-0.5">
+                                                        {Array.from({ length: 5 }).map((_, i) => (
+                                                            <Star
+                                                                key={i}
+                                                                size={13}
+                                                                fill={i < starsFilled ? "#212121" : "none"}
+                                                                color={i < starsFilled ? "#212121" : "#CFCFCF"}
+                                                                strokeWidth={2}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-[12px] text-[#666666]">{count}</span>
+                                                </div>
+
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-[14px] text-[#666666]">from</span>
+                                                    <span className="text-[18px] font-bold text-[#212121]">
+                                                        {price !== null ? `AED ${price}` : `AED ${p.price}`}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </Link>
@@ -234,15 +246,25 @@ export default function BestsellersCarousel({
                         </div>
                     )}
 
+                    {thumbWidth > 0 && (
+                        <div className="pointer-events-none hidden md:block absolute left-0 right-0 bottom-[2px] h-[14px] opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] bg-transparent" />
+                            <div
+                                className="absolute top-1/2 h-[6px] -translate-y-1/2 rounded-full bg-[#8E9AA6]/70"
+                                style={{ width: thumbWidth, transform: `translateX(${thumbLeft}px) translateY(-50%)` }}
+                            />
+                        </div>
+                    )}
+
                     {canLeft && (
                         <button
                             type="button"
                             aria-label="Previous"
-                            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 bg-[#AEB7C2] items-center justify-center z-20
+                            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20
               opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                             onClick={() => scrollByAmount("left")}
                         >
-                            <ChevronLeft size={22} className="text-white" />
+                            <ChevronLeft size={26} className="text-white" />
                         </button>
                     )}
 
@@ -250,11 +272,11 @@ export default function BestsellersCarousel({
                         <button
                             type="button"
                             aria-label="Next"
-                            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 bg-[#AEB7C2] items-center justify-center z-20
+                            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20
               opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                             onClick={() => scrollByAmount("right")}
                         >
-                            <ChevronRight size={22} className="text-white" />
+                            <ChevronRight size={26} className="text-white" />
                         </button>
                     )}
                 </div>

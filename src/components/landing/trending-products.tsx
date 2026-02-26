@@ -66,14 +66,14 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
         if (!el) return;
 
         const onScroll = () => update();
-        const onResize = () => update();
+        const ro = new ResizeObserver(() => update());
 
         el.addEventListener("scroll", onScroll, { passive: true });
-        window.addEventListener("resize", onResize);
+        ro.observe(el);
 
         return () => {
             el.removeEventListener("scroll", onScroll);
-            window.removeEventListener("resize", onResize);
+            ro.disconnect();
         };
     }, [ref]);
 
@@ -88,22 +88,25 @@ export default function TrendingProducts() {
     const ref = useRef<HTMLDivElement | any>(null);
     const { canLeft, canRight, scrollBy } = useHorizontalScroll(ref);
 
+    const scrollerClass =
+        "flex gap-8 overflow-x-auto pb-3 scroll-smooth touch-pan-x overscroll-x-contain " +
+        "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
     return (
         <section className="bg-white py-8">
-            <div className="container max-w-[1280px] mx-auto px-3 lg:px-0">
-                <h2 className="text-[20px] font-bold text-[#212121] mb-4">
-                    Currently trending
-                </h2>
+            <div className="max-w-[1280px] mx-auto px-3 lg:px-0">
+                <h2 className="text-[20px] font-bold text-[#212121] mb-4">Currently trending</h2>
 
-                <div className="relative">
+                <div className="relative group">
                     {canLeft && (
                         <button
                             type="button"
                             aria-label="Previous"
-                            onClick={() => scrollBy(-420)}
-                            className="hidden md:flex absolute left-[-14px] top-[86px] w-8 h-8 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                            onClick={() => scrollBy(-520)}
+                            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center bg-[#AEB7C2] z-20
+    opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={22} className="text-white" />
                         </button>
                     )}
 
@@ -111,31 +114,29 @@ export default function TrendingProducts() {
                         <button
                             type="button"
                             aria-label="Next"
-                            onClick={() => scrollBy(420)}
-                            className="hidden md:flex absolute right-[-14px] top-[86px] w-8 h-8 bg-white border border-[#DEE2E6] rounded-full shadow-md items-center justify-center z-20 hover:bg-[#F1F3F5]"
+                            onClick={() => scrollBy(520)}
+                            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center bg-[#AEB7C2] z-20
+    opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                         >
-                            <ChevronRight size={20} />
+                            <ChevronRight size={22} className="text-white" />
                         </button>
                     )}
 
-                    <div
-                        ref={ref}
-                        className="flex gap-6 overflow-x-auto pb-2 hide-scrollbar scroll-smooth touch-pan-x overscroll-x-contain"
-                    >
+                    <div ref={ref} className={scrollerClass}>
                         {trendingItems.map((item) => (
                             <Link
                                 key={item.slug}
                                 href={`/category/${encodeURIComponent(item.slug)}`}
-                                className="flex-none w-[150px] md:w-[170px] no-underline hover:no-underline"
+                                className="flex-none w-[170px] md:w-[185px] no-underline hover:no-underline"
                             >
-                                <div className="w-full aspect-square rounded-[999px] bg-[#F5F5F5] flex items-center justify-center overflow-hidden">
-                                    <div className="relative w-[110px] h-[110px] md:w-[120px] md:h-[120px]">
+                                <div className="mx-auto h-[132px] w-[132px] md:h-[140px] md:w-[140px] rounded-full bg-[#F2F2F2] flex items-center justify-center overflow-hidden">
+                                    <div className="relative h-[86px] w-[110px] md:h-[92px] md:w-[118px]">
                                         <Image
                                             src={item.image}
                                             alt={item.name}
                                             fill
-                                            sizes="170px"
-                                            className="object-contain"
+                                            sizes="185px"
+                                            className="object-contain mix-blend-multiply"
                                         />
                                     </div>
                                 </div>
