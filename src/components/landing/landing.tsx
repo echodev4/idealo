@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import CategoryBar from "@/components/sections/category-bar";
-import HeroTeaser from "@/components/sections/hero-teaser";
-import NewsletterCTA from "@/components/sections/newsletter-cta";
-import BestsellersCarousel from "@/components/sections/bestsellers-carousel";
-import RelatedCategories from "@/components/sections/related-categories";
-import TrendingProducts from "@/components/sections/trending-products";
-import FlightsDeals from "@/components/sections/flights-deals";
-import TransparencyTrust from "@/components/sections/transparency-trust";
+import HeroTeaser from "@/components/landing/hero-teaser";
+import NewsletterCTA from "@/components/landing/newsletter-cta";
+import BestsellersCarousel from "@/components/landing/bestsellers-carousel";
+import RelatedCategories from "@/components/landing/related-categories";
+import TrendingProducts from "@/components/landing/trending-products";
 
 type LandingProduct = {
     _id: string;
@@ -94,8 +91,6 @@ export default function Landing() {
                 <NewsletterCTA />
                 <RelatedCategories products={data.fashionProducts} loading={loading} />
                 <TrendingProducts />
-                <FlightsDeals />
-                <TransparencyTrust />
             </main>
 
         </div>

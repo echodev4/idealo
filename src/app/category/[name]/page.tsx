@@ -3,29 +3,29 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Products from "@/components/sections/products";
-import ProductCardSkeleton from "@/components/sections/skeleton-product-card";
+import Products from "@/components/category/products";
+import ProductCardSkeleton from "@/components/category/skeleton-product-card";
 import { Home, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
 import BabyFilterSidebar, {
   BabyFacetKey,
   BabyFacets,
-} from "@/components/sections/baby-filter-sidebar";
+} from "@/components/category/baby-filter-sidebar";
 
 import MobileFilterSidebar, {
   MobileFacetKey,
   MobileFacets,
-} from "@/components/sections/mobile-filter-sidebar";
+} from "@/components/category/mobile-filter-sidebar";
 
 import FashionFilterSidebar, {
   FashionFacetKey,
   FashionFacets,
-} from "@/components/sections/fashion-filter-sidebar";
+} from "@/components/category/fashion-filter-sidebar";
 
 import PetFilterSidebar, {
   PetFacetKey,
   PetFacets,
-} from "@/components/sections/pet-filter-sidebar";
+} from "@/components/category/pet-filter-sidebar";
 
 type Specs = Record<string, string>;
 

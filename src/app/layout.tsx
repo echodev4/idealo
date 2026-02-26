@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { VisualEditsMessenger } from "orchids-visual-edits";
 import { LanguageProvider } from "@/contexts/language-context";
-import Header from "@/components/sections/header";
-import Footer from "@/components/sections/footer";
+import Header from "@/components/common/header";
+import Footer from "@/components/common/footer";
 
 
 export const metadata: Metadata = {
