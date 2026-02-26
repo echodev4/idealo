@@ -135,13 +135,7 @@ function ProductDetailsModal({
                                                 {name}
                                             </Link>
 
-                                            <div className="mt-2 flex items-center gap-2">
-                                                <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[12px] text-gray-600 cursor-not-allowed">
-                                                    Average grade 0.0
-                                                </span>
-                                                <StarsDisabled />
-                                                <span className="text-[12px] text-gray-500 cursor-not-allowed">(0)</span>
-                                            </div>
+
                                         </div>
 
                                         <button
@@ -365,13 +359,7 @@ function ProductCellGrid({ product, onOpenDetails }: { product: Product; onOpenD
                     </div>
                 </Link>
 
-                <div className="mt-2 flex items-center gap-2 text-[12px] text-gray-600 cursor-not-allowed">
-                    <span>Average grade 0.0</span>
-                    <StarsDisabled />
-                    <span className="text-gray-500">(0)</span>
-                </div>
 
-                <div className="mt-1 text-[12px] text-gray-600 cursor-not-allowed">0 offers</div>
 
                 <div className="mt-3">
                     <span className="text-[12px] text-gray-700">from </span>
@@ -432,12 +420,6 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                     </Link>
                     <div className="mt-1 text-[12px] text-gray-600 line-clamp-2 cursor-not-allowed">
                         Ski helmet, all-round, in-mold, with side impact protection (MIPS)
-                    </div>
-
-                    <div className="mt-2 flex items-center gap-2 text-[12px] text-gray-600 cursor-not-allowed">
-                        <span>Average grade 0.0</span>
-                        <StarsDisabled />
-                        <span className="text-gray-500">(0)</span>
                     </div>
 
                     <button

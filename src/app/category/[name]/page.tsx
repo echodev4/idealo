@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Products from "@/components/category/products";
 import ProductCardSkeleton from "@/components/category/skeleton-product-card";
-import { Home, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 
 import BabyFilterSidebar, {
   BabyFacetKey,
@@ -621,101 +620,20 @@ export default function CategoryPage() {
       <div className="max-w-[1280px] mx-auto px-3 lg:px-0 py-5">
         <div className="mb-3 flex items-center gap-2 text-[13px] text-gray-600">
           <Link href="/" className="inline-flex items-center gap-2 text-[#0b63c8] hover:underline">
-            <Home className="h-4 w-4" />
+            <HomeIcon />
           </Link>
-
-          <ChevronRight className="h-4 w-4 text-gray-400" />
-
+          <span className="text-gray-400">
+            <ChevronRightIcon />
+          </span>
           <span className="cursor-not-allowed text-gray-600 capitalize">{searchedName}</span>
         </div>
 
-
-
-        <div className="hidden md:flex items-center justify-between gap-3 mb-3">
-          <div className="mb-3 flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-[28px] font-semibold leading-tight text-gray-900 capitalize">{searchedName}</h1>
-              <div className="mt-1 text-[14px] text-gray-600">{sortedProducts.length} products found</div>
-              <div className="mb-3 flex flex-col gap-2 md:hidden">
-                <div className="flex items-center justify-between gap-2">
-                  {filterMode !== "none" ? (
-                    <button
-                      onClick={() => setIsSidebarOpen(true)}
-                      className="h-10 rounded border border-[#cfd6dd] bg-white px-4 text-[13px] font-medium text-[#0b63c8] hover:bg-[#f2f6fb]"
-                    >
-                      Filters
-                    </button>
-                  ) : (
-                    <div />
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    <div ref={sortRef} className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setSortOpen((v) => !v)}
-                        className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
-                      >
-                        <span className="text-[#0b63c8]">{sortLabel}</span>
-                        {sortOpen ? (
-                          <ChevronUp className="h-4 w-4 text-gray-500" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-gray-500" />
-                        )}                      </button>
-
-                      {sortOpen ? (
-                        <div className="absolute right-0 top-[44px] z-30 w-[240px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-                          {[
-                            { k: "popular", t: "Most popular first" },
-                            { k: "savings", t: "Biggest savings first" },
-                            { k: "cheap", t: "Price: Cheapest first" },
-                            { k: "high", t: "Price: Highest first" },
-                            { k: "new", t: "Newest first" },
-                          ].map((o) => {
-                            const active = sortKey === (o.k as SortKey);
-                            return (
-                              <button
-                                key={o.k}
-                                type="button"
-                                onClick={() => {
-                                  setSortKey(o.k as SortKey);
-                                  setSortOpen(false);
-                                }}
-                                className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                                  }`}
-                              >
-                                <span>{o.t}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="flex items-center overflow-hidden rounded border border-[#cfd6dd] bg-white">
-                      <button
-                        type="button"
-                        onClick={() => setViewMode("grid")}
-                        className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                          }`}
-                      >
-                        <GridIcon active={viewMode === "grid"} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setViewMode("list")}
-                        className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                          }`}
-                      >
-                        <ListIcon active={viewMode === "list"} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-[28px] font-semibold leading-tight text-gray-900 capitalize">{searchedName}</h1>
+            <div className="mt-1 text-[14px] text-gray-600">{sortedProducts.length} products found</div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <div ref={sortRef} className="relative">
               <button
                 type="button"
@@ -723,11 +641,8 @@ export default function CategoryPage() {
                 className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
               >
                 <span className="text-[#0b63c8]">{sortLabel}</span>
-                {sortOpen ? (
-                  <ChevronUp className="h-4 w-4 text-gray-500" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
-                )}              </button>
+                <span className="text-gray-500">▾</span>
+              </button>
 
               {sortOpen ? (
                 <div className="absolute right-0 top-[44px] z-30 w-[260px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
@@ -779,6 +694,80 @@ export default function CategoryPage() {
           </div>
         </div>
 
+        <div className="mb-3 flex flex-col gap-2 md:hidden">
+          <div className="flex items-center justify-between gap-2">
+            {filterMode !== "none" ? (
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="h-10 rounded border border-[#cfd6dd] bg-white px-4 text-[13px] font-medium text-[#0b63c8] hover:bg-[#f2f6fb]"
+              >
+                Filters
+              </button>
+            ) : (
+              <div />
+            )}
+
+            <div className="flex items-center gap-2">
+              <div ref={sortRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setSortOpen((v) => !v)}
+                  className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
+                >
+                  <span className="text-[#0b63c8]">{sortLabel}</span>
+                  <span className="text-gray-500">▾</span>
+                </button>
+
+                {sortOpen ? (
+                  <div className="absolute right-0 top-[44px] z-30 w-[240px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+                    {[
+                      { k: "popular", t: "Most popular first" },
+                      { k: "savings", t: "Biggest savings first" },
+                      { k: "cheap", t: "Price: Cheapest first" },
+                      { k: "high", t: "Price: Highest first" },
+                      { k: "new", t: "Newest first" },
+                    ].map((o) => {
+                      const active = sortKey === (o.k as SortKey);
+                      return (
+                        <button
+                          key={o.k}
+                          type="button"
+                          onClick={() => {
+                            setSortKey(o.k as SortKey);
+                            setSortOpen(false);
+                          }}
+                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                            }`}
+                        >
+                          <span>{o.t}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="flex items-center overflow-hidden rounded border border-[#cfd6dd] bg-white">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                    }`}
+                >
+                  <GridIcon active={viewMode === "grid"} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                    }`}
+                >
+                  <ListIcon active={viewMode === "list"} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="flex gap-4">
           {filterMode === "mobile" && (
@@ -849,8 +838,11 @@ export default function CategoryPage() {
             />
           )}
 
-          <main className="min-w-0 flex-1">
 
+          <main className="min-w-0 flex-1">
+            <div className="hidden md:flex items-center justify-between gap-3">
+
+            </div>
 
             {loading ? (
               <div className="w-full bg-[#cfd6dd] p-px">
@@ -866,48 +858,48 @@ export default function CategoryPage() {
               <>
                 <Products products={paginatedProducts as any} landingPage={false} view={viewMode} />
 
-                {totalPages > 1 ? (
-                  <div className="mt-6 flex items-center justify-end gap-2">
-                    <div className="flex items-center gap-2">
-                      {pageButtons.map((t, idx) => {
-                        if (t === "…") {
-                          return (
-                            <div key={`e-${idx}`} className="h-10 w-10 grid place-items-center text-[14px] text-gray-500">
-                              …
-                            </div>
-                          );
-                        }
-                        const page = Number(t);
-                        const active = page === currentPage;
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`h-10 w-10 rounded border text-sm font-medium ${active ? "bg-[#0b63c8] text-white border-[#0b63c8]" : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
-                              }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
-                        ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
-                        : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
-                        }`}
-                      disabled={currentPage === totalPages}
-                    >
-                      →
-                    </button>
-                  </div>
-                ) : null}
               </>
             )}
           </main>
         </div>
+            {totalPages > 1 ? (
+              <div className="mt-6 flex items-center justify-end gap-2">
+                <div className="flex items-center gap-2">
+                  {pageButtons.map((t, idx) => {
+                    if (t === "…") {
+                      return (
+                        <div key={`e-${idx}`} className="h-10 w-10 grid place-items-center text-[14px] text-gray-500">
+                          …
+                        </div>
+                      );
+                    }
+                    const page = Number(t);
+                    const active = page === currentPage;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-10 w-10 rounded border text-sm font-medium ${active ? "bg-[#0b63c8] text-white border-[#0b63c8]" : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
+                    ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
+                    : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
+                    }`}
+                  disabled={currentPage === totalPages}
+                >
+                  →
+                </button>
+              </div>
+            ) : null}
       </div>
     </div>
   );
