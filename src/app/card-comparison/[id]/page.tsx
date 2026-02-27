@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import ApplyCardModal from "@/components/apply/ApplyCardModal";
+import ApplyCardModal from "@/components/card-comparison/ApplyCardModal";
 import Link from "next/link";
 import {
     ChevronRight,

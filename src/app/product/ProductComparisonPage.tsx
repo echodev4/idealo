@@ -1,12 +1,12 @@
 "use client";
 
 import { ProductProvider } from "@/context/ProductContext";
-import ProductGallery from "@/components/product/product-gallery";
-import ProductHeaderInfo from "@/components/product/product-header-info";
-import ProductVariantsSelector from "@/components/product/product-variants-selector"
-import PriceWidgetSidebar from "@/components/product/price-widget-sidebar";
-import OfferComparisonTable from "@/components/product/offer-comparison-table"
-import ProductDetailsSpecifications from "@/components/product/product-details-specifications"
+import ProductGallery from "@/components/single-product/product-gallery";
+import ProductHeaderInfo from "@/components/single-product/product-header-info";
+import ProductVariantsSelector from "@/components/single-product/product-variants-selector"
+import PriceWidgetSidebar from "@/components/single-product/price-widget-sidebar";
+import OfferComparisonTable from "@/components/single-product/offer-comparison-table"
+import ProductDetailsSpecifications from "@/components/single-product/product-details-specifications"
 
 interface Props {
   productUrl: string;

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeroTitle from "@/components/sections/page-hero-title";
-import CardSelectionModal from "@/components/sections/card-selection-modal";
-import ComparisonGridSection from "@/components/sections/comparison-grid-section";
-import CardBrowseSection from "@/components/sections/card-browse-section";
-import ApplyCardModal from "@/components/apply/ApplyCardModal";
+import PageHeroTitle from "@/components/card-comparison/page-hero-title";
+import CardSelectionModal from "@/components/card-comparison/card-selection-modal";
+import ComparisonGridSection from "@/components/card-comparison/comparison-grid-section";
+import CardBrowseSection from "@/components/card-comparison/card-browse-section";
+import ApplyCardModal from "@/components/card-comparison/ApplyCardModal";
 import type { CardData } from "@/types/card";
 
 type Card = {

@@ -67,7 +67,6 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
         setSubmitted(true);
         if (Object.keys(errors).length > 0) return;
 
-        console.log("APPLICATION (UI ONLY)", { cardId: card._id, ...form });
         onClose();
     };
 

@@ -306,7 +306,6 @@ export default function Header() {
             value={query}
             dir={direction}
             onChange={(e) => {
-              console.log(e.target.value);
               setQuery(e.target.value);
               setIsOpen(true);
             }}
