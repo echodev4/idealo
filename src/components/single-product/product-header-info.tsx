@@ -1,232 +1,114 @@
 "use client";
 
-import { Heart } from "lucide-react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import * as React from "react";
+import { Heart, Home } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
+import { cn } from "@/lib/utils";
+
+function parseRating(v: any): number {
+  const n = Number(v);
+  if (Number.isNaN(n)) return 0;
+  return Math.max(0, Math.min(5, n));
+}
+
+function parseReviewCount(v: any): string | null {
+  if (!v) return null;
+  return String(v);
+}
+
+function Stars({ value }: { value: number }) {
+  const full = Math.floor(value);
+  const half = value - full >= 0.5;
+  return (
+    <div className="flex items-center gap-[2px] leading-none">
+      {Array.from({ length: 5 }).map((_, i) => {
+        const filled = i < full;
+        const isHalf = i === full && half;
+        return (
+          <span
+            key={i}
+            className={cn("text-[14px] leading-none", filled ? "text-black" : "text-[#cbd5e1]")}
+            aria-hidden
+          >
+            {isHalf ? "★" : "★"}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 const ProductHeaderInfoSkeleton = () => {
   return (
     <div className="w-full animate-pulse">
-      {/* Title + Heart */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="h-8 w-3/4 bg-muted rounded" />
-        <div className="w-10 h-10 bg-muted rounded-full" />
-      </div>
-
-      {/* Offers line */}
-      <div className="mt-2 h-4 w-48 bg-muted rounded" />
-
-      {/* Energy label */}
-      <div className="my-4 h-7 w-10 bg-muted rounded" />
-
-      {/* Product overview */}
-      <div className="mt-2 space-y-2">
-        <div className="h-4 w-full bg-muted rounded" />
-        <div className="h-4 w-[90%] bg-muted rounded" />
-      </div>
-
-      {/* Similar products */}
-      <div className="mt-4">
-        <div className="h-4 w-32 bg-muted rounded mb-2" />
-        <div className="flex flex-wrap gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-6 w-20 bg-muted rounded-sm"
-            />
-          ))}
-        </div>
-      </div>
+      <div className="h-3 w-2/3 bg-muted rounded" />
+      <div className="mt-3 h-7 w-4/5 bg-muted rounded" />
+      <div className="mt-2 h-4 w-56 bg-muted rounded" />
+      <div className="mt-3 h-4 w-full bg-muted rounded" />
+      <div className="mt-2 h-4 w-[90%] bg-muted rounded" />
     </div>
   );
 };
 
-
-/* =========================
-   Helpers
-========================= */
-
-function parseAEDPrice(price: string): number | null {
-  if (!price) return null;
-  const numeric = price.replace(/[^\d.]/g, "");
-  const value = Number(numeric);
-  return isNaN(value) ? null : value;
-}
-
-function shortenTitle(title: string, words = 5): string {
-  const split = title.split(" ");
-  if (split.length <= words) return title;
-  return split.slice(0, words).join(" ") + " ...";
-}
-
-/* =========================
-   Component
-========================= */
-
-const ProductHeaderInfo = () => {
-
-  const { relatedProducts, relatedLoading, product, loading } = useProduct();
+export default function ProductHeaderInfo() {
+  const { product, loading, relatedProducts, relatedLoading } = useProduct();
 
   if (loading || relatedLoading) {
     return <ProductHeaderInfoSkeleton />;
   }
 
-
-  /* -------- Offers & Prices -------- */
-  const prices = relatedProducts
-    .map((p) => parseAEDPrice(p.price))
-    .filter((p): p is number => p !== null);
-
-  const minPrice = prices.length ? Math.min(...prices) : null;
-  const maxPrice = prices.length ? Math.max(...prices) : null;
-
-  /* -------- Overview specs (first 4, key + value) -------- */
-  const specs = Object.entries(product.specifications || {}) as [string, string][];
-  const visibleSpecs = specs.slice(0, 4);
-
-  /* -------- Similar relatedProducts -------- */
-  const similarProducts = relatedProducts
-    .filter(
-      (p) =>
-        p.product_name &&
-        p.product_name.length < product.title.length
-    )
-    .slice(0, 5)
-    .map((p) => ({
-      fullName: p.product_name,
-      shortName: shortenTitle(p.product_name, 5),
-      href: p.product_url,
-    }));
-
-  function shortenHighlight(text: string, maxChars = 70): string {
-    if (!text) return "";
-    if (text.length <= maxChars) return text;
-    return text.slice(0, maxChars).trimEnd() + " ...";
-  }
-
-  /* -------- Highlights (first 5) -------- */
-  const highlights = ((product.highlights ?? []) as string[])
-    .slice(0, 5)
-    .map((h) => ({
-      full: h,
-      short: shortenHighlight(h, 70),
-    }));
-
-
-
+  const ratingValue = parseRating(relatedProducts?.[0]?.average_rating);
+  const reviewsCount = parseReviewCount(relatedProducts?.[0]?.reviews);
 
   return (
     <div className="w-full">
-      {/* TITLE */}
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="text-text-primary text-[28px] font-bold leading-[1.2]">
-          {product.title}
-        </h1>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full flex-shrink-0 w-10 h-10 border-border bg-transparent hover:bg-secondary"
-        >
-          <Heart className="w-5 h-5 text-muted-foreground" />
-        </Button>
-      </div>
-
-      {/* OFFERS */}
-      {minPrice !== null && maxPrice !== null && (
-        <div className="mt-2">
-          <span className="text-brand-blue-light text-sm">
-            {relatedProducts.length} Offers: AED {minPrice.toLocaleString()} – AED{" "}
-            {maxPrice.toLocaleString()}
+      
+      <div className="mt-2 lg:mt-0 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center h-8 px-4 rounded-full bg-[#fbbf24] text-[#111827] text-[13px] font-semibold cursor-not-allowed select-none">
+            No variant selected.
           </span>
         </div>
-      )}
 
-      {/* ENERGY LABEL */}
-      {
-        visibleSpecs?.length ?
-          <a href="#" className="block my-4">
-            <Image
-              src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/8d3a1cc2-409a-47cb-abb2-a933b24d9e94-idealo-de/assets/svgs/A-Right-WithAGScale-2.svg?"
-              alt="Energy efficiency class"
-              width={39}
-              height={28}
-              unoptimized
-            />
-          </a> : null
-      }
+        <button
+          type="button"
+          onClick={(e) => e.preventDefault()}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#d1d5db] bg-white text-[#1a73e8] cursor-not-allowed"
+        >
+          <Heart className="w-5 h-5" />
+        </button>
+      </div>
 
-      {/* PRODUCT OVERVIEW */}
-      {
-        visibleSpecs.length ?
-          <div className="text-sm leading-relaxed text-text-primary">
-            <span className="font-bold">Product overview:</span>
-            <span className="ml-1">
-              {visibleSpecs.map(([key, value], index) => (
-                <span key={key}>
-                  <span className="font-medium">{key}:</span> {value}
-                  {index < specs.length - 1 && (
-                    <span className="text-muted-foreground mx-1.5"> • </span>
-                  )}
-                </span>
-              ))}
-              <a
-                href="#specifications"
-                className="text-brand-blue-light hover:underline ml-1.5 whitespace-nowrap"
-              >
-                Product details
-              </a>
-            </span>
-          </div> : null
-      }
+      <h1 className="mt-3 text-[#111827] text-[26px] lg:text-[28px] font-semibold leading-[1.15]">
+        {product?.title}
+      </h1>
 
-      {/* SIMILAR PRODUCTS */}
-      {similarProducts.length > 0 && (
-        <div className="mt-4">
-          <p className="text-sm font-bold text-text-primary">
-            Similar products:
-          </p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {similarProducts.map((product) => (
-              <p
-                key={product.fullName}
-                title={product.fullName}
-                className="bg-secondary text-brand-blue-light cursor-pointer text-[13px] rounded-sm px-2 py-1"
-                onClick={() => window.open(product.href, "__blank")}
-              >
-                {product.shortName}
-              </p>
-            ))}
-          </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#111827]">
+        <span className="text-[#374151]">10 product reviews:</span>
+        <div className="flex items-center gap-2">
+          <Stars value={ratingValue} />
+          <span className="text-[#111827]">{reviewsCount ? `(${reviewsCount})` : "(—)"}</span>
         </div>
-      )}
+        <span className="text-[#6b7280]">2 test reports:</span>
+        <span className="font-semibold">Average grade 2.0</span>
+      </div>
 
-      {/* HIGHLIGHTS */}
-      {highlights.length > 0 && (
-        <div className="mt-4">
-          <p className="text-sm font-bold text-text-primary">
-            Highlights:
-          </p>
+      <div className="mt-3 text-[13px] leading-[1.55] text-[#111827]">
+        <span className="font-semibold">Product overview:</span>
+        <span className="ml-1 text-[#374151]">
+          men&apos;s synthetic shoes · intended use: competition · neutral · drop: 6 mm · men&apos;s{" "}
+          <a href="#specifications" className="text-[#1a73e8] hover:underline">
+            product details
+          </a>
+        </span>
+      </div>
 
-          <div className="flex flex-wrap gap-2 mt-2">
-            {highlights.map((h, idx) => (
-              <p
-                key={idx}
-                title={h.full}
-                className="bg-secondary text-text-primary cursor-default text-[13px] rounded-sm px-2 py-1"
-              >
-                {h.short}
-              </p>
-            ))}
-
-          </div>
-        </div>
-      )}
-
+      <div className="mt-2 text-[13px] leading-[1.55] text-[#111827]">
+        <span className="font-semibold">Similar products:</span>{" "}
+        <a href="#" onClick={(e) => e.preventDefault()} className="text-[#1a73e8] hover:underline cursor-not-allowed">
+          {relatedProducts?.length ? `${relatedProducts.length.toLocaleString()} products` : "products"}
+        </a>
+      </div>
     </div>
   );
-};
-
-export default ProductHeaderInfo;
-
+}

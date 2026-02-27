@@ -2,13 +2,9 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Check } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
-
-/* =========================
-   Helpers
-========================= */
 
 function parseAEDPrice(price: string): number | null {
     if (!price) return null;
@@ -17,247 +13,184 @@ function parseAEDPrice(price: string): number | null {
     return isNaN(value) ? null : value;
 }
 
-function extractStorage(name: string): string | null {
-    const match = name.match(/(\d+)\s?GB/i);
-    return match ? `${match[1]}GB` : null;
+function truncate(s: string, n: number) {
+    if (!s) return "";
+    if (s.length <= n) return s;
+    return s.slice(0, n).trimEnd() + "...";
 }
-
-function extractColor(name: string): string | null {
-    const parts = name.split(",");
-    return parts.length >= 3 ? parts[2].trim() : null;
-}
-
-/* =========================
-   Component
-========================= */
 
 const ProductVariantsSelectorSkeleton = () => {
     return (
-        <section className="bg-white p-4 sm:p-6 rounded-lg mt-6 animate-pulse">
-            {/* Heading */}
-            <div className="h-6 w-28 bg-muted rounded mb-4" />
-
-            <div className="relative">
-                <div className="flex overflow-x-auto space-x-3 pb-4">
-                    {/* All variants card skeleton */}
-                    <div className="flex-shrink-0 w-[140px] h-[190px] border border-border rounded-lg p-3 flex flex-col justify-between text-center">
-                        <div className="grid grid-cols-2 gap-1 mb-2 h-[68px]">
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="w-[30px] h-[40px] bg-muted rounded mx-auto"
-                                />
-                            ))}
-                        </div>
-
-                        <div className="flex-grow flex flex-col justify-center">
-                            <div className="h-4 w-20 bg-muted rounded mx-auto mb-2" />
-                            <div className="h-5 w-24 bg-muted rounded mx-auto" />
-                        </div>
-                    </div>
-
-                    {/* Variant cards skeleton */}
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="flex-shrink-0 w-[140px] h-[190px] border border-border rounded-lg p-3 flex flex-col items-center justify-between text-center"
-                        >
-                            {/* Discount badge placeholder */}
-                            <div className="absolute top-0 left-0 h-4 w-10 bg-muted rounded-tl-md rounded-br-md" />
-
-                            {/* Image */}
-                            <div className="w-full h-[80px] flex items-center justify-center">
-                                <div className="w-[50px] h-[80px] bg-muted rounded" />
-                            </div>
-
-                            {/* Name */}
-                            <div className="h-[42px] w-full flex items-center justify-center">
-                                <div className="h-4 w-24 bg-muted rounded" />
-                            </div>
-
-                            {/* Price */}
-                            <div className="mt-1">
-                                <div className="h-3 w-12 bg-muted rounded mx-auto mb-1" />
-                                <div className="h-5 w-20 bg-muted rounded mx-auto" />
-                            </div>
-                        </div>
-                    ))}
-                </div>
+        <section className="mt-4 animate-pulse">
+            <div className="h-4 w-56 bg-muted rounded" />
+            <div className="mt-3 flex gap-3 overflow-hidden">
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="w-[170px] h-[220px] bg-muted rounded" />
+                ))}
             </div>
+            <div className="mt-3 h-2 w-[360px] bg-muted rounded" />
         </section>
     );
 };
 
-const ProductVariantsSelector = () => {
+export default function ProductVariantsSelector() {
     const { relatedProducts, relatedLoading } = useProduct();
+    const [selectedIdx, setSelectedIdx] = React.useState(0);
+    const scrollerRef = React.useRef<HTMLDivElement | null>(null);
 
-    const [selectedKey, setSelectedKey] = React.useState<string | null>(null);
+    if (relatedLoading) return <ProductVariantsSelectorSkeleton />;
+    if (!relatedProducts?.length) return null;
 
-    /* -------- Build variants -------- */
-    const variantsMap = new Map<
-        string,
-        {
-            key: string;
-            name: string;
-            imageUrl: string;
-            prices: number[];
-        }
-    >();
+    const items = relatedProducts
+        .map((p) => {
+            const price = parseAEDPrice(p.price);
+            if (price === null) return null;
+            return {
+                key: p._id || p.product_url,
+                name: p.product_name,
+                imageUrl: p.image_url,
+                price,
+            };
+        })
+        .filter(Boolean) as { key: string; name: string; imageUrl: string; price: number }[];
 
-    relatedProducts.forEach((product) => {
-        const storage = extractStorage(product.product_name);
-        const color = extractColor(product.product_name);
-        const price = parseAEDPrice(product.price);
+    if (!items.length) return null;
 
-        if (!storage || !color || price === null) return;
+    const minPrice = Math.min(...items.map((i) => i.price));
 
-        const key = `${storage}_${color}`;
+    const scrollByAmount = (dir: "left" | "right") => {
+        const el = scrollerRef.current;
+        if (!el) return;
+        const amount = 5 * 170 + 4 * 12;
+        el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    };
 
-        if (!variantsMap.has(key)) {
-            variantsMap.set(key, {
-                key,
-                name: `${storage} ${color}`,
-                imageUrl: product.image_url,
-                prices: [price],
-            });
-        } else {
-            variantsMap.get(key)!.prices.push(price);
-        }
-    });
-
-    const variants = Array.from(variantsMap.values()).map((v) => {
-        const minPrice = Math.min(...v.prices);
-        const maxPrice = Math.max(...v.prices);
-
-        return {
-            ...v,
-            price: minPrice,
-            discount:
-                maxPrice > minPrice
-                    ? `-${Math.round(((maxPrice - minPrice) / maxPrice) * 100)}%`
-                    : null,
-        };
-    });
-
-    const cheapestPrice = Math.min(...variants.map((v) => v.price));
-
-
-    /* -------- Set default selection safely -------- */
-    React.useEffect(() => {
-        if (!selectedKey && variants.length) {
-            const cheapest = variants.reduce((a, b) =>
-                a.price < b.price ? a : b
-            );
-            setSelectedKey(cheapest.key);
-        }
-    }, [variants, selectedKey]);
-
-    /* -------- Loading -------- */
-    if (relatedLoading) {
-        return <ProductVariantsSelectorSkeleton />;
-    }
-
-    if (!variants.length) return null;
+    const allThumbs = items.slice(0, 4);
 
     return (
-        <section className="bg-white p-4 sm:p-6 rounded-lg mt-6">
-            <h2 className="text-xl font-semibold text-text-primary mb-4">
-                Variant:
-            </h2>
+        <section className="mt-4">
+            <div className="flex items-center justify-between gap-4">
+                <div className="text-[14px] text-[#111827]">
+                    <span className="font-semibold">{items.length} variants</span>{" "}
+                    <span className="text-[#6b7280]">from</span>{" "}
+                    <span className="font-semibold text-[#f97316]">AED {minPrice.toLocaleString()}</span>
+                </div>
 
-            <div className="relative">
-                <div className="flex overflow-x-auto space-x-3 pb-4">
+                <button
+                    type="button"
+                    onClick={(e) => e.preventDefault()}
+                    className="inline-flex items-center justify-center h-9 px-6 rounded border border-[#1a73e8] text-[#1a73e8] bg-white text-[13px] font-semibold cursor-not-allowed"
+                >
+                    filter
+                </button>
+            </div>
+
+            <div className="mt-3 relative">
+                <button
+                    type="button"
+                    onClick={() => scrollByAmount("left")}
+                    className="hidden lg:flex items-center justify-center absolute -left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-[#e5e7eb] shadow-sm hover:border-[#cbd5e1]"
+                    aria-label="Scroll left"
+                >
+                    <ChevronLeft className="w-5 h-5 text-[#374151]" />
+                </button>
+
+                <div
+                    ref={scrollerRef}
+                    className={cn(
+                        "flex gap-3 overflow-x-auto pb-3 pr-2",
+                        "[scrollbar-width:thin] [scrollbar-color:#9ca3af_#e5e7eb]"
+                    )}
+                >
                     <a
                         href="#"
                         onClick={(e) => e.preventDefault()}
-                        className="flex-shrink-0 w-[140px] h-[190px] border border-border rounded-lg p-3 flex flex-col justify-between text-center hover:shadow-md transition-shadow"
+                        className="relative flex-shrink-0 w-[170px] h-[220px] rounded border border-[#1a73e8] bg-white"
                     >
-                        <div className="grid grid-cols-2 gap-1 mb-2 h-[68px]">
-                            {variants.slice(0, 4).map((v) => (
-                                <Image
-                                    key={v.key}
-                                    src={v.imageUrl}
-                                    alt={v.name}
-                                    width={30}
-                                    height={40}
-                                    className="object-contain mx-auto"
-                                />
-                            ))}
+                        <div className="absolute top-0 left-0 w-0 h-0 border-t-[28px] border-t-[#1a73e8] border-r-[28px] border-r-transparent" />
+                        <div className="absolute top-[5px] left-[5px] text-white">
+                            <Check className="w-4 h-4" />
                         </div>
 
-                        <div className="flex-grow flex flex-col justify-center">
-                            <span className="text-sm font-semibold text-text-primary">
-                                All variants
-                            </span>
-                            <div className="text-sm mt-1">
-                                <span className="text-text-secondary text-xs">from</span>
-                                <p className="font-bold text-accent-orange text-lg">
-                                    AED {cheapestPrice.toLocaleString()}
-                                </p>
+                        <div className="px-3 pt-3">
+                            <div className="grid grid-cols-2 gap-2">
+                                {allThumbs.map((t) => (
+                                    <div
+                                        key={t.key}
+                                        className="relative aspect-[4/3] rounded bg-[#f3f4f6] border border-[#e5e7eb] overflow-hidden"
+                                    >
+                                        <Image src={t.imageUrl} alt={t.name} fill className="object-contain p-1.5" sizes="70px" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="px-3 pt-3">
+                            <div className="text-[13px] font-semibold text-[#111827]">All variants</div>
+                            <div className="mt-2 text-[12px] text-[#6b7280]">from</div>
+                            <div className="text-[18px] font-semibold text-[#f97316] leading-none">
+                                AED {minPrice.toLocaleString()}
                             </div>
                         </div>
                     </a>
 
-                    {/* VARIANT CARDS */}
-                    {variants.map((variant) => {
-                        const selected = variant.key === selectedKey;
-
+                    {items.map((item, idx) => {
+                        const selected = idx === selectedIdx;
                         return (
                             <a
-                                key={variant.key}
+                                key={item.key}
                                 href="#"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    setSelectedKey(variant.key);
+                                    setSelectedIdx(idx);
                                 }}
                                 className={cn(
-                                    "relative flex-shrink-0 w-[140px] h-[190px] border rounded-lg p-3 flex flex-col items-center justify-between text-center hover:shadow-md transition-shadow",
-                                    selected
-                                        ? "border-2 border-brand-blue-light bg-[#F0F7FF] box-border"
-                                        : "border border-border bg-white"
-
+                                    "relative flex-shrink-0 w-[170px] h-[220px] rounded border bg-white",
+                                    selected ? "border-[#1a73e8]" : "border-[#d1d5db] hover:border-[#9ca3af]"
                                 )}
                             >
-                                {variant.discount && (
-                                    <div className="absolute top-0 left-0 bg-accent-orange text-white text-[10px] font-bold px-2 py-0.5 rounded-tl-md rounded-br-md z-10">
-                                        {variant.discount}
-                                    </div>
-                                )}
+                                {selected ? (
+                                    <>
+                                        <div className="absolute top-0 left-0 w-0 h-0 border-t-[28px] border-t-[#1a73e8] border-r-[28px] border-r-transparent" />
+                                        <div className="absolute top-[5px] left-[5px] text-white">
+                                            <Check className="w-4 h-4" />
+                                        </div>
+                                    </>
+                                ) : null}
 
-                                {selected && (
-                                    <div className="absolute top-1.5 right-1.5 bg-brand-blue-light text-white rounded-full w-5 h-5 flex items-center justify-center z-10">
-                                        <Check size={14} />
+                                <div className="px-3 pt-3">
+                                    <div className="relative w-full h-[92px] rounded bg-[#f3f4f6] border border-[#e5e7eb] overflow-hidden">
+                                        <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-2" sizes="140px" />
                                     </div>
-                                )}
-
-                                <div className="w-full h-[80px] flex items-center justify-center">
-                                    <Image
-                                        src={variant.imageUrl}
-                                        alt={variant.name}
-                                        width={50}
-                                        height={80}
-                                        className="object-contain"
-                                    />
                                 </div>
 
-                                <div className="mt-2 text-sm font-semibold text-text-primary leading-tight h-[42px] flex items-center justify-center">
-                                    {variant.name}
-                                </div>
-
-                                <div className="mt-1">
-                                    <span className="text-text-secondary text-xs">from</span>
-                                    <p className="font-bold text-text-primary text-lg">
-                                        AED {variant.price.toLocaleString()}
-                                    </p>
+                                <div className="px-3 pt-2">
+                                    <div className="text-[12.5px] leading-[1.15] font-semibold text-[#111827] min-h-[34px]">
+                                        {truncate(item.name, 36)}
+                                    </div>
+                                    <div className="mt-2 text-[12px] text-[#6b7280]">from</div>
+                                    <div className="text-[18px] font-semibold text-[#f97316] leading-none">
+                                        AED {item.price.toLocaleString()}
+                                    </div>
                                 </div>
                             </a>
                         );
                     })}
                 </div>
+
+                <button
+                    type="button"
+                    onClick={() => scrollByAmount("right")}
+                    className="hidden lg:flex items-center justify-center absolute -right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-[#e5e7eb] shadow-sm hover:border-[#cbd5e1]"
+                    aria-label="Scroll right"
+                >
+                    <ChevronRight className="w-5 h-5 text-[#374151]" />
+                </button>
+
+                <div className="mt-2 h-[10px] w-full max-w-[420px] bg-[#e5e7eb] rounded overflow-hidden">
+                    <div className="h-full w-[55%] bg-[#9ca3af] rounded" />
+                </div>
             </div>
         </section>
     );
-};
-
-export default ProductVariantsSelector;
-
+}
