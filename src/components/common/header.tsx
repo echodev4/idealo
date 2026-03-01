@@ -105,17 +105,6 @@ function clampText(s: string, max = 34) {
   return `${s.slice(0, max - 1)}…`;
 }
 
-function formatProductPriceAED(price: string) {
-  const raw = String(price ?? "").replace(/,/g, "");
-  const match = raw.match(/\d+(\.\d+)?/);
-  if (!match) return "AED";
-
-  const amount = Number(match[0]);
-  if (!Number.isFinite(amount)) return "AED";
-
-  return `AED ${amount.toLocaleString()}`;
-}
-
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
@@ -287,7 +276,7 @@ export default function Header() {
     categoriesRef.current?.scrollBy({ left: -260, behavior: "smooth" });
   };
 
-  const renderSearchField = (variant: "desktop" | "mobile") => {
+  const SearchField = ({ variant }: { variant: "desktop" | "mobile" }) => {
     const isMobile = variant === "mobile";
     const inputH = isMobile ? "h-[46px]" : "h-[44px]";
     const inputRadius = "rounded-[4px]";
@@ -461,7 +450,7 @@ export default function Header() {
                                 <div className="min-w-0 flex-1">
                                   <div className="truncate text-[14px] font-medium">{p.product_name}</div>
                                   <div className="truncate text-[12px] text-[#666]">
-                                    {p.source} • {formatProductPriceAED(p.price)}
+                                    {p.source} • {p.price}
                                   </div>
                                 </div>
                               </button>
@@ -541,7 +530,7 @@ export default function Header() {
                 </Link>
 
                 <div className="min-w-0 flex-1">
-                  {renderSearchField("desktop")}
+                  <SearchField variant="desktop" />
                 </div>
 
                 <div className="flex items-center gap-0">
@@ -629,7 +618,7 @@ export default function Header() {
                   </div>
                 </div>
 
-                {renderSearchField("mobile")}
+                <SearchField variant="mobile" />
               </div>
             </div>
           </div>

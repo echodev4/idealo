@@ -225,7 +225,7 @@ export default function FashionFilterSidebar<
 
             <aside
                 className={cn(
-                    "fixed md:sticky top-0 left-0 h-screen md:h-auto w-80 md:w-72 bg-white border-r border-border overflow-y-auto z-50 transition-transform duration-300",
+                    "fixed md:sticky top-0 left-0 h-screen md:h-auto w-80 md:w-72 bg-white border-r border-border overflow-y-auto  transition-transform duration-300",
                     isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                 )}
             >
