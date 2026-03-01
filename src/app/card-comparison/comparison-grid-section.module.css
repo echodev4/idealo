@@ -6,7 +6,7 @@
 
 .stickyCardHeader {
     position: sticky;
-    top: calc(var(--site-header-height, 96px) + 8px);
+    top: 0;
     z-index: 20;
     background: white;
 }
