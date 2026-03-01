@@ -1,16 +1,14 @@
 "use client";
 
-import { ProductProvider } from "@/context/ProductContext";
+import Link from "next/link";
+import { Home } from "lucide-react";
+import { ProductProvider, useProduct } from "@/context/ProductContext";
 import ProductGallery from "@/components/single-product/product-gallery";
 import ProductHeaderInfo from "@/components/single-product/product-header-info";
 import ProductVariantsSelector from "@/components/single-product/product-variants-selector";
 import OfferComparisonTable from "@/components/single-product/offer-comparison-table";
 import ProductDetailsSpecifications from "@/components/single-product/product-details-specifications";
 import PriceDevelopmentPanel from "@/components/single-product/price-development-panel";
-import { useProduct } from "@/context/ProductContext";
-import { Home } from "lucide-react";
-
-
 
 interface Props {
   productUrl: string;
@@ -18,62 +16,41 @@ interface Props {
   sourceName?: string;
 }
 
-export default function ProductComparisonPage({
-  productUrl,
-  productName,
-  sourceName,
-}: Props) {
-  const { product, loading, relatedProducts, relatedLoading } = useProduct();
-  console.log(product)
+function ProductTopNav() {
+  const { product, loading } = useProduct();
 
   return (
-    <ProductProvider
-      productUrl={productUrl}
-      productName={productName}
-      sourceName={sourceName}
-    >
-      <div className="hidden lg:flex items-center gap-2 text-[12px] text-[#6b7280]">
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="inline-flex items-center gap-1 hover:underline cursor-not-allowed"
-        >
-          <Home className="w-3.5 h-3.5" />
-        </a>
-        <span className="text-[#9ca3af]">›</span>
-        <a href="#" onClick={(e) => e.preventDefault()} className="hover:underline cursor-not-allowed">
-          Sports &amp; Outdoors
-        </a>
-        <span className="text-[#9ca3af]">›</span>
-        <a href="#" onClick={(e) => e.preventDefault()} className="hover:underline cursor-not-allowed">
-          Sports shoes
-        </a>
-        <span className="text-[#9ca3af]">›</span>
-        <a href="#" onClick={(e) => e.preventDefault()} className="hover:underline cursor-not-allowed">
-          running shoes
-        </a>
-        <span className="text-[#9ca3af]">›</span>
-        <span className="text-[#111827] truncate">{product?.title}</span>
-      </div>
+    <div className="hidden lg:flex items-center gap-2 text-[12px] text-[#6b7280] pt-1 pb-3">
+      <Link href="/" className="inline-flex items-center text-[#111827] hover:text-[#1a73e8]">
+        <Home className="w-3.5 h-3.5" />
+      </Link>
+      <span className="text-[#9ca3af]">›</span>
+      <span className="truncate max-w-[900px] text-[#111827] cursor-not-allowed">
+        {loading ? "Loading..." : product?.title || "Product"}
+      </span>
+    </div>
+  );
+}
 
-      <main className="max-w-[1280px] mx-auto px-3 lg:px-0 pt-2 pb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr_420px] gap-6 lg:gap-10">
+export default function ProductComparisonPage({ productUrl, productName, sourceName }: Props) {
+  return (
+    <ProductProvider productUrl={productUrl} productName={productName} sourceName={sourceName}>
+      <main className="container max-w-[1280px] mx-auto px-3 lg:px-0 pt-2 pb-6">
+        <ProductTopNav />
 
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_280px] gap-6 lg:gap-10">
+          <div className="lg:pt-6">
             <ProductGallery />
           </div>
 
-          <div className="min-w-0">
-            <div className="lg:pt-2">
-              <ProductHeaderInfo />
-            </div>
-
-            <div className="mt-5">
+          <div className="min-w-0 lg:pt-4">
+            <ProductHeaderInfo />
+            <div className="mt-4 lg:mt-5">
               <ProductVariantsSelector />
             </div>
           </div>
 
-          <div className="lg:pt-2">
+          <div className="lg:pt-4">
             <PriceDevelopmentPanel />
           </div>
         </div>
@@ -83,7 +60,7 @@ export default function ProductComparisonPage({
         </div>
       </main>
 
-      <div className="max-w-[1280px] mx-auto px-3 lg:px-0 pb-8">
+      <div className="container max-w-[1280px] mx-auto px-3 lg:px-0 pb-8">
         <div className="max-w-[1216px] mx-auto">
           <ProductDetailsSpecifications />
         </div>
