@@ -148,7 +148,7 @@ function ButtonPill({
 export default function OfferComparisonTable() {
     const { relatedProducts, relatedLoading } = useProduct();
 
-    const [availableImmediately, setAvailableImmediately] = React.useState(true);
+    const [availableImmediately, setAvailableImmediately] = React.useState(false);
     const [noReturnShippingCosts, setNoReturnShippingCosts] = React.useState(false);
     const [sortKey, setSortKey] = React.useState<"price" | "total">("price");
     const [visible, setVisible] = React.useState(10);
@@ -192,7 +192,7 @@ export default function OfferComparisonTable() {
 
     return (
         <section>
-            <div className="max-w-[1216px] mx-auto px-3 lg:px-0 py-6">
+            <div className="py-6">
                 {/* Title */}
                 <div className="text-[28px] font-semibold text-[#111827] mb-4">Price comparison</div>
 
@@ -352,14 +352,22 @@ export default function OfferComparisonTable() {
 
                                             {/* Payment methods */}
                                             <div className="flex items-start gap-2 pt-1">
-                                                {PAYMENT_ICONS.map((p) => (
+                                                {PAYMENT_ICONS.map((p, i) => (
                                                     <div
                                                         key={p.key}
-                                                        className="w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden"
+                                                        className={`w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden ${i > 0 ? "hidden sm:block" : ""
+                                                            }`}
                                                     >
-                                                        <Image src={p.src} alt={p.alt} fill sizes="46px" className="object-contain p-1" />
+                                                        <Image
+                                                            src={p.src}
+                                                            alt={p.alt}
+                                                            fill
+                                                            sizes="46px"
+                                                            className="object-contain p-1"
+                                                        />
                                                     </div>
                                                 ))}
+
                                             </div>
 
                                             {/* Shop & review */}
@@ -426,15 +434,15 @@ export default function OfferComparisonTable() {
                                             </div>
 
                                             <div className="mt-3 flex items-start justify-between gap-3">
-                                                <div className="flex items-center gap-2">
+                                                <div className="min-w-0 flex items-center gap-2">
                                                     <div className="relative w-[120px] h-[40px]">
                                                         <Image src={shop.src} alt={shop.alt} fill sizes="120px" className="object-contain" />
                                                     </div>
                                                     <Rating value={idx % 2 === 0 ? 5.0 : 3.7} />
                                                 </div>
 
-                                                <div className="flex items-center gap-2">
-                                                    {PAYMENT_ICONS.slice(0, 2).map((p) => (
+                                                <div className="shrink-0 flex items-center gap-2">
+                                                    {PAYMENT_ICONS.slice(0, 1).map((p) => (
                                                         <div
                                                             key={p.key}
                                                             className="w-[44px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden"
