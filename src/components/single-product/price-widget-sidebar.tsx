@@ -79,7 +79,7 @@ const PriceWidgetSidebarSkeleton = () => {
    Helpers
 ========================= */
 
-function parseAEDPrice(price) {
+function parseAEDPrice(price: string) {
     if (!price) return null;
     const numeric = price.replace(/[^\d.]/g, "");
     const value = Number(numeric);
@@ -87,7 +87,7 @@ function parseAEDPrice(price) {
 }
 
 /* =========================
-   Static Chart (unchanged)
+   Static Chart 
 ========================= */
 
 const PriceChart = () => (
@@ -196,7 +196,7 @@ const PriceWidgetSidebar = () => {
                                         {cheapest.source}
                                     </a>
 
-                                    {/* STATIC RATING (unchanged) */}
+                                    {/* STATIC RATING */}
                                     <div className="flex items-center gap-1 text-text-secondary">
                                         <div className="flex">
                                             {[...Array(4)].map((_, i) => (

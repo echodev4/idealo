@@ -63,9 +63,7 @@ export default function ProductVariantsSelector() {
         setThumbLeft(left);
     };
 
-    // ✅ Hook must be called every render (no conditional returns before it)
     React.useEffect(() => {
-        // Don't do anything until data is ready (prevents attaching listeners too early)
         if (relatedLoading) return;
         if (!relatedProducts?.length) return;
 

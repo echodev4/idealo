@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Heart, FileText, LineChart, Bell } from "lucide-react";
+import { FileText, LineChart, Bell } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
 import { cn } from "@/lib/utils";
 
@@ -70,33 +70,29 @@ export default function ProductHeaderInfo() {
       <div className="mt-1 text-[13px] font-semibold text-[#111827]">Average grade 2.0</div>
 
       <div className="lg:hidden mt-4 border-t border-[#e5e7eb]">
-        <div className="grid grid-cols-3">
+        <div className="flex divide-x divide-[#e5e7eb]">
           <button
             type="button"
             onClick={(e) => e.preventDefault()}
-            className="flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
+            className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
           >
             <FileText className="w-5 h-5 text-[#111827]" />
             Product details
           </button>
 
-          <div className="w-px bg-[#e5e7eb]" />
-
           <button
             type="button"
             onClick={(e) => e.preventDefault()}
-            className="flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
+            className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
           >
             <LineChart className="w-5 h-5 text-[#111827]" />
             Price history
           </button>
 
-          <div className="w-px bg-[#e5e7eb]" />
-
           <button
             type="button"
             onClick={(e) => e.preventDefault()}
-            className="flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
+            className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
           >
             <Bell className="w-5 h-5 text-[#111827]" />
             Price alert

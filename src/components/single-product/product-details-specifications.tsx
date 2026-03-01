@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
@@ -48,10 +48,15 @@ const ProductDetailsSpecificationsSkeleton = () => {
 const INITIAL_VISIBLE_COUNT = 15;
 
 
+type SpecificationRowProps = {
+    label: React.ReactNode;
+    value: any;
+};
+
 const SpecificationRow = ({
     label,
     value,
-}) => (
+}: SpecificationRowProps) => (
     <div className="flex flex-col sm:flex-row py-3 border-b border-muted gap-2 sm:gap-0">
         <dt className="w-full sm:w-[190px] shrink-0 sm:pr-4 text-sm text-text-secondary">
             {label}
@@ -85,7 +90,7 @@ export default function ProductDetailsSpecifications() {
 
     const image = product.images?.[0];
 
-    if(!specs.length) return null
+    if (!specs.length) return null
 
     return (
         <section
