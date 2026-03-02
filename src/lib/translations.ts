@@ -223,6 +223,17 @@ export const translations: Record<Locale, any> = {
           previous: "Previous",
           next: "Next",
         },
+      }
+    },
+    categoryPage: {
+      productsFound: "products found",
+      filters: "Filters",
+      sort: {
+        popular: "Most popular first",
+        savings: "Biggest savings first",
+        cheap: "Price: Cheapest first",
+        high: "Price: Highest first",
+        newest: "Newest first",
       },
     },
   },
@@ -449,6 +460,17 @@ export const translations: Record<Locale, any> = {
           previous: "السابق",
           next: "التالي",
         },
+      },
+    },
+    categoryPage: {
+      productsFound: "منتج تم العثور عليه",
+      filters: "الفلاتر",
+      sort: {
+        popular: "الأكثر شعبية أولا",
+        savings: "أكبر توفير أولا",
+        cheap: "السعر: الأرخص أولا",
+        high: "السعر: الأعلى أولا",
+        newest: "الأحدث أولا",
       },
     },
   },

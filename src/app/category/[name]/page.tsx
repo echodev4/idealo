@@ -25,6 +25,7 @@ import PetFilterSidebar, {
   PetFacetKey,
   PetFacets,
 } from "@/components/category/pet-filter-sidebar";
+import { useLanguage } from "@/contexts/language-context";
 
 type Specs = Record<string, string>;
 
@@ -214,6 +215,7 @@ function ChevronRightIcon() {
 }
 
 export default function CategoryPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const searchedName = decodeURIComponent(params.name as string);
 
@@ -593,12 +595,12 @@ export default function CategoryPage() {
   }, [sortedProducts, currentPage]);
 
   const sortLabel = useMemo(() => {
-    if (sortKey === "popular") return "Most popular first";
-    if (sortKey === "savings") return "Biggest savings first";
-    if (sortKey === "cheap") return "Price: Cheapest first";
-    if (sortKey === "high") return "Price: Highest first";
-    return "Newest first";
-  }, [sortKey]);
+    if (sortKey === "popular") return t("categoryPage.sort.popular", "Most popular first");
+    if (sortKey === "savings") return t("categoryPage.sort.savings", "Biggest savings first");
+    if (sortKey === "cheap") return t("categoryPage.sort.cheap", "Price: Cheapest first");
+    if (sortKey === "high") return t("categoryPage.sort.high", "Price: Highest first");
+    return t("categoryPage.sort.newest", "Newest first");
+  }, [sortKey, t]);
 
   const pageButtons = useMemo(() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => String(i + 1));
@@ -631,7 +633,9 @@ export default function CategoryPage() {
         <div className="mb-3 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[28px] font-semibold leading-tight text-gray-900 capitalize">{searchedName}</h1>
-            <div className="mt-1 text-[14px] text-gray-600">{sortedProducts.length} products found</div>
+            <div className="mt-1 text-[14px] text-gray-600">
+              {sortedProducts.length} {t("categoryPage.productsFound", "products found")}
+            </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
             <div ref={sortRef} className="relative">
@@ -646,12 +650,12 @@ export default function CategoryPage() {
 
               {sortOpen ? (
                 <div className="absolute right-0 top-[44px] z-30 w-[260px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-                  {[
-                    { k: "popular", t: "Most popular first" },
-                    { k: "savings", t: "Biggest savings first" },
-                    { k: "cheap", t: "Price: Cheapest first" },
-                    { k: "high", t: "Price: Highest first" },
-                    { k: "new", t: "Newest first" },
+                  {[ 
+                    { k: "popular", t: t("categoryPage.sort.popular", "Most popular first") },
+                    { k: "savings", t: t("categoryPage.sort.savings", "Biggest savings first") },
+                    { k: "cheap", t: t("categoryPage.sort.cheap", "Price: Cheapest first") },
+                    { k: "high", t: t("categoryPage.sort.high", "Price: Highest first") },
+                    { k: "new", t: t("categoryPage.sort.newest", "Newest first") },
                   ].map((o) => {
                     const active = sortKey === (o.k as SortKey);
                     return (
@@ -701,7 +705,7 @@ export default function CategoryPage() {
                 onClick={() => setIsSidebarOpen(true)}
                 className="h-10 rounded border border-[#cfd6dd] bg-white px-4 text-[13px] font-medium text-[#0b63c8] hover:bg-[#f2f6fb]"
               >
-                Filters
+                {t("categoryPage.filters", "Filters")}
               </button>
             ) : (
               <div />
@@ -721,11 +725,11 @@ export default function CategoryPage() {
                 {sortOpen ? (
                   <div className="absolute right-0 top-[44px] z-30 w-[240px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
                     {[
-                      { k: "popular", t: "Most popular first" },
-                      { k: "savings", t: "Biggest savings first" },
-                      { k: "cheap", t: "Price: Cheapest first" },
-                      { k: "high", t: "Price: Highest first" },
-                      { k: "new", t: "Newest first" },
+                      { k: "popular", t: t("categoryPage.sort.popular", "Most popular first") },
+                      { k: "savings", t: t("categoryPage.sort.savings", "Biggest savings first") },
+                      { k: "cheap", t: t("categoryPage.sort.cheap", "Price: Cheapest first") },
+                      { k: "high", t: t("categoryPage.sort.high", "Price: Highest first") },
+                      { k: "new", t: t("categoryPage.sort.newest", "Newest first") },
                     ].map((o) => {
                       const active = sortKey === (o.k as SortKey);
                       return (
