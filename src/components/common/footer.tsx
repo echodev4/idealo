@@ -7,6 +7,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useLanguage } from "@/contexts/language-context";
 
 type FooterLink = { label: string; href: string };
 
@@ -30,56 +31,58 @@ const PreventLink = ({
 );
 
 export default function Footer() {
+    const { t } = useLanguage();
+
     const cols: Array<{ title: string; links: FooterLink[] }> = [
         {
-            title: "idealo",
+            title: t("footer.columns.idealo.title", "idealo"),
             links: [
-                { label: "About Us", href: "#" },
-                { label: "sustainability", href: "#" },
-                { label: "Disposal of old appliances", href: "#" },
-                { label: "press", href: "#" },
-                { label: "Jobs", href: "#" },
-                { label: "Friends", href: "#" },
+                { label: t("footer.columns.idealo.links.aboutUs", "About Us"), href: "#" },
+                { label: t("footer.columns.idealo.links.sustainability", "sustainability"), href: "#" },
+                { label: t("footer.columns.idealo.links.disposal", "Disposal of old appliances"), href: "#" },
+                { label: t("footer.columns.idealo.links.press", "press"), href: "#" },
+                { label: t("footer.columns.idealo.links.jobs", "Jobs"), href: "#" },
+                { label: t("footer.columns.idealo.links.friends", "Friends"), href: "#" },
             ],
         },
         {
-            title: "Trip",
-            links: [{ label: "Flight price comparison", href: "#" }],
+            title: t("footer.columns.trip.title", "Trip"),
+            links: [{ label: t("footer.columns.trip.links.flightPriceComparison", "Flight price comparison"), href: "#" }],
         },
         {
-            title: "Business",
+            title: t("footer.columns.business.title", "Business"),
             links: [
-                { label: "dealers", href: "#" },
-                { label: "service provider", href: "#" },
-                { label: "Shop registration", href: "#" },
-                { label: "Affiliate Partner Program", href: "#" },
-                { label: "idealo Partner Magazine", href: "#" },
+                { label: t("footer.columns.business.links.dealers", "dealers"), href: "#" },
+                { label: t("footer.columns.business.links.serviceProvider", "service provider"), href: "#" },
+                { label: t("footer.columns.business.links.shopRegistration", "Shop registration"), href: "#" },
+                { label: t("footer.columns.business.links.affiliate", "Affiliate Partner Program"), href: "#" },
+                { label: t("footer.columns.business.links.partnerMagazine", "idealo Partner Magazine"), href: "#" },
             ],
         },
         {
-            title: "Follow us",
+            title: t("footer.columns.followUs.title", "Follow us"),
             links: [
-                { label: "Newsletter", href: "#" },
-                { label: "idealo magazine", href: "#" },
-                { label: "Facebook", href: "#" },
-                { label: "Instagram", href: "#" },
+                { label: t("footer.columns.followUs.links.newsletter", "Newsletter"), href: "#" },
+                { label: t("footer.columns.followUs.links.magazine", "idealo magazine"), href: "#" },
+                { label: t("footer.columns.followUs.links.facebook", "Facebook"), href: "#" },
+                { label: t("footer.columns.followUs.links.instagram", "Instagram"), href: "#" },
             ],
         },
     ];
 
     const legalLinks: FooterLink[] = [
-        { label: "Data protection", href: "#" },
-        { label: "Privacy", href: "#" },
-        { label: "Legal Notice / Terms and Conditions", href: "#" },
-        { label: "Accessibility", href: "#" },
+        { label: t("footer.legalLinks.dataProtection", "Data protection"), href: "#" },
+        { label: t("footer.legalLinks.privacy", "Privacy"), href: "#" },
+        { label: t("footer.legalLinks.terms", "Legal Notice / Terms and Conditions"), href: "#" },
+        { label: t("footer.legalLinks.accessibility", "Accessibility"), href: "#" },
     ];
 
     const countries: FooterLink[] = [
-        { label: "Austria", href: "#" },
-        { label: "Great Britain", href: "#" },
-        { label: "Spain", href: "#" },
-        { label: "France", href: "#" },
-        { label: "Italy", href: "#" },
+        { label: t("footer.countries.austria", "Austria"), href: "#" },
+        { label: t("footer.countries.greatBritain", "Great Britain"), href: "#" },
+        { label: t("footer.countries.spain", "Spain"), href: "#" },
+        { label: t("footer.countries.france", "France"), href: "#" },
+        { label: t("footer.countries.italy", "Italy"), href: "#" },
     ];
 
     return (
@@ -136,7 +139,7 @@ export default function Footer() {
 
                     <div className="mt-8 text-center">
                         <div className="text-[16px] font-bold leading-snug px-4">
-                            Bring the idealo price comparison to your smartphone!
+                            {t("footer.mobile.appCta", "Bring the idealo price comparison to your smartphone!")}
                         </div>
 
                         <div className="mt-4 flex items-center justify-center gap-3">
@@ -148,7 +151,7 @@ export default function Footer() {
                             >
                                 <img
                                     src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                                    alt="App Store"
+                                    alt={t("footer.mobile.appStoreAlt", "App Store")}
                                     className="h-10 w-auto"
                                 />
                             </a>
@@ -160,7 +163,7 @@ export default function Footer() {
                             >
                                 <img
                                     src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-                                    alt="Google Play"
+                                    alt={t("footer.mobile.googlePlayAlt", "Google Play")}
                                     className="h-10 w-auto"
                                 />
                             </a>
@@ -193,16 +196,18 @@ export default function Footer() {
 
                     <div className="mt-7 text-center text-[12px] leading-[1.55] text-white/70 max-w-[980px] mx-auto">
                         <p className="m-0">
-                            All prices are in euros including VAT, plus shipping if applicable. Prices, rankings, delivery times, and
-                            shipping costs are subject to change. Delivery times are in days (Monday-Friday, excluding public
-                            holidays).
+                            {t(
+                                "footer.disclaimer.prices",
+                                "All prices are in euros including VAT, plus shipping if applicable. Prices, rankings, delivery times, and shipping costs are subject to change. Delivery times are in days (Monday-Friday, excluding public holidays)."
+                            )}
                         </p>
                         <p className="m-0 mt-3">
-                            We publish consumer reviews (product opinions) on our website. We have not verified whether these reviews
-                            are from consumers who have actually used or purchased the reviewed product, unless the review is marked
-                            as "verified opinion."
+                            {t(
+                                "footer.disclaimer.reviews",
+                                'We publish consumer reviews (product opinions) on our website. We have not verified whether these reviews are from consumers who have actually used or purchased the reviewed product, unless the review is marked as "verified opinion."'
+                            )}
                         </p>
-                        <p className="m-0 mt-3">Further information can be found on the respective product detail page.</p>
+                        <p className="m-0 mt-3">{t("footer.disclaimer.moreInfo", "Further information can be found on the respective product detail page.")}</p>
                     </div>
                 </div>
             </div>

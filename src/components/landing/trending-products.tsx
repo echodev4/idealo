@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 const trendingItems = [
     {
@@ -85,6 +86,7 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
 }
 
 export default function TrendingProducts() {
+    const { t } = useLanguage();
     const ref = useRef<HTMLDivElement | any>(null);
     const { canLeft, canRight, scrollBy } = useHorizontalScroll(ref);
 
@@ -95,13 +97,13 @@ export default function TrendingProducts() {
     return (
         <section className="bg-white py-8">
             <div className="max-w-[1280px] mx-auto px-3 lg:px-0">
-                <h2 className="text-[20px] font-bold text-[#212121] mb-4">Currently trending</h2>
+                <h2 className="text-[20px] font-bold text-[#212121] mb-4">{t("landing.trendingProducts.title", "Currently trending")}</h2>
 
                 <div className="relative group">
                     {canLeft && (
                         <button
                             type="button"
-                            aria-label="Previous"
+                            aria-label={t("landing.trendingProducts.aria.previous", "Previous")}
                             onClick={() => scrollBy(-520)}
                             className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center bg-[#AEB7C2] z-20
     opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
@@ -113,7 +115,7 @@ export default function TrendingProducts() {
                     {canRight && (
                         <button
                             type="button"
-                            aria-label="Next"
+                            aria-label={t("landing.trendingProducts.aria.next", "Next")}
                             onClick={() => scrollBy(520)}
                             className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-10 w-10 items-center justify-center bg-[#AEB7C2] z-20
     opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
@@ -123,7 +125,24 @@ export default function TrendingProducts() {
                     )}
 
                     <div ref={ref} className={scrollerClass}>
-                        {trendingItems.map((item) => (
+                        {trendingItems.map((item) => {
+                            const name =
+                                item.slug === "shopping-bags"
+                                    ? t("landing.trendingProducts.items.shoppingBags", "Shopping bags")
+                                    : item.slug === "trading-cards"
+                                        ? t("landing.trendingProducts.items.tradingCards", "Trading cards")
+                                        : item.slug === "childrens-shoes"
+                                            ? t("landing.trendingProducts.items.childrensShoes", "Children's shoes")
+                                            : item.slug === "fertilizer"
+                                                ? t("landing.trendingProducts.items.fertilizer", "Fertilizer")
+                                                : item.slug === "hedge-trimmers"
+                                                    ? t("landing.trendingProducts.items.hedgeTrimmers", "Hedge trimmers")
+                                                    : item.slug === "robotic-lawnmower"
+                                                        ? t("landing.trendingProducts.items.roboticLawnmower", "Robotic lawnmower")
+                                                        : item.slug === "bicycle-carrier"
+                                                            ? t("landing.trendingProducts.items.bicycleCarrier", "Bicycle carrier")
+                                                            : t("landing.trendingProducts.items.jerseys", "Jerseys");
+                            return (
                             <Link
                                 key={item.slug}
                                 href={`/category/${encodeURIComponent(item.slug)}`}
@@ -133,7 +152,7 @@ export default function TrendingProducts() {
                                     <div className="relative h-[86px] w-[110px] md:h-[92px] md:w-[118px]">
                                         <Image
                                             src={item.image}
-                                            alt={item.name}
+                                            alt={name}
                                             fill
                                             sizes="185px"
                                             className="object-contain mix-blend-multiply"
@@ -142,10 +161,10 @@ export default function TrendingProducts() {
                                 </div>
 
                                 <div className="mt-3 text-center text-[14px] text-[#212121] leading-[1.3]">
-                                    {item.name}
+                                    {name}
                                 </div>
                             </Link>
-                        ))}
+                        )})}
                     </div>
                 </div>
             </div>

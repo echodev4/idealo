@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 type Product = {
   _id: string;
@@ -124,10 +125,16 @@ const SCROLLER_HIDE_NATIVE =
 function ProductCard({
   p,
   badge = "bestseller",
+  inLabel = "in",
+  fromLabel = "from",
+  wishlistLabel = "Wishlist",
   wishlistColor = "text-[#0474BA]",
 }: {
   p: Product;
   badge?: string;
+  inLabel?: string;
+  fromLabel?: string;
+  wishlistLabel?: string;
   wishlistColor?: string;
 }) {
   const encodedUrl = encodeURIComponent(p.product_url);
@@ -141,7 +148,7 @@ function ProductCard({
     >
       <button
         type="button"
-        aria-label="Wishlist"
+        aria-label={wishlistLabel}
         className={`absolute top-3 right-3 z-10 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white ${wishlistColor} sm:flex`}
         onClick={(e) => {
           e.preventDefault();
@@ -162,7 +169,7 @@ function ProductCard({
           <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
             {badge}
           </span>
-          <span className="text-[#666666] text-[13px] truncate">in {p.source}</span>
+          <span className="text-[#666666] text-[13px] truncate">{inLabel} {p.source}</span>
         </div>
 
         <div className="text-[#212121] text-[15px] font-bold leading-[1.2] line-clamp-2 min-h-[36px]">
@@ -170,7 +177,7 @@ function ProductCard({
         </div>
 
         <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-[13px] text-[#666666]">from</span>
+          <span className="text-[13px] text-[#666666]">{fromLabel}</span>
           <span className="text-[18px] font-bold text-[#FF6600]">AED {p.numericPrice}</span>
         </div>
       </div>
@@ -201,18 +208,22 @@ function HoverArrows({
   canRight,
   onLeft,
   onRight,
+  previousLabel = "Previous",
+  nextLabel = "Next",
 }: {
   canLeft: boolean;
   canRight: boolean;
   onLeft: () => void;
   onRight: () => void;
+  previousLabel?: string;
+  nextLabel?: string;
 }) {
   return (
     <>
       {canLeft && (
         <button
           type="button"
-          aria-label="Previous"
+          aria-label={previousLabel}
           className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
           onClick={onLeft}
         >
@@ -222,7 +233,7 @@ function HoverArrows({
       {canRight && (
         <button
           type="button"
-          aria-label="Next"
+          aria-label={nextLabel}
           className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
           onClick={onRight}
         >
@@ -234,12 +245,26 @@ function HoverArrows({
 }
 
 export default function RelatedCategories({ products, loading }: { products: Product[]; loading: boolean }) {
+  const { t } = useLanguage();
   console.log(products)
   const bestsellers = useMemo(() => (Array.isArray(products) ? products : []), [products]);
   const matching = useMemo(() => {
     const arr = Array.isArray(products) ? products : [];
     return arr.slice(0, 12);
   }, [products]);
+  const translatedCategories = useMemo(
+    () =>
+      categories.map((cat) => ({
+        ...cat,
+        title:
+          cat.slug === "ski-jackets"
+            ? t("landing.relatedCategories.categories.skiJackets", "Ski jackets")
+            : cat.slug === "functional-underwear"
+              ? t("landing.relatedCategories.categories.functionalUnderwear", "Functional underwear")
+              : t("landing.relatedCategories.categories.alpineSkiing", "Alpine skiing"),
+      })),
+    [t]
+  );
 
   const bestRef = useRef<null | any>(null);
   const {
@@ -277,13 +302,13 @@ export default function RelatedCategories({ products, loading }: { products: Pro
   return (
     <section className="bg-white">
       <div className="max-w-[1280px] mx-auto px-3 lg:px-0 pt-7 md:pt-8">
-        <h2 className="text-[20px] md:text-[22px] font-bold text-[#212121] mb-4">Discover the bestsellers</h2>
+        <h2 className="text-[20px] md:text-[22px] font-bold text-[#212121] mb-4">{t("landing.relatedCategories.sections.discoverBestsellers", "Discover the bestsellers")}</h2>
 
         <div className="relative group hidden md:block">
           {bestCanLeft && (
             <button
               type="button"
-              aria-label="Previous"
+              aria-label={t("landing.relatedCategories.aria.previous", "Previous")}
               className="hidden md:flex absolute left-[-6px] top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20
         opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
               onClick={() => bestScrollByViewport("left")}
@@ -295,7 +320,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
           {bestCanRight && (
             <button
               type="button"
-              aria-label="Next"
+              aria-label={t("landing.relatedCategories.aria.next", "Next")}
               className="hidden md:flex absolute right-[-6px] top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20
         opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
               onClick={() => bestScrollByViewport("right")}
@@ -334,7 +359,14 @@ export default function RelatedCategories({ products, loading }: { products: Pro
               onPointerLeave={bestEndDrag}
             >
               {bestsellers.map((p) => (
-                <ProductCard key={p._id ?? p.product_url} p={p} badge="bestseller" />
+                <ProductCard
+                  key={p._id ?? p.product_url}
+                  p={p}
+                  badge={t("landing.relatedCategories.badges.bestseller", "bestseller")}
+                  inLabel={t("landing.relatedCategories.labels.in", "in")}
+                  fromLabel={t("landing.relatedCategories.labels.from", "from")}
+                  wishlistLabel={t("landing.relatedCategories.aria.wishlist", "Wishlist")}
+                />
               ))}
             </div>
           )}
@@ -345,7 +377,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
         <div className="grid grid-cols-1 xl:grid-cols-12 xl:gap-14 gap-8">
           <div className="xl:col-span-7">
             <h2 className="hidden sm:block text-[20px] md:text-[22px] font-bold text-[#212121] mb-4 mt-3 md:mt-4">
-              Related categories
+              {t("landing.relatedCategories.sections.relatedCategories", "Related categories")}
             </h2>
 
             <div className="relative group">
@@ -354,6 +386,8 @@ export default function RelatedCategories({ products, loading }: { products: Pro
                 canRight={relCanRight}
                 onLeft={() => relScrollByViewport("left")}
                 onRight={() => relScrollByViewport("right")}
+                previousLabel={t("landing.relatedCategories.aria.previous", "Previous")}
+                nextLabel={t("landing.relatedCategories.aria.next", "Next")}
               />
 
               <div
@@ -366,13 +400,13 @@ export default function RelatedCategories({ products, loading }: { products: Pro
                 onPointerCancel={relEndDrag}
                 onPointerLeave={relEndDrag}
               >
-                {categories.map((cat) => (
+                {translatedCategories.map((cat) => (
                   <CategoryTile key={cat.slug} title={cat.title} slug={cat.slug} image={cat.image} />
                 ))}
               </div>
             </div>
 
-            <h2 className="text-[20px] md:text-[22px] font-bold text-[#212121] mb-4">Matching products</h2>
+            <h2 className="text-[20px] md:text-[22px] font-bold text-[#212121] mb-4">{t("landing.relatedCategories.sections.matchingProducts", "Matching products")}</h2>
 
             <div className="relative group">
               <HoverArrows
@@ -380,6 +414,8 @@ export default function RelatedCategories({ products, loading }: { products: Pro
                 canRight={matchCanRight}
                 onLeft={() => matchScrollByViewport("left")}
                 onRight={() => matchScrollByViewport("right")}
+                previousLabel={t("landing.relatedCategories.aria.previous", "Previous")}
+                nextLabel={t("landing.relatedCategories.aria.next", "Next")}
               />
 
               {loading ? (
@@ -412,7 +448,15 @@ export default function RelatedCategories({ products, loading }: { products: Pro
                   onPointerLeave={matchEndDrag}
                 >
                   {matching.map((p) => (
-                    <ProductCard key={p._id ?? p.product_url} p={p} badge="noon" wishlistColor="text-[#666666]" />
+                    <ProductCard
+                      key={p._id ?? p.product_url}
+                      p={p}
+                      badge="noon"
+                      inLabel={t("landing.relatedCategories.labels.in", "in")}
+                      fromLabel={t("landing.relatedCategories.labels.from", "from")}
+                      wishlistLabel={t("landing.relatedCategories.aria.wishlist", "Wishlist")}
+                      wishlistColor="text-[#666666]"
+                    />
                   ))}
                 </div>
               )}
@@ -421,7 +465,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
             <div className="block xl:hidden mt-6">
               <div className="rounded-[8px] overflow-hidden">
                 <div className="relative w-full aspect-[16/9]">
-                  <Image src={promoImage} alt="Promo" fill sizes="100vw" className="object-cover" />
+                  <Image src={promoImage} alt={t("landing.relatedCategories.promo.alt", "Promo")} fill sizes="100vw" className="object-cover" />
                   <div className="absolute inset-0 bg-black/10" />
                   <div className="absolute left-6 bottom-6">
                     <button
@@ -429,7 +473,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
                       className="px-7 py-3 border-2 border-white text-white font-bold text-[14px] rounded-[3px] cursor-not-allowed"
                       onClick={(e) => e.preventDefault()}
                     >
-                      Discover now
+                      {t("landing.relatedCategories.promo.cta", "Discover now")}
                     </button>
                   </div>
                 </div>
@@ -439,7 +483,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
 
           <div className="hidden xl:block xl:col-span-5">
             <div className="rounded-[10px] overflow-hidden relative w-full min-h-[520px]">
-              <Image src={promoImage} alt="Promo" fill sizes="40vw" className="object-cover" />
+              <Image src={promoImage} alt={t("landing.relatedCategories.promo.alt", "Promo")} fill sizes="40vw" className="object-cover" />
               <div className="absolute inset-0 bg-black/10" />
               <div className="absolute left-10 bottom-10">
                 <button
@@ -447,7 +491,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
                   className="px-8 py-3 border-2 border-white text-white font-bold text-[14px] rounded-[3px] cursor-not-allowed"
                   onClick={(e) => e.preventDefault()}
                 >
-                  Discover now
+                  {t("landing.relatedCategories.promo.cta", "Discover now")}
                 </button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 type Product = {
     _id: string;
@@ -34,6 +35,7 @@ export default function BestsellersCarousel({
     loading: boolean;
     fallbackTitle?: string;
 }) {
+    const { t } = useLanguage();
     const items = useMemo(() => (Array.isArray(products) ? products : []), [products]);
     const ref = useRef<HTMLDivElement | null>(null);
 
@@ -118,7 +120,7 @@ export default function BestsellersCarousel({
     return (
         <section className="bg-[#DCEAF6] py-10">
             <div className="max-w-[1280px] mx-auto px-3 lg:px-0">
-                <h2 className="text-[22px] font-bold text-[#212121] mb-4 leading-[1.25] m-0">{fallbackTitle}</h2>
+                <h2 className="text-[22px] font-bold text-[#212121] mb-4 leading-[1.25] m-0">{t("landing.bestsellersCarousel.title", fallbackTitle)}</h2>
 
                 <div className="relative group">
                     {loading ? (
@@ -168,7 +170,7 @@ export default function BestsellersCarousel({
                                         <div className="relative bg-[#F1F3F5] px-4 pt-4 pb-2">
                                             <button
                                                 type="button"
-                                                aria-label="Wishlist"
+                                                aria-label={t("landing.bestsellersCarousel.aria.wishlist", "Wishlist")}
                                                 className="absolute top-3 right-3 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white text-[#0B62B3] sm:flex"
                                                 onClick={(e) => {
                                                     e.preventDefault();
@@ -192,9 +194,9 @@ export default function BestsellersCarousel({
                                         <div className="bg-white px-4 pt-3 pb-4 flex flex-col flex-1">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
-                                                    featured
+                                                    {t("landing.bestsellersCarousel.badges.featured", "featured")}
                                                 </span>
-                                                <span className="text-[#666666] text-[14px] truncate">in {p.source}</span>
+                                                <span className="text-[#666666] text-[14px] truncate">{t("landing.bestsellersCarousel.inSource", "in")} {p.source}</span>
                                             </div>
 
                                             <div className="text-[#212121] text-[14px] leading-[1.35] font-normal line-clamp-2 min-h-[38px] mb-3">
@@ -218,7 +220,7 @@ export default function BestsellersCarousel({
                                                 </div>
 
                                                 <div className="flex items-baseline gap-2">
-                                                    <span className="text-[14px] text-[#666666]">from</span>
+                                                    <span className="text-[14px] text-[#666666]">{t("landing.bestsellersCarousel.from", "from")}</span>
                                                     <span className="text-[18px] font-bold text-[#212121]">
                                                         {price !== null ? `AED ${price}` : `AED ${p.price}`}
                                                     </span>
@@ -234,7 +236,7 @@ export default function BestsellersCarousel({
                     {canLeft && (
                         <button
                             type="button"
-                            aria-label="Previous"
+                            aria-label={t("landing.bestsellersCarousel.aria.previous", "Previous")}
                             className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20
               opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                             onClick={() => scrollByAmount("left")}
@@ -246,7 +248,7 @@ export default function BestsellersCarousel({
                     {canRight && (
                         <button
                             type="button"
-                            aria-label="Next"
+                            aria-label={t("landing.bestsellersCarousel.aria.next", "Next")}
                             className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#C7CFD7] items-center justify-center z-20
               opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                             onClick={() => scrollByAmount("right")}

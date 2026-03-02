@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 type Product = {
     _id: string;
@@ -52,6 +53,7 @@ const tips = [
 ];
 
 export default function HeroTeaser({ products, loading }: { products: Product[]; loading: boolean }) {
+    const { t } = useLanguage();
     const items = useMemo(() => (Array.isArray(products) ? products.slice(0, 12) : []), [products]);
 
     const tipsRef = useRef<HTMLDivElement | null>(null);
@@ -153,20 +155,31 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 className="flex gap-6 overflow-x-auto hide-scrollbar pr-3 max-w-full scroll-smooth overscroll-x-contain snap-x snap-mandatory"
                                 onWheel={onWheelTips}
                                 role="navigation"
-                                aria-label="Teaser tips"
+                                aria-label={t("landing.heroTeaser.aria.teaserTips", "Teaser tips")}
                             >
-                                {tips.map((t) => (
-                                    <div key={t.title} className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[170px] cursor-not-allowed select-none snap-start">
+                                {tips.map((tip, idx) => {
+                                    const tipTitle =
+                                        idx === 0
+                                            ? t("landing.heroTeaser.tips.dealsOfDay", "Deals of the day")
+                                            : idx === 1
+                                                ? t("landing.heroTeaser.tips.pokemon", "30 Years of Pokemon")
+                                                : idx === 2
+                                                    ? t("landing.heroTeaser.tips.homeCinema", "Your home cinema")
+                                                    : idx === 3
+                                                        ? t("landing.heroTeaser.tips.snow", "Off to the snow")
+                                                        : t("landing.heroTeaser.tips.ourTips", "Our 3 Tips");
+                                    return (
+                                    <div key={tip.title} className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[170px] cursor-not-allowed select-none snap-start">
                                         <div className="mx-auto w-[112px] h-[112px] rounded-full border-[3px] border-[#FF6600] flex items-center justify-center bg-[#0A3761] overflow-hidden">
                                             <div className="relative w-[98px] h-[98px] rounded-full overflow-hidden">
-                                                <Image src={t.img} alt={t.title} fill className="object-cover" />
+                                                <Image src={tip.img} alt={tipTitle} fill className="object-cover" />
                                             </div>
                                         </div>
                                         <div className="mt-2 text-center text-[13px] leading-4 text-[#212121] font-semibold px-1">
-                                            {t.title}
+                                            {tipTitle}
                                         </div>
                                     </div>
-                                ))}
+                                )})}
                             </div>
 
                             {tipsCanLeft && (
@@ -174,7 +187,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     type="button"
                                     onClick={() => scrollTipsBy("left")}
                                     className="hidden md:flex absolute left-0 top-[34px] h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
-                                    aria-label="Previous tips"
+                                    aria-label={t("landing.heroTeaser.aria.previousTips", "Previous tips")}
                                 >
                                     <ChevronLeft size={26} className="text-white" />
                                 </button>
@@ -185,7 +198,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     type="button"
                                     onClick={() => scrollTipsBy("right")}
                                     className="hidden md:flex absolute right-0 top-[34px] h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
-                                    aria-label="Next tips"
+                                    aria-label={t("landing.heroTeaser.aria.nextTips", "Next tips")}
                                 >
                                     <ChevronRight size={26} className="text-white" />
                                 </button>
@@ -193,7 +206,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                         </div>
 
                         <div className="flex items-end justify-between mb-3">
-                            <h2 className="text-[22px] font-bold text-[#212121] m-0">Popular products</h2>
+                            <h2 className="text-[22px] font-bold text-[#212121] m-0">{t("landing.heroTeaser.popularProducts", "Popular products")}</h2>
                         </div>
 
                         <div className="relative group">
@@ -219,7 +232,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar scroll-smooth overscroll-x-contain snap-x snap-mandatory"
                                     onWheel={onWheelProducts}
                                     role="region"
-                                    aria-label="Popular products"
+                                    aria-label={t("landing.heroTeaser.aria.popularProducts", "Popular products")}
                                 >
                                     {items.map((p, idx) => {
                                         const name = p.product_name;
@@ -240,7 +253,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                             >
                                                 <button
                                                     type="button"
-                                                    aria-label="Wishlist"
+                                                    aria-label={t("landing.heroTeaser.aria.wishlist", "Wishlist")}
                                                     className="absolute top-3 right-3 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white text-[#0474BA] sm:flex"
                                                     onClick={(e) => {
                                                         e.preventDefault();
@@ -262,9 +275,9 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
 
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
-                                                        bestseller
+                                                        {t("landing.heroTeaser.badges.bestseller", "bestseller")}
                                                     </span>
-                                                    <span className="text-[#666666] text-[14px] truncate">in {p.source}</span>
+                                                    <span className="text-[#666666] text-[14px] truncate">{t("landing.heroTeaser.inSource", "in")} {p.source}</span>
                                                 </div>
 
                                                 <div className="text-[#212121] text-[15px] sm:text-[16px] font-bold leading-[1.2] line-clamp-2 mb-3">
@@ -291,7 +304,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                     </div>
 
                                                     <div className="flex items-baseline gap-2">
-                                                        <span className="text-[14px] text-[#666666]">from</span>
+                                                        <span className="text-[14px] text-[#666666]">{t("landing.heroTeaser.from", "from")}</span>
                                                         <span className="text-[20px] font-bold text-[#FF6600]">
                                                             {price !== null ? `€${price.toFixed(2)}` : p.price}
                                                         </span>
@@ -308,7 +321,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     type="button"
                                     onClick={() => scrollProductsBy("left")}
                                     className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
-                                    aria-label="Previous products"
+                                    aria-label={t("landing.heroTeaser.aria.previousProducts", "Previous products")}
                                 >
                                     <ChevronLeft size={26} className="text-white" />
                                 </button>
@@ -319,7 +332,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     type="button"
                                     onClick={() => scrollProductsBy("right")}
                                     className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
-                                    aria-label="Next products"
+                                    aria-label={t("landing.heroTeaser.aria.nextProducts", "Next products")}
                                 >
                                     <ChevronRight size={26} className="text-white" />
                                 </button>
@@ -331,7 +344,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                         <div className="relative w-full overflow-hidden rounded-[6px] cursor-not-allowed flex-1 min-h-[360px] lg:min-h-0">
                             <Image
                                 src={bannerUrl}
-                                alt="Campaign banner"
+                                alt={t("landing.heroTeaser.banner.alt", "Campaign banner")}
                                 fill
                                 priority
                                 sizes="(max-width: 1024px) 100vw, 42vw"
@@ -340,10 +353,10 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                             <div className="absolute left-6 right-6 bottom-6 lg:left-10 lg:right-10 lg:bottom-10">
                                 <div className="text-white text-[28px] lg:text-[36px] font-bold leading-tight mb-4">
-                                    30 Years of Pokemon
+                                    {t("landing.heroTeaser.banner.title", "30 Years of Pokemon")}
                                 </div>
                                 <div className="inline-flex items-center justify-center px-6 py-3 border-2 border-white text-white font-bold text-[14px] rounded-sm w-fit">
-                                    Grab them all!
+                                    {t("landing.heroTeaser.banner.cta", "Grab them all!")}
                                 </div>
                             </div>
                         </div>
