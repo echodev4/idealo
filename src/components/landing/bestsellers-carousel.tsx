@@ -39,8 +39,6 @@ export default function BestsellersCarousel({
 
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
-    const [thumbLeft, setThumbLeft] = useState(0);
-    const [thumbWidth, setThumbWidth] = useState(0);
 
     const updateArrows = () => {
         const el = ref.current;
@@ -53,19 +51,6 @@ export default function BestsellersCarousel({
         setCanLeft(left > eps);
         setCanRight(left < maxScroll - eps);
 
-        if (el.scrollWidth <= el.clientWidth || maxScroll <= 0) {
-            setThumbLeft(0);
-            setThumbWidth(0);
-            return;
-        }
-
-        const ratio = el.clientWidth / el.scrollWidth;
-        const w = Math.max(64, Math.round(el.clientWidth * ratio));
-        const maxLeft = el.clientWidth - w;
-        const l = Math.round((left / maxScroll) * maxLeft);
-
-        setThumbWidth(w);
-        setThumbLeft(l);
     };
 
     useEffect(() => {
@@ -184,7 +169,7 @@ export default function BestsellersCarousel({
                                             <button
                                                 type="button"
                                                 aria-label="Wishlist"
-                                                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border border-[#E0E0E0] flex items-center justify-center text-[#0B62B3]"
+                                                className="absolute top-3 right-3 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white text-[#0B62B3] sm:flex"
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
@@ -243,16 +228,6 @@ export default function BestsellersCarousel({
                                     </Link>
                                 );
                             })}
-                        </div>
-                    )}
-
-                    {thumbWidth > 0 && (
-                        <div className="pointer-events-none hidden md:block absolute left-0 right-0 bottom-[2px] h-[14px] opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] bg-transparent" />
-                            <div
-                                className="absolute top-1/2 h-[6px] -translate-y-1/2 rounded-full bg-[#8E9AA6]/70"
-                                style={{ width: thumbWidth, transform: `translateX(${thumbLeft}px) translateY(-50%)` }}
-                            />
                         </div>
                     )}
 

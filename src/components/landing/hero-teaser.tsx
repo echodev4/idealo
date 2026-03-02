@@ -241,7 +241,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                 <button
                                                     type="button"
                                                     aria-label="Wishlist"
-                                                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border border-[#E0E0E0] flex items-center justify-center text-[#0474BA]"
+                                                    className="absolute top-3 right-3 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white text-[#0474BA] sm:flex"
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();

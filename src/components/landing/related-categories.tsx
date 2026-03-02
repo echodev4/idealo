@@ -43,7 +43,7 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
+function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.DependencyList = []) {
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
 
@@ -72,7 +72,7 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
       el.removeEventListener("scroll", onScroll);
       ro.disconnect();
     };
-  }, [ref]);
+  }, [ref, ...deps]);
 
   const scrollByViewport = (dir: "left" | "right") => {
     const el = ref.current;
@@ -142,7 +142,7 @@ function ProductCard({
       <button
         type="button"
         aria-label="Wishlist"
-        className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white border border-[#E0E0E0] flex items-center justify-center ${wishlistColor}`}
+        className={`absolute top-3 right-3 z-10 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white ${wishlistColor} sm:flex`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -234,13 +234,14 @@ function HoverArrows({
 }
 
 export default function RelatedCategories({ products, loading }: { products: Product[]; loading: boolean }) {
+  console.log(products)
   const bestsellers = useMemo(() => (Array.isArray(products) ? products : []), [products]);
   const matching = useMemo(() => {
     const arr = Array.isArray(products) ? products : [];
-    return arr.slice(Math.max(0, arr.length - 3));
+    return arr.slice(0, 12);
   }, [products]);
 
-  const bestRef = useRef<HTMLDivElement | any>(null);
+  const bestRef = useRef<null | any>(null);
   const {
     canLeft: bestCanLeft,
     canRight: bestCanRight,
@@ -249,9 +250,9 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     onPointerDown: bestOnPointerDown,
     onPointerMove: bestOnPointerMove,
     endDrag: bestEndDrag,
-  } = useHorizontalScroll(bestRef);
+  } = useHorizontalScroll(bestRef, [bestsellers.length, loading]);
 
-  const relRef = useRef<HTMLDivElement | any>(null);
+  const relRef = useRef<null | any>(null);
   const {
     canLeft: relCanLeft,
     canRight: relCanRight,
@@ -260,9 +261,9 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     onPointerDown: relOnPointerDown,
     onPointerMove: relOnPointerMove,
     endDrag: relEndDrag,
-  } = useHorizontalScroll(relRef);
+  } = useHorizontalScroll(relRef, [categories.length]);
 
-  const matchRef = useRef<HTMLDivElement | any>(null);
+  const matchRef = useRef<null | any>(null);
   const {
     canLeft: matchCanLeft,
     canRight: matchCanRight,
@@ -271,7 +272,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     onPointerDown: matchOnPointerDown,
     onPointerMove: matchOnPointerMove,
     endDrag: matchEndDrag,
-  } = useHorizontalScroll(matchRef);
+  } = useHorizontalScroll(matchRef, [matching.length, loading]);
 
   return (
     <section className="bg-white">
