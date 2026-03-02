@@ -329,7 +329,7 @@ function ProductCellGrid({ product, onOpenDetails }: { product: Product; onOpenD
         <div className="relative h-full bg-white px-4 pb-5 pt-4 sm:px-5 sm:pb-6">
             <button
                 type="button"
-                className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-gray-300 bg-white text-[#0b63c8] cursor-not-allowed"
+                className="absolute right-4 top-4 z-10 hidden h-10 w-10 place-items-center rounded-full border border-gray-300 bg-white text-[#0b63c8] cursor-not-allowed sm:grid"
                 onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -396,17 +396,6 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
 
     return (
         <div className="relative bg-white px-4 py-4 sm:px-5">
-            <button
-                type="button"
-                className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-gray-300 bg-white text-[#0b63c8] cursor-not-allowed"
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}
-            >
-                <Heart className="h-5 w-5" />
-            </button>
-
             <div className="flex items-start gap-4">
                 <Link href={href} className="shrink-0">
                     <div className="relative h-[92px] w-[92px] overflow-hidden rounded bg-white">
@@ -484,7 +473,7 @@ export default function Products({
 
     return (
         <section className={landingPage ? "bg-secondary py-8" : ""}>
-            <div className={`container ${landingPage ? "mx-auto px-4" : ""}`}>
+            <div className={`container`}>
                 {view === "grid" ? (
                     <div className="w-full bg-[#cfd6dd] p-px">
                         <div className="grid grid-cols-2 gap-px sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

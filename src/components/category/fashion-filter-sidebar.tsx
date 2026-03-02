@@ -218,14 +218,14 @@ export default function FashionFilterSidebar<
         <>
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    className="fixed inset-0 z-[70] bg-black/50 md:hidden"
                     onClick={onClose}
                 />
             )}
 
             <aside
                 className={cn(
-                    "fixed md:sticky top-0 left-0 h-screen md:h-auto w-80 md:w-72 bg-white border-r border-border overflow-y-auto  transition-transform duration-300",
+                    "fixed top-0 left-0 z-[80] h-screen w-80 bg-white border-r border-border overflow-y-auto transition-transform duration-300 md:sticky md:z-auto md:h-auto md:w-72",
                     isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
                 )}
             >
