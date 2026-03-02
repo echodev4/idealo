@@ -147,7 +147,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
             <div className="max-w-[1280px] mx-auto px-3 lg:px-0">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
                     <div className="lg:col-span-7 order-1 flex flex-col">
-                        <div className="relative mb-4">
+                        <div className="relative mb-4 group">
                             <div
                                 ref={tipsRef}
                                 className="flex gap-6 overflow-x-auto hide-scrollbar pr-3 max-w-full scroll-smooth touch-pan-x overscroll-x-contain snap-x snap-mandatory"
@@ -173,7 +173,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 <button
                                     type="button"
                                     onClick={() => scrollTipsBy("left")}
-                                    className="hidden md:flex absolute left-0 top-[34px] h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md"
+                                    className="hidden md:flex absolute left-0 top-[34px] h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                                     aria-label="Previous tips"
                                 >
                                     <ChevronLeft size={26} className="text-white" />
@@ -184,7 +184,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 <button
                                     type="button"
                                     onClick={() => scrollTipsBy("right")}
-                                    className="hidden md:flex absolute right-0 top-[34px] h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md"
+                                    className="hidden md:flex absolute right-0 top-[34px] h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                                     aria-label="Next tips"
                                 >
                                     <ChevronRight size={26} className="text-white" />
@@ -196,7 +196,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                             <h2 className="text-[22px] font-bold text-[#212121] m-0">Popular products</h2>
                         </div>
 
-                        <div className="relative">
+                        <div className="relative group">
                             {loading ? (
                                 <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar scroll-smooth touch-pan-x overscroll-x-contain">
                                     {Array.from({ length: 6 }).map((_, i) => (
@@ -307,7 +307,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 <button
                                     type="button"
                                     onClick={() => scrollProductsBy("left")}
-                                    className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20"
+                                    className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                                     aria-label="Previous products"
                                 >
                                     <ChevronLeft size={26} className="text-white" />
@@ -318,7 +318,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 <button
                                     type="button"
                                     onClick={() => scrollProductsBy("right")}
-                                    className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20"
+                                    className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 bg-[#CFCFCF] items-center justify-center shadow-md z-20 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
                                     aria-label="Next products"
                                 >
                                     <ChevronRight size={26} className="text-white" />
