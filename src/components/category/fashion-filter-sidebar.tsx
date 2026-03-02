@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 type Specs = Record<string, string>;
 
@@ -101,6 +102,7 @@ function FacetList({
     countForValue: (v: string) => number;
     limit?: number;
 }) {
+    const { t } = useLanguage();
     const [showAll, setShowAll] = useState(false);
 
     const safeValues = useMemo(() => {
@@ -151,7 +153,9 @@ function FacetList({
                     onClick={() => setShowAll((s) => !s)}
                     className="mt-2 text-sm text-[#0066CC] hover:underline"
                 >
-                    {showAll ? "Show less" : "Show all"}
+                    {showAll
+                        ? t("category.filtersSidebar.showLess", "Show less")
+                        : t("category.filtersSidebar.showAll", "Show all")}
                 </button>
             )}
         </>
@@ -161,6 +165,7 @@ function FacetList({
 export default function FashionFilterSidebar<
     T extends { numericPrice?: number; specifications?: Specs; title?: string }
 >(props: FashionFilterSidebarProps<T>) {
+    const { t } = useLanguage();
     const {
         isOpen,
         onClose,
@@ -232,14 +237,14 @@ export default function FashionFilterSidebar<
                 <div className="p-4">
                     {/* Mobile header */}
                     <div className="flex items-center justify-between mb-4 md:hidden">
-                        <h2 className="text-lg font-semibold">Filters</h2>
+                        <h2 className="text-lg font-semibold">{t("category.filtersSidebar.filters", "Filters")}</h2>
                         <Button variant="ghost" size="icon" onClick={onClose}>
                             <X className="h-5 w-5" />
                         </Button>
                     </div>
 
                     {/* PRICE */}
-                    <Section title="Price Range">
+                    <Section title={t("category.filtersSidebar.priceRange", "Price Range")}>
                         <div className="space-y-4">
                             <Slider
                                 min={defaultPriceRange[0]}
@@ -255,19 +260,19 @@ export default function FashionFilterSidebar<
                                 <span className="font-medium">
                                     AED {priceRange[0].toFixed(0)}
                                 </span>
-                                <span className="text-gray-400">to</span>
+                                <span className="text-gray-400">{t("category.filtersSidebar.to", "to")}</span>
                                 <span className="font-medium">
                                     AED {priceRange[1].toFixed(0)}
                                 </span>
                             </div>
                             <p className="text-xs text-gray-500">
-                                Showing {filteredProducts.length} results
+                                {t("category.filtersSidebar.showing", "Showing")} {filteredProducts.length} {t("category.filtersSidebar.results", "results")}
                             </p>
                         </div>
                     </Section>
 
                     {/* FACETS (keep the main useful ones first) */}
-                    <Section title="Department">
+                    <Section title={t("category.filtersSidebar.department", "Department")}>
                         <FacetList
                             facetKey="Department"
                             values={facets["Department"]}
@@ -277,7 +282,7 @@ export default function FashionFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Size">
+                    <Section title={t("category.filtersSidebar.size", "Size")}>
                         <FacetList
                             facetKey="Size"
                             values={facets["Size"]}
@@ -287,7 +292,7 @@ export default function FashionFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Color">
+                    <Section title={t("category.filtersSidebar.color", "Color")}>
                         <FacetList
                             facetKey="Colour Name"
                             values={facets["Colour Name"]}
@@ -297,7 +302,7 @@ export default function FashionFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Material">
+                    <Section title={t("category.filtersSidebar.material", "Material")}>
                         <FacetList
                             facetKey="Material"
                             values={facets["Material"]}
@@ -307,7 +312,7 @@ export default function FashionFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Fit">
+                    <Section title={t("category.filtersSidebar.fit", "Fit")}>
                         <FacetList
                             facetKey="Fit"
                             values={facets["Fit"]}
@@ -317,7 +322,7 @@ export default function FashionFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Occasion">
+                    <Section title={t("category.filtersSidebar.occasion", "Occasion")}>
                         <FacetList
                             facetKey="Occasion"
                             values={facets["Occasion"]}
@@ -327,7 +332,7 @@ export default function FashionFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Pattern">
+                    <Section title={t("category.filtersSidebar.pattern", "Pattern")}>
                         <FacetList
                             facetKey="Pattern"
                             values={facets["Pattern"]}
@@ -338,7 +343,7 @@ export default function FashionFilterSidebar<
                     </Section>
 
                     <Button variant="outline" className="w-full mt-2" onClick={onReset}>
-                        Reset Filters
+                        {t("category.filtersSidebar.resetFilters", "Reset Filters")}
                     </Button>
                 </div>
             </aside>

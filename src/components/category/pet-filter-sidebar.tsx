@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 type Specs = Record<string, string>;
 
@@ -98,6 +99,7 @@ function FacetList({
     countForValue: (v: string) => number;
     limit?: number;
 }) {
+    const { t } = useLanguage();
     const [showAll, setShowAll] = useState(false);
 
     const safeValues = useMemo(() => {
@@ -140,7 +142,9 @@ function FacetList({
                     onClick={() => setShowAll((s) => !s)}
                     className="mt-2 text-sm text-[#0066CC] hover:underline"
                 >
-                    {showAll ? "Show less" : "Show all"}
+                    {showAll
+                        ? t("category.filtersSidebar.showLess", "Show less")
+                        : t("category.filtersSidebar.showAll", "Show all")}
                 </button>
             )}
         </>
@@ -150,6 +154,7 @@ function FacetList({
 export default function PetFilterSidebar<
     T extends { numericPrice?: number; specifications?: Specs; title?: string }
 >(props: PetFilterSidebarProps<T>) {
+    const { t } = useLanguage();
     const {
         isOpen,
         onClose,
@@ -218,14 +223,14 @@ export default function PetFilterSidebar<
                 <div className="p-4">
                     {/* mobile header */}
                     <div className="flex items-center justify-between mb-4 md:hidden">
-                        <h2 className="text-lg font-semibold">Filters</h2>
+                        <h2 className="text-lg font-semibold">{t("category.filtersSidebar.filters", "Filters")}</h2>
                         <Button variant="ghost" size="icon" onClick={onClose}>
                             <X className="h-5 w-5" />
                         </Button>
                     </div>
 
                     {/* PRICE */}
-                    <Section title="Price Range">
+                    <Section title={t("category.filtersSidebar.priceRange", "Price Range")}>
                         <div className="space-y-4">
                             <Slider
                                 min={defaultPriceRange[0]}
@@ -237,15 +242,17 @@ export default function PetFilterSidebar<
                             />
                             <div className="flex items-center justify-between text-sm">
                                 <span className="font-medium">AED {priceRange[0].toFixed(0)}</span>
-                                <span className="text-gray-400">to</span>
+                                <span className="text-gray-400">{t("category.filtersSidebar.to", "to")}</span>
                                 <span className="font-medium">AED {priceRange[1].toFixed(0)}</span>
                             </div>
-                            <p className="text-xs text-gray-500">Showing {filteredProducts.length} results</p>
+                            <p className="text-xs text-gray-500">
+                                {t("category.filtersSidebar.showing", "Showing")} {filteredProducts.length} {t("category.filtersSidebar.results", "results")}
+                            </p>
                         </div>
                     </Section>
 
                     {/* PET FACETS (best-fit first) */}
-                    <Section title="Department">
+                    <Section title={t("category.filtersSidebar.department", "Department")}>
                         <FacetList
                             facetKey="Department"
                             values={facets["Department"]}
@@ -255,7 +262,7 @@ export default function PetFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Size">
+                    <Section title={t("category.filtersSidebar.size", "Size")}>
                         <FacetList
                             facetKey="Size"
                             values={facets["Size"]}
@@ -265,7 +272,7 @@ export default function PetFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Color">
+                    <Section title={t("category.filtersSidebar.color", "Color")}>
                         <FacetList
                             facetKey="Colour Name"
                             values={facets["Colour Name"]}
@@ -275,7 +282,7 @@ export default function PetFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Material">
+                    <Section title={t("category.filtersSidebar.material", "Material")}>
                         <FacetList
                             facetKey="Material"
                             values={facets["Material"]}
@@ -285,7 +292,7 @@ export default function PetFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Dietary needs">
+                    <Section title={t("category.filtersSidebar.dietaryNeeds", "Dietary needs")}>
                         <FacetList
                             facetKey="Dietary Needs"
                             values={facets["Dietary Needs"]}
@@ -295,7 +302,7 @@ export default function PetFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Item form">
+                    <Section title={t("category.filtersSidebar.itemForm", "Item form")}>
                         <FacetList
                             facetKey="Item Form"
                             values={facets["Item Form"]}
@@ -305,7 +312,7 @@ export default function PetFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Pack quantity">
+                    <Section title={t("category.filtersSidebar.packQuantity", "Pack quantity")}>
                         <FacetList
                             facetKey="Item Pack Quantity"
                             values={facets["Item Pack Quantity"]}
@@ -316,7 +323,7 @@ export default function PetFilterSidebar<
                     </Section>
 
                     <Button variant="outline" className="w-full mt-2" onClick={onReset}>
-                        Reset Filters
+                        {t("category.filtersSidebar.resetFilters", "Reset Filters")}
                     </Button>
                 </div>
             </aside>

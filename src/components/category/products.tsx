@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, Heart, Star, X } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
 
 export interface Product {
     _id?: string;
@@ -77,6 +78,7 @@ function ProductDetailsModal({
     activeIndex: number;
     onNavigateIndex: (idx: number) => void;
 }) {
+    const { t } = useLanguage();
     const active = products[activeIndex];
     const otherRef = useRef<HTMLDivElement | null>(null);
 
@@ -110,7 +112,7 @@ function ProductDetailsModal({
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-3 py-6">
             <div className="relative flex h-[82vh] max-h-[82vh] w-full max-w-[980px] flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
                 <div className="relative shrink-0 border-b border-gray-200 px-6 py-4">
-                    <div className="text-center text-[18px] font-semibold text-gray-900">Product details</div>
+                    <div className="text-center text-[18px] font-semibold text-gray-900">{t("category.products.productDetailsTitle", "Product details")}</div>
                     <button
                         type="button"
                         onClick={onClose}
@@ -159,7 +161,7 @@ function ProductDetailsModal({
                                                 e.stopPropagation();
                                             }}
                                         >
-                                            from&nbsp;AED&nbsp;{formatPriceAED(active.numericPrice)}
+                                            {t("category.products.from", "from")}&nbsp;AED&nbsp;{formatPriceAED(active.numericPrice)}
                                         </button>
 
                                         <button
@@ -170,7 +172,7 @@ function ProductDetailsModal({
                                                 e.stopPropagation();
                                             }}
                                         >
-                                            Show offers <span>→</span>
+                                            {t("category.products.showOffers", "Show offers")} <span>→</span>
                                         </button>
                                     </div>
                                 </div>
@@ -179,14 +181,14 @@ function ProductDetailsModal({
 
                         {active.overview ? (
                             <div className="mt-5">
-                                <div className="text-[15px] font-semibold text-gray-900">Overview</div>
+                                <div className="text-[15px] font-semibold text-gray-900">{t("category.products.overview", "Overview")}</div>
                                 <div className="mt-2 text-[13px] leading-6 text-gray-700">{active.overview}</div>
                             </div>
                         ) : null}
 
                         {highlights.length ? (
                             <div className="mt-5">
-                                <div className="text-[15px] font-semibold text-gray-900">Highlights</div>
+                                <div className="text-[15px] font-semibold text-gray-900">{t("category.products.highlights", "Highlights")}</div>
                                 <div className="mt-3 space-y-2">
                                     {highlights.slice(0, 12).map((h, i) => (
                                         <div key={i} className="text-[13px] leading-6 text-gray-700">
@@ -199,7 +201,7 @@ function ProductDetailsModal({
 
                         <div className="mt-6">
                             <div className="flex items-center gap-2">
-                                <div className="text-[15px] font-semibold text-gray-900">Conclusion of the editorial team</div>
+                                <div className="text-[15px] font-semibold text-gray-900">{t("category.products.conclusion", "Conclusion of the editorial team")}</div>
                                 <button
                                     type="button"
                                     className="inline-flex items-center text-[13px] font-medium text-[#0b63c8] cursor-not-allowed"
@@ -208,35 +210,35 @@ function ProductDetailsModal({
                                         e.stopPropagation();
                                     }}
                                 >
-                                    Show <span className="ml-1">›</span>
+                                    {t("category.products.show", "Show")} <span className="ml-1">›</span>
                                 </button>
                             </div>
 
                             <div className="mt-4 grid gap-4 md:grid-cols-2">
                                 <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
-                                    <div className="text-[14px] font-semibold text-gray-900">Advantages</div>
+                                    <div className="text-[14px] font-semibold text-gray-900">{t("category.products.advantages", "Advantages")}</div>
                                     <div className="mt-3 space-y-2 text-[13px] leading-6 text-gray-700">
                                         <div className="flex gap-2">
                                             <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">+</span>
-                                            <span className="cursor-not-allowed">Not available</span>
+                                            <span className="cursor-not-allowed">{t("category.products.notAvailable", "Not available")}</span>
                                         </div>
                                         <div className="flex gap-2">
                                             <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">+</span>
-                                            <span className="cursor-not-allowed">Not available</span>
+                                            <span className="cursor-not-allowed">{t("category.products.notAvailable", "Not available")}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
-                                    <div className="text-[14px] font-semibold text-gray-900">Disadvantages</div>
+                                    <div className="text-[14px] font-semibold text-gray-900">{t("category.products.disadvantages", "Disadvantages")}</div>
                                     <div className="mt-3 space-y-2 text-[13px] leading-6 text-gray-700">
                                         <div className="flex gap-2">
                                             <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-rose-700">–</span>
-                                            <span className="cursor-not-allowed">Not available</span>
+                                            <span className="cursor-not-allowed">{t("category.products.notAvailable", "Not available")}</span>
                                         </div>
                                         <div className="flex gap-2">
                                             <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-rose-700">–</span>
-                                            <span className="cursor-not-allowed">Not available</span>
+                                            <span className="cursor-not-allowed">{t("category.products.notAvailable", "Not available")}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -244,7 +246,7 @@ function ProductDetailsModal({
                         </div>
 
                         <div className="mt-6">
-                            <div className="text-[15px] font-semibold text-gray-900">Product details</div>
+                            <div className="text-[15px] font-semibold text-gray-900">{t("category.products.productDetailsSection", "Product details")}</div>
                             <div className="mt-3 overflow-hidden rounded-md bg-[#f3f3f3]">
                                 {specEntries.length ? (
                                     <div className="divide-y divide-white">
@@ -256,7 +258,7 @@ function ProductDetailsModal({
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="px-4 py-3 text-[13px] text-gray-600 cursor-not-allowed">No specifications available</div>
+                                    <div className="px-4 py-3 text-[13px] text-gray-600 cursor-not-allowed">{t("category.products.noSpecifications", "No specifications available")}</div>
                                 )}
                             </div>
                         </div>
@@ -273,7 +275,7 @@ function ProductDetailsModal({
                             <ChevronLeft className="h-5 w-5" />
                         </button>
 
-                        <div className="text-center text-[12px] text-gray-500">Other products</div>
+                        <div className="text-center text-[12px] text-gray-500">{t("category.products.otherProducts", "Other products")}</div>
 
                         <button
                             type="button"
@@ -304,7 +306,7 @@ function ProductDetailsModal({
                                     </div>
                                     <div className="mt-2 line-clamp-2 text-[12px] font-semibold text-gray-900">{n}</div>
                                     <div className="mt-2 text-[12px] text-gray-600">
-                                        from <span className="font-semibold text-[#ff6a00]">AED {formatPriceAED(p.numericPrice)}</span>
+                                        {t("category.products.from", "from")} <span className="font-semibold text-[#ff6a00]">AED {formatPriceAED(p.numericPrice)}</span>
                                     </div>
                                 </button>
                             );
@@ -317,6 +319,7 @@ function ProductDetailsModal({
 }
 
 function ProductCellGrid({ product, onOpenDetails }: { product: Product; onOpenDetails: () => void }) {
+    const { t } = useLanguage();
     const name = getName(product);
     const img = getImg(product);
     const source = getSource(product);
@@ -362,7 +365,7 @@ function ProductCellGrid({ product, onOpenDetails }: { product: Product; onOpenD
 
 
                 <div className="mt-3">
-                    <span className="text-[12px] text-gray-700">from </span>
+                    <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
                     <span className="text-[16px] font-semibold text-[#ff6a00]">AED {formatPriceAED(product.numericPrice)}</span>
                 </div>
 
@@ -377,7 +380,7 @@ function ProductCellGrid({ product, onOpenDetails }: { product: Product; onOpenD
                         className="inline-flex items-center gap-2 text-[13px] font-medium text-[#0b63c8] hover:underline"
                     >
                         <ExternalLink className="h-4 w-4" />
-                        Product details
+                        {t("category.products.productDetailsButton", "Product details")}
                     </button>
                 </div>
             </div>
@@ -386,6 +389,7 @@ function ProductCellGrid({ product, onOpenDetails }: { product: Product; onOpenD
 }
 
 function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDetails: () => void }) {
+    const { t } = useLanguage();
     const name = getName(product);
     const img = getImg(product);
     const source = getSource(product);
@@ -408,7 +412,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                         <div className="text-[14px] font-semibold leading-5 text-gray-900 hover:underline line-clamp-2">{name}</div>
                     </Link>
                     <div className="mt-1 text-[12px] text-gray-600 line-clamp-2 cursor-not-allowed">
-                        Ski helmet, all-round, in-mold, with side impact protection (MIPS)
+                        {t("category.products.placeholderDescription", "Ski helmet, all-round, in-mold, with side impact protection (MIPS)")}
                     </div>
 
                     <button
@@ -421,14 +425,14 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                         className="mt-2 inline-flex items-center gap-2 text-[13px] font-medium text-[#0b63c8] hover:underline"
                     >
                         <ExternalLink className="h-4 w-4" />
-                        Product details
+                        {t("category.products.productDetailsButton", "Product details")}
                     </button>
                 </div>
 
                 <div className="hidden sm:flex w-[180px] flex-col items-end justify-center gap-2 pr-1">
                     <div className="text-[12px] text-gray-500">{source}</div>
                     <div className="text-right">
-                        <div className="text-[12px] text-gray-700">from</div>
+                        <div className="text-[12px] text-gray-700">{t("category.products.from", "from")}</div>
                         <div className="text-[18px] font-semibold text-[#ff6a00]">AED {formatPriceAED(product.numericPrice)}</div>
                     </div>
                 </div>
@@ -437,7 +441,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
             <div className="mt-3 flex items-center justify-between sm:hidden">
                 <div className="text-[12px] text-gray-500">{source}</div>
                 <div className="text-right">
-                    <span className="text-[12px] text-gray-700">from </span>
+                    <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
                     <span className="text-[16px] font-semibold text-[#ff6a00]">AED {formatPriceAED(product.numericPrice)}</span>
                 </div>
             </div>

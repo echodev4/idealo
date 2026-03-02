@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 type Specs = Record<string, string>;
 
@@ -101,6 +102,7 @@ function FacetList({
     countForValue: (v: string) => number;
     limit?: number;
 }) {
+    const { t } = useLanguage();
     const [showAll, setShowAll] = useState(false);
 
     const safeValues = useMemo(() => {
@@ -151,7 +153,9 @@ function FacetList({
                     onClick={() => setShowAll((s) => !s)}
                     className="mt-2 text-sm text-[#0066CC] hover:underline"
                 >
-                    {showAll ? "Show less" : "Show all"}
+                    {showAll
+                        ? t("category.filtersSidebar.showLess", "Show less")
+                        : t("category.filtersSidebar.showAll", "Show all")}
                 </button>
             )}
         </>
@@ -161,6 +165,7 @@ function FacetList({
 export default function BabyFilterSidebar<
     T extends { numericPrice?: number; specifications?: Specs; title?: string }
 >(props: BabyFilterSidebarProps<T>) {
+    const { t } = useLanguage();
     const {
         isOpen,
         onClose,
@@ -229,13 +234,13 @@ export default function BabyFilterSidebar<
             >
                 <div className="p-4">
                     <div className="flex items-center justify-between mb-4 md:hidden">
-                        <h2 className="text-lg font-semibold">Filters</h2>
+                        <h2 className="text-lg font-semibold">{t("category.filtersSidebar.filters", "Filters")}</h2>
                         <Button variant="ghost" size="icon" onClick={onClose}>
                             <X className="h-5 w-5" />
                         </Button>
                     </div>
 
-                    <Section title="Price Range">
+                    <Section title={t("category.filtersSidebar.priceRange", "Price Range")}>
                         <div className="space-y-4">
                             <Slider
                                 min={defaultPriceRange[0]}
@@ -251,19 +256,19 @@ export default function BabyFilterSidebar<
                                 <span className="font-medium">
                                     AED {priceRange[0].toFixed(0)}
                                 </span>
-                                <span className="text-gray-400">to</span>
+                                <span className="text-gray-400">{t("category.filtersSidebar.to", "to")}</span>
                                 <span className="font-medium">
                                     AED {priceRange[1].toFixed(0)}
                                 </span>
                             </div>
                             <p className="text-xs text-gray-500">
-                                Showing {filteredProducts.length} results
+                                {t("category.filtersSidebar.showing", "Showing")} {filteredProducts.length} {t("category.filtersSidebar.results", "results")}
                             </p>
                         </div>
                     </Section>
 
                     {/* MAIN BABY FACETS */}
-                    <Section title="Department">
+                    <Section title={t("category.filtersSidebar.department", "Department")}>
                         <FacetList
                             facetKey="Department"
                             values={facets["Department"]}
@@ -273,7 +278,7 @@ export default function BabyFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Age range">
+                    <Section title={t("category.filtersSidebar.ageRange", "Age range")}>
                         <FacetList
                             facetKey="Age Range"
                             values={facets["Age Range"]}
@@ -283,7 +288,7 @@ export default function BabyFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Target age range">
+                    <Section title={t("category.filtersSidebar.targetAgeRange", "Target age range")}>
                         <FacetList
                             facetKey="Target Age Range"
                             values={facets["Target Age Range"]}
@@ -293,7 +298,7 @@ export default function BabyFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Color">
+                    <Section title={t("category.filtersSidebar.color", "Color")}>
                         <FacetList
                             facetKey="Colour Name"
                             values={facets["Colour Name"]}
@@ -303,7 +308,7 @@ export default function BabyFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Size">
+                    <Section title={t("category.filtersSidebar.size", "Size")}>
                         <FacetList
                             facetKey="Size"
                             values={facets["Size"]}
@@ -313,7 +318,7 @@ export default function BabyFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Material">
+                    <Section title={t("category.filtersSidebar.material", "Material")}>
                         <FacetList
                             facetKey="Material"
                             values={facets["Material"]}
@@ -323,7 +328,7 @@ export default function BabyFilterSidebar<
                         />
                     </Section>
 
-                    <Section title="Features">
+                    <Section title={t("category.filtersSidebar.features", "Features")}>
                         <FacetList
                             facetKey="Features"
                             values={facets["Features"]}
@@ -334,7 +339,7 @@ export default function BabyFilterSidebar<
                     </Section>
 
                     <Button variant="outline" className="w-full mt-2" onClick={onReset}>
-                        Reset Filters
+                        {t("category.filtersSidebar.resetFilters", "Reset Filters")}
                     </Button>
                 </div>
             </aside>
