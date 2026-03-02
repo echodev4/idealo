@@ -150,7 +150,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                         <div className="relative mb-4 group">
                             <div
                                 ref={tipsRef}
-                                className="flex gap-6 overflow-x-auto hide-scrollbar pr-3 max-w-full scroll-smooth touch-pan-x overscroll-x-contain snap-x snap-mandatory"
+                                className="flex gap-6 overflow-x-auto hide-scrollbar pr-3 max-w-full scroll-smooth overscroll-x-contain snap-x snap-mandatory"
                                 onWheel={onWheelTips}
                                 role="navigation"
                                 aria-label="Teaser tips"
@@ -198,7 +198,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
 
                         <div className="relative group">
                             {loading ? (
-                                <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar scroll-smooth touch-pan-x overscroll-x-contain">
+                                <div className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar scroll-smooth overscroll-x-contain">
                                     {Array.from({ length: 6 }).map((_, i) => (
                                         <div
                                             key={i}
@@ -216,7 +216,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                             ) : (
                                 <div
                                     ref={productsRef}
-                                    className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar scroll-smooth touch-pan-x overscroll-x-contain snap-x snap-mandatory"
+                                    className="flex overflow-x-auto gap-3 pb-2 hide-scrollbar scroll-smooth overscroll-x-contain snap-x snap-mandatory"
                                     onWheel={onWheelProducts}
                                     role="region"
                                     aria-label="Popular products"

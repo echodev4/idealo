@@ -118,7 +118,7 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.D
 }
 
 const SCROLLER_HIDE_NATIVE =
-  "overflow-x-auto scroll-smooth touch-pan-x overscroll-x-contain select-none " +
+  "overflow-x-auto scroll-smooth overscroll-x-contain select-none " +
   "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 function ProductCard({

@@ -111,7 +111,7 @@ export default function BestsellersCarousel({
     };
 
     const scrollerClass =
-        "flex overflow-x-auto gap-4 pb-4 select-none scroll-smooth touch-pan-x overscroll-x-contain " +
+        "flex overflow-x-auto gap-4 pb-4 select-none scroll-smooth overscroll-x-contain " +
         "[-ms-overflow-style:none] [scrollbar-width:none] " +
         "[&::-webkit-scrollbar]:hidden";
 

@@ -89,7 +89,7 @@ export default function TrendingProducts() {
     const { canLeft, canRight, scrollBy } = useHorizontalScroll(ref);
 
     const scrollerClass =
-        "flex gap-8 overflow-x-auto pb-3 scroll-smooth touch-pan-x overscroll-x-contain " +
+        "flex gap-8 overflow-x-auto pb-3 scroll-smooth overscroll-x-contain " +
         "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
     return (
