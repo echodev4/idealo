@@ -130,41 +130,40 @@ export default function Header() {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const categoriesRef = useRef<HTMLDivElement | null>(null);
 
   const categories = useMemo(
     () => [
-      { label: "Deals", icon: Percent, active: true },
-      { label: "Electrical goods", icon: Plug },
-      { label: "Sports & Outdoors", icon: Dumbbell },
-      { label: "Baby & Child", icon: Baby },
-      { label: "Home & Garden", icon: Home },
-      { label: "Food & Drink", icon: Utensils },
-      { label: "Gaming & Play", icon: Gamepad2 },
-      { label: "Drugstore & Health", icon: HeartPulse },
-      { label: "Cars & Motorcycles", icon: Car },
-      { label: "Fashion & Accessories", icon: Shirt },
-      { label: "Pet supplies", icon: PawPrint },
-      { label: "Flight", icon: Plane },
+      { label: t("header.categories.deals", "Deals"), query: "Deals", icon: Percent, active: true },
+      { label: t("header.categories.electricalGoods", "Electrical goods"), query: "Electrical goods", icon: Plug },
+      { label: t("header.categories.sportsOutdoors", "Sports & Outdoors"), query: "Sports & Outdoors", icon: Dumbbell },
+      { label: t("header.categories.babyChild", "Baby & Child"), query: "Baby & Child", icon: Baby },
+      { label: t("header.categories.homeGarden", "Home & Garden"), query: "Home & Garden", icon: Home },
+      { label: t("header.categories.foodDrink", "Food & Drink"), query: "Food & Drink", icon: Utensils },
+      { label: t("header.categories.gamingPlay", "Gaming & Play"), query: "Gaming & Play", icon: Gamepad2 },
+      { label: t("header.categories.drugstoreHealth", "Drugstore & Health"), query: "Drugstore & Health", icon: HeartPulse },
+      { label: t("header.categories.carsMotorcycles", "Cars & Motorcycles"), query: "Cars & Motorcycles", icon: Car },
+      { label: t("header.categories.fashionAccessories", "Fashion & Accessories"), query: "Fashion & Accessories", icon: Shirt },
+      { label: t("header.categories.petSupplies", "Pet supplies"), query: "Pet supplies", icon: PawPrint },
+      { label: t("header.categories.flight", "Flight"), query: "Flight", icon: Plane },
     ],
-    []
+    [t]
   );
 
   const popularSearches = useMemo(
     () => [
-      "Electronics",
-      "Sports & Outdoor",
-      "Baby & Kids",
-      "Home & Garden",
-      "Food & Drink",
-      "Gaming & Toys",
-      "Health & Beauty",
-      "Automotive",
-      "Fashion & Accessories",
-      "Pet Supplies",
+      { label: t("header.popularSearches.electronics", "Electronics"), query: "Electronics" },
+      { label: t("header.popularSearches.sportsOutdoor", "Sports & Outdoor"), query: "Sports & Outdoor" },
+      { label: t("header.popularSearches.babyKids", "Baby & Kids"), query: "Baby & Kids" },
+      { label: t("header.popularSearches.homeGarden", "Home & Garden"), query: "Home & Garden" },
+      { label: t("header.popularSearches.foodDrink", "Food & Drink"), query: "Food & Drink" },
+      { label: t("header.popularSearches.gamingToys", "Gaming & Toys"), query: "Gaming & Toys" },
+      { label: t("header.popularSearches.healthBeauty", "Health & Beauty"), query: "Health & Beauty" },
+      { label: t("header.popularSearches.automotive", "Automotive"), query: "Automotive" },
+      { label: t("header.popularSearches.fashionAccessories", "Fashion & Accessories"), query: "Fashion & Accessories" },
+      { label: t("header.popularSearches.petSupplies", "Pet Supplies"), query: "Pet Supplies" },
     ],
-    []
+    [t]
   );
 
   useEffect(() => {
@@ -325,7 +324,7 @@ export default function Header() {
                 type="button"
                 onClick={() => setQuery("")}
                 className={`flex ${buttonSize} items-center justify-center rounded-full text-[#666] ${buttonHover}`}
-                aria-label="Clear search"
+                aria-label={t("header.search.clearSearch", "Clear search")}
               >
                 <X size={18} />
               </button>
@@ -357,32 +356,32 @@ export default function Header() {
             {showPopularAndRecent && (
               <>
                 <div className="px-4 py-3 border-b border-[#eee]">
-                  <span className="text-[14px] font-bold text-[#666]">Popular searches</span>
+                  <span className="text-[14px] font-bold text-[#666]">{t("header.search.popularSearchesTitle", "Popular searches")}</span>
                 </div>
 
                 <div className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     {popularSearches.map((term) => (
                       <button
-                        key={term}
+                        key={term.query}
                         type="button"
-                        onClick={() => navigateToCategory(term)}
+                        onClick={() => navigateToCategory(term.query)}
                         className="rounded-[4px] bg-[#F1F3F5] px-3 py-1 text-[13px] text-[#212121] transition-colors hover:bg-[#E9ECEF]"
-                        title={term}
+                        title={term.label}
                       >
-                        {clampText(term, 26)}
+                        {clampText(term.label, 26)}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="px-4 py-3 border-t border-[#eee]">
-                  <span className="text-[14px] font-bold text-[#666]">Recently searched</span>
+                  <span className="text-[14px] font-bold text-[#666]">{t("header.search.recentlySearchedTitle", "Recently searched")}</span>
                 </div>
 
                 <div className="px-4 pb-4">
                   {recent.length === 0 ? (
-                    <div className="py-2 text-[13px] text-[#666]">No recent searches</div>
+                    <div className="py-2 text-[13px] text-[#666]">{t("header.search.noRecentSearches", "No recent searches")}</div>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {recent.slice(0, RECENT_LIMIT).map((term) => (
@@ -407,12 +406,12 @@ export default function Header() {
                 {loading ? (
                   <div className="flex items-center gap-2 px-4 py-4 text-[#666]">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-[13px]">Loading…</span>
+                    <span className="text-[13px]">{t("header.search.loading", "Loading...")}</span>
                   </div>
                 ) : (
                   <>
                     <div className="px-4 py-3 border-b border-[#eee]">
-                      <span className="text-[14px] font-bold text-[#666]">Suggestions</span>
+                      <span className="text-[14px] font-bold text-[#666]">{t("header.search.suggestions", "Suggestions")}</span>
                     </div>
 
                     <ol className="m-0 list-none p-0">
@@ -431,17 +430,17 @@ export default function Header() {
                       ))}
 
                       {query.trim().length >= 3 && aiTags.length === 0 && (
-                        <li className="px-4 py-2 text-[13px] text-[#666]">No suggestions found</li>
+                        <li className="px-4 py-2 text-[13px] text-[#666]">{t("header.search.noSuggestionsFound", "No suggestions found")}</li>
                       )}
                     </ol>
 
                     <div className="px-4 py-3 border-t border-[#eee]">
-                      <span className="text-[14px] font-bold text-[#666]">Products</span>
+                      <span className="text-[14px] font-bold text-[#666]">{t("header.search.products", "Products")}</span>
                     </div>
 
                     <div className="px-2 pb-2">
                       {realProducts.length === 0 ? (
-                        <div className="px-2 py-2 text-[13px] text-[#666]">No products found</div>
+                        <div className="px-2 py-2 text-[13px] text-[#666]">{t("header.search.noProductsFound", "No products found")}</div>
                       ) : (
                         <ul className="m-0 list-none p-0">
                           {realProducts.map((p) => (
@@ -531,7 +530,7 @@ export default function Header() {
           <div className="mx-auto max-w-[1280px] px-3">
             <div className="py-3 lg:py-4">
               <div className="hidden lg:flex items-center gap-6">
-                <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">
+                <Link href="/" className="block no-underline hover:no-underline" aria-label={t("header.aria.home", "Home")}>
                   <div className="leading-none">
                     <div className="text-[40px] font-bold tracking-tight text-white">idealo</div>
                     <div className="mt-1 h-[5px] w-[92px] bg-[#FF6600]" />
@@ -550,10 +549,10 @@ export default function Header() {
                   <Link
                     href="/card-comparison"
                     className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 no-underline hover:no-underline"
-                    aria-label="Cards"
+                    aria-label={t("header.actions.cards", "Cards")}
                   >
                     <CreditCard size={22} />
-                    <span className="text-[14px] font-semibold">Cards</span>
+                    <span className="text-[14px] font-semibold">{t("header.actions.cards", "Cards")}</span>
                   </Link>
 
                   <div className="mx-3 h-7 w-px bg-white/25" />
@@ -561,11 +560,11 @@ export default function Header() {
                   <button
                     type="button"
                     className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 cursor-not-allowed opacity-95"
-                    aria-label="Notepad"
+                    aria-label={t("header.actions.notepad", "Notepad")}
                     onClick={(e) => e.preventDefault()}
                   >
                     <Heart size={22} />
-                    <span className="text-[14px] font-semibold">Notepad</span>
+                    <span className="text-[14px] font-semibold">{t("header.actions.notepad", "Notepad")}</span>
                   </button>
 
                   <div className="mx-3 h-7 w-px bg-white/25" />
@@ -573,11 +572,11 @@ export default function Header() {
                   <button
                     type="button"
                     className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 cursor-not-allowed opacity-95"
-                    aria-label="Price alert"
+                    aria-label={t("header.actions.priceAlert", "Price alert")}
                     onClick={(e) => e.preventDefault()}
                   >
                     <Bell size={22} />
-                    <span className="text-[14px] font-semibold">Price alert</span>
+                    <span className="text-[14px] font-semibold">{t("header.actions.priceAlert", "Price alert")}</span>
                   </button>
 
                   <div className="mx-3 h-7 w-px bg-white/25" />
@@ -585,18 +584,18 @@ export default function Header() {
                   <button
                     type="button"
                     className="flex items-center gap-2 rounded px-3 py-2 hover:bg-white/10 cursor-not-allowed opacity-95"
-                    aria-label="Register"
+                    aria-label={t("header.actions.register", "Register")}
                     onClick={(e) => e.preventDefault()}
                   >
                     <User size={22} />
-                    <span className="text-[14px] font-semibold">Register</span>
+                    <span className="text-[14px] font-semibold">{t("header.actions.register", "Register")}</span>
                   </button>
                 </div>
               </div>
 
               <div className="lg:hidden">
                 <div className="flex items-center justify-between gap-3">
-                  <Link href="/" className="block no-underline hover:no-underline" aria-label="Home">
+                  <Link href="/" className="block no-underline hover:no-underline" aria-label={t("header.aria.home", "Home")}>
                     <div className="leading-none">
                       <div className="text-[34px] font-bold tracking-tight">idealo</div>
                       <div className="mt-1 h-[5px] w-[78px] bg-[#FF6600]" />
@@ -607,7 +606,7 @@ export default function Header() {
                     <Link
                       href="/card-comparison"
                       className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 no-underline hover:no-underline"
-                      aria-label="Cards"
+                      aria-label={t("header.actions.cards", "Cards")}
                     >
                       <CreditCard size={22} />
                     </Link>
@@ -615,7 +614,7 @@ export default function Header() {
                     <button
                       type="button"
                       className="flex h-10 w-10 items-center justify-center rounded hover:bg-white/10 cursor-not-allowed opacity-95"
-                      aria-label="Register"
+                      aria-label={t("header.actions.register", "Register")}
                       onClick={(e) => e.preventDefault()}
                     >
                       <User size={22} />
@@ -640,15 +639,15 @@ export default function Header() {
                     ref={categoriesRef}
                     className="flex w-full items-stretch gap-0 overflow-x-auto py-2 pl-10 pr-10 hide-scrollbar"
                     role="navigation"
-                    aria-label="Categories"
+                    aria-label={t("header.aria.categories", "Categories")}
                   >
                     {categories.map((c) => {
                       const Icon = c.icon;
                       return (
                         <button
-                          key={c.label}
+                          key={c.query}
                           type="button"
-                          onClick={() => navigateToCategory(c.label)}
+                          onClick={() => navigateToCategory(c.query)}
                           className="min-w-[102px] flex-shrink-0 px-2 py-2 text-center hover:bg-white/10"
                         >
                           <div className="mx-auto flex h-6 w-6 items-center justify-center">
@@ -666,7 +665,7 @@ export default function Header() {
                       type="button"
                       onClick={scrollCategoriesLeft}
                       className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded bg-white/10 hover:bg-white/15"
-                      aria-label="Scroll categories left"
+                      aria-label={t("header.aria.scrollCategoriesLeft", "Scroll categories left")}
                     >
                       <ChevronRight className="rotate-180" size={22} />
                     </button>
@@ -677,7 +676,7 @@ export default function Header() {
                       type="button"
                       onClick={scrollCategoriesRight}
                       className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded bg-white/10 hover:bg-white/15"
-                      aria-label="Scroll categories right"
+                      aria-label={t("header.aria.scrollCategoriesRight", "Scroll categories right")}
                     >
                       <ChevronRight size={22} />
                     </button>
