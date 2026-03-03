@@ -26,6 +26,65 @@ function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
 }
 
+type RtlScrollType = "negative" | "reverse" | "default";
+let cachedRtlScrollType: RtlScrollType | null = null;
+
+function getRtlScrollType(): RtlScrollType {
+    if (cachedRtlScrollType) return cachedRtlScrollType;
+    if (typeof document === "undefined") return "negative";
+
+    const outer = document.createElement("div");
+    const inner = document.createElement("div");
+
+    outer.dir = "rtl";
+    outer.style.width = "4px";
+    outer.style.height = "1px";
+    outer.style.overflow = "scroll";
+    outer.style.position = "absolute";
+    outer.style.top = "-9999px";
+
+    inner.style.width = "8px";
+    inner.style.height = "1px";
+    outer.appendChild(inner);
+    document.body.appendChild(outer);
+
+    outer.scrollLeft = 1;
+
+    if (outer.scrollLeft === 0) {
+        cachedRtlScrollType = "negative";
+    } else {
+        const initial = outer.scrollLeft;
+        outer.scrollLeft = 0;
+        cachedRtlScrollType = outer.scrollLeft === 0 ? "default" : (initial > 0 ? "reverse" : "negative");
+    }
+
+    document.body.removeChild(outer);
+    return cachedRtlScrollType;
+}
+
+function getNormalizedScrollLeft(el: HTMLDivElement, isRtl: boolean) {
+    if (!isRtl) return el.scrollLeft;
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const left = el.scrollLeft;
+    const type = getRtlScrollType();
+
+    if (type === "negative") return maxScroll + left;
+    if (type === "reverse") return maxScroll - left;
+    return left;
+}
+
+function getNativeScrollLeft(normalizedLeft: number, el: HTMLDivElement, isRtl: boolean) {
+    if (!isRtl) return normalizedLeft;
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const type = getRtlScrollType();
+
+    if (type === "negative") return normalizedLeft - maxScroll;
+    if (type === "reverse") return maxScroll - normalizedLeft;
+    return normalizedLeft;
+}
+
 export default function BestsellersCarousel({
     products,
     loading,
@@ -35,7 +94,8 @@ export default function BestsellersCarousel({
     loading: boolean;
     fallbackTitle?: string;
 }) {
-    const { t } = useLanguage();
+    const { t, direction } = useLanguage();
+    const isRtl = direction === "rtl";
     const items = useMemo(() => (Array.isArray(products) ? products : []), [products]);
     const ref = useRef<HTMLDivElement | null>(null);
 
@@ -47,7 +107,7 @@ export default function BestsellersCarousel({
         if (!el) return;
 
         const maxScroll = el.scrollWidth - el.clientWidth;
-        const left = el.scrollLeft;
+        const left = getNormalizedScrollLeft(el, isRtl);
         const eps = 2;
 
         setCanLeft(left > eps);
@@ -70,22 +130,27 @@ export default function BestsellersCarousel({
             el.removeEventListener("scroll", onScroll);
             ro.disconnect();
         };
-    }, [items.length, loading]);
+    }, [items.length, loading, isRtl]);
 
     const scrollByAmount = (dir: "left" | "right") => {
         const el = ref.current;
         if (!el) return;
         const amount = Math.round(el.clientWidth * 0.85);
         const maxScroll = el.scrollWidth - el.clientWidth;
-        const next = dir === "left" ? el.scrollLeft - amount : el.scrollLeft + amount;
-        el.scrollTo({ left: clamp(next, 0, maxScroll), behavior: "smooth" });
+        const current = getNormalizedScrollLeft(el, isRtl);
+        const delta = dir === "left" ? -amount : amount;
+        const next = clamp(current + delta, 0, maxScroll);
+        el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl), behavior: "smooth" });
     };
 
     const onWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
         const el = ref.current;
         if (!el) return;
         if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-        el.scrollLeft += e.deltaY;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        const current = getNormalizedScrollLeft(el, isRtl);
+        const next = clamp(current + e.deltaY, 0, maxScroll);
+        el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl) });
     };
 
     const dragging = useRef(false);
@@ -97,7 +162,7 @@ export default function BestsellersCarousel({
         if (!el) return;
         dragging.current = true;
         startX.current = e.clientX;
-        startLeft.current = el.scrollLeft;
+        startLeft.current = getNormalizedScrollLeft(el, isRtl);
         el.setPointerCapture(e.pointerId);
     };
 
@@ -105,7 +170,9 @@ export default function BestsellersCarousel({
         const el = ref.current;
         if (!el || !dragging.current) return;
         const dx = e.clientX - startX.current;
-        el.scrollLeft = startLeft.current - dx;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        const next = clamp(startLeft.current - dx, 0, maxScroll);
+        el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl) });
     };
 
     const endDrag = () => {

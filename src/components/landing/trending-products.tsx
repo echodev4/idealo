@@ -49,7 +49,66 @@ const trendingItems = [
     },
 ];
 
-function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
+type RtlScrollType = "negative" | "reverse" | "default";
+let cachedRtlScrollType: RtlScrollType | null = null;
+
+function getRtlScrollType(): RtlScrollType {
+    if (cachedRtlScrollType) return cachedRtlScrollType;
+    if (typeof document === "undefined") return "negative";
+
+    const outer = document.createElement("div");
+    const inner = document.createElement("div");
+
+    outer.dir = "rtl";
+    outer.style.width = "4px";
+    outer.style.height = "1px";
+    outer.style.overflow = "scroll";
+    outer.style.position = "absolute";
+    outer.style.top = "-9999px";
+
+    inner.style.width = "8px";
+    inner.style.height = "1px";
+    outer.appendChild(inner);
+    document.body.appendChild(outer);
+
+    outer.scrollLeft = 1;
+
+    if (outer.scrollLeft === 0) {
+        cachedRtlScrollType = "negative";
+    } else {
+        const initial = outer.scrollLeft;
+        outer.scrollLeft = 0;
+        cachedRtlScrollType = outer.scrollLeft === 0 ? "default" : (initial > 0 ? "reverse" : "negative");
+    }
+
+    document.body.removeChild(outer);
+    return cachedRtlScrollType;
+}
+
+function getNormalizedScrollLeft(el: HTMLDivElement, isRtl: boolean) {
+    if (!isRtl) return el.scrollLeft;
+
+    const max = el.scrollWidth - el.clientWidth;
+    const left = el.scrollLeft;
+    const type = getRtlScrollType();
+
+    if (type === "negative") return max + left;
+    if (type === "reverse") return max - left;
+    return left;
+}
+
+function getNativeScrollLeft(normalizedLeft: number, el: HTMLDivElement, isRtl: boolean) {
+    if (!isRtl) return normalizedLeft;
+
+    const max = el.scrollWidth - el.clientWidth;
+    const type = getRtlScrollType();
+
+    if (type === "negative") return normalizedLeft - max;
+    if (type === "reverse") return max - normalizedLeft;
+    return normalizedLeft;
+}
+
+function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, isRtl: boolean) {
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
 
@@ -57,8 +116,9 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
         const el = ref.current;
         if (!el) return;
         const max = el.scrollWidth - el.clientWidth;
-        setCanLeft(el.scrollLeft > 2);
-        setCanRight(el.scrollLeft < max - 2);
+        const left = getNormalizedScrollLeft(el, isRtl);
+        setCanLeft(left > 2);
+        setCanRight(left < max - 2);
     };
 
     useEffect(() => {
@@ -76,19 +136,25 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>) {
             el.removeEventListener("scroll", onScroll);
             ro.disconnect();
         };
-    }, [ref]);
+    }, [ref, isRtl]);
 
     const scrollBy = (dx: number) => {
-        ref.current?.scrollBy({ left: dx, behavior: "smooth" });
+        const el = ref.current;
+        if (!el) return;
+        const max = el.scrollWidth - el.clientWidth;
+        const current = getNormalizedScrollLeft(el, isRtl);
+        const next = Math.max(0, Math.min(max, current + dx));
+        el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl), behavior: "smooth" });
     };
 
     return { canLeft, canRight, scrollBy };
 }
 
 export default function TrendingProducts() {
-    const { t } = useLanguage();
+    const { t, direction } = useLanguage();
+    const isRtl = direction === "rtl";
     const ref = useRef<HTMLDivElement | any>(null);
-    const { canLeft, canRight, scrollBy } = useHorizontalScroll(ref);
+    const { canLeft, canRight, scrollBy } = useHorizontalScroll(ref, isRtl);
 
     const scrollerClass =
         "flex gap-8 overflow-x-auto pb-3 scroll-smooth overscroll-x-contain " +
@@ -143,28 +209,29 @@ export default function TrendingProducts() {
                                                             ? t("landing.trendingProducts.items.bicycleCarrier", "Bicycle carrier")
                                                             : t("landing.trendingProducts.items.jerseys", "Jerseys");
                             return (
-                            <Link
-                                key={item.slug}
-                                href={`/category/${encodeURIComponent(item.slug)}`}
-                                className="flex-none w-[170px] md:w-[185px] no-underline hover:no-underline"
-                            >
-                                <div className="mx-auto h-[132px] w-[132px] md:h-[140px] md:w-[140px] rounded-full bg-[#F2F2F2] flex items-center justify-center overflow-hidden">
-                                    <div className="relative h-[86px] w-[110px] md:h-[92px] md:w-[118px]">
-                                        <Image
-                                            src={item.image}
-                                            alt={name}
-                                            fill
-                                            sizes="185px"
-                                            className="object-contain mix-blend-multiply"
-                                        />
+                                <Link
+                                    key={item.slug}
+                                    href={`/category/${encodeURIComponent(item.slug)}`}
+                                    className="flex-none w-[170px] md:w-[185px] no-underline hover:no-underline"
+                                >
+                                    <div className="mx-auto h-[132px] w-[132px] md:h-[140px] md:w-[140px] rounded-full bg-[#F2F2F2] flex items-center justify-center overflow-hidden">
+                                        <div className="relative h-[86px] w-[110px] md:h-[92px] md:w-[118px]">
+                                            <Image
+                                                src={item.image}
+                                                alt={name}
+                                                fill
+                                                sizes="185px"
+                                                className="object-contain mix-blend-multiply"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="mt-3 text-center text-[14px] text-[#212121] leading-[1.3]">
-                                    {name}
-                                </div>
-                            </Link>
-                        )})}
+                                    <div className="mt-3 text-center text-[14px] text-[#212121] leading-[1.3]">
+                                        {name}
+                                    </div>
+                                </Link>
+                            )
+                        })}
                     </div>
                 </div>
             </div>

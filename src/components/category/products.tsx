@@ -451,11 +451,9 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
 
 export default function Products({
     products,
-    landingPage,
     view = "grid",
 }: {
     products: Product[];
-    landingPage?: boolean;
     view?: "grid" | "list";
 }) {
     const safeProducts = useMemo(() => products.filter((p) => p?.product_url && getName(p) && getImg(p)), [products]);
@@ -476,8 +474,7 @@ export default function Products({
     };
 
     return (
-        <section className={landingPage ? "bg-secondary py-8" : ""}>
-            <div className={`container`}>
+            <div>
                 {view === "grid" ? (
                     <div className="w-full bg-[#cfd6dd] p-px">
                         <div className="grid grid-cols-2 gap-px sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -502,6 +499,5 @@ export default function Products({
 
                 <ProductDetailsModal open={open} onClose={close} products={safeProducts} activeIndex={activeIndex} onNavigateIndex={navigateIndex} />
             </div>
-        </section>
     );
 }

@@ -650,7 +650,7 @@ export default function CategoryPage() {
 
               {sortOpen ? (
                 <div className="absolute right-0 top-[44px] z-30 w-[260px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-                  {[ 
+                  {[
                     { k: "popular", t: t("categoryPage.sort.popular", "Most popular first") },
                     { k: "savings", t: t("categoryPage.sort.savings", "Biggest savings first") },
                     { k: "cheap", t: t("categoryPage.sort.cheap", "Price: Cheapest first") },
@@ -860,50 +860,50 @@ export default function CategoryPage() {
               </div>
             ) : (
               <>
-                <Products products={paginatedProducts as any} landingPage={false} view={viewMode} />
+                <Products products={paginatedProducts as any} view={viewMode} />
 
               </>
             )}
           </main>
         </div>
-            {totalPages > 1 ? (
-              <div className="mt-6 flex items-center justify-end gap-2">
-                <div className="flex items-center gap-2">
-                  {pageButtons.map((t, idx) => {
-                    if (t === "…") {
-                      return (
-                        <div key={`e-${idx}`} className="h-10 w-10 grid place-items-center text-[14px] text-gray-500">
-                          …
-                        </div>
-                      );
-                    }
-                    const page = Number(t);
-                    const active = page === currentPage;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`h-10 w-10 rounded border text-sm font-medium ${active ? "bg-[#0b63c8] text-white border-[#0b63c8]" : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
-                          }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
+        {totalPages > 1 ? (
+          <div className="mt-6 flex items-center justify-end gap-2">
+            <div className="flex items-center gap-2">
+              {pageButtons.map((t, idx) => {
+                if (t === "…") {
+                  return (
+                    <div key={`e-${idx}`} className="h-10 w-10 grid place-items-center text-[14px] text-gray-500">
+                      …
+                    </div>
+                  );
+                }
+                const page = Number(t);
+                const active = page === currentPage;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`h-10 w-10 rounded border text-sm font-medium ${active ? "bg-[#0b63c8] text-white border-[#0b63c8]" : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
+                      }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
 
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
-                    ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
-                    : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
-                    }`}
-                  disabled={currentPage === totalPages}
-                >
-                  →
-                </button>
-              </div>
-            ) : null}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
+                ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
+                : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
+                }`}
+              disabled={currentPage === totalPages}
+            >
+              →
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

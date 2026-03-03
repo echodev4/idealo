@@ -44,7 +44,70 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.DependencyList = []) {
+type RtlScrollType = "negative" | "reverse" | "default";
+let cachedRtlScrollType: RtlScrollType | null = null;
+
+function getRtlScrollType(): RtlScrollType {
+  if (cachedRtlScrollType) return cachedRtlScrollType;
+  if (typeof document === "undefined") return "negative";
+
+  const outer = document.createElement("div");
+  const inner = document.createElement("div");
+
+  outer.dir = "rtl";
+  outer.style.width = "4px";
+  outer.style.height = "1px";
+  outer.style.overflow = "scroll";
+  outer.style.position = "absolute";
+  outer.style.top = "-9999px";
+
+  inner.style.width = "8px";
+  inner.style.height = "1px";
+  outer.appendChild(inner);
+  document.body.appendChild(outer);
+
+  outer.scrollLeft = 1;
+
+  if (outer.scrollLeft === 0) {
+    cachedRtlScrollType = "negative";
+  } else {
+    const initial = outer.scrollLeft;
+    outer.scrollLeft = 0;
+    cachedRtlScrollType = outer.scrollLeft === 0 ? "default" : (initial > 0 ? "reverse" : "negative");
+  }
+
+  document.body.removeChild(outer);
+  return cachedRtlScrollType;
+}
+
+function getNormalizedScrollLeft(el: HTMLDivElement, isRtl: boolean) {
+  if (!isRtl) return el.scrollLeft;
+
+  const maxScroll = el.scrollWidth - el.clientWidth;
+  const left = el.scrollLeft;
+  const type = getRtlScrollType();
+
+  if (type === "negative") return maxScroll + left;
+  if (type === "reverse") return maxScroll - left;
+  return left;
+}
+
+function getNativeScrollLeft(normalizedLeft: number, el: HTMLDivElement, isRtl: boolean) {
+  if (!isRtl) return normalizedLeft;
+
+  const maxScroll = el.scrollWidth - el.clientWidth;
+  const type = getRtlScrollType();
+
+  if (type === "negative") return normalizedLeft - maxScroll;
+  if (type === "reverse") return maxScroll - normalizedLeft;
+  return normalizedLeft;
+}
+
+function useHorizontalScroll(
+  ref: React.RefObject<HTMLDivElement>,
+  isRtl: boolean,
+  deps: React.DependencyList = []
+) {
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
 
@@ -52,7 +115,7 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.D
     const el = ref.current;
     if (!el) return;
     const max = el.scrollWidth - el.clientWidth;
-    const left = el.scrollLeft;
+    const left = getNormalizedScrollLeft(el, isRtl);
     const eps = 2;
     setCanLeft(left > eps);
     setCanRight(left < max - eps);
@@ -73,22 +136,27 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.D
       el.removeEventListener("scroll", onScroll);
       ro.disconnect();
     };
-  }, [ref, ...deps]);
+  }, [ref, isRtl, ...deps]);
 
   const scrollByViewport = (dir: "left" | "right") => {
     const el = ref.current;
     if (!el) return;
     const amount = Math.round(el.clientWidth * 0.85);
     const max = el.scrollWidth - el.clientWidth;
-    const next = dir === "left" ? el.scrollLeft - amount : el.scrollLeft + amount;
-    el.scrollTo({ left: clamp(next, 0, max), behavior: "smooth" });
+    const current = getNormalizedScrollLeft(el, isRtl);
+    const delta = dir === "left" ? -amount : amount;
+    const next = clamp(current + delta, 0, max);
+    el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl), behavior: "smooth" });
   };
 
   const onWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
     const el = ref.current;
     if (!el) return;
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    el.scrollLeft += e.deltaY;
+    const max = el.scrollWidth - el.clientWidth;
+    const current = getNormalizedScrollLeft(el, isRtl);
+    const next = clamp(current + e.deltaY, 0, max);
+    el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl) });
   };
 
   const dragging = useRef(false);
@@ -100,7 +168,7 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.D
     if (!el) return;
     dragging.current = true;
     startX.current = e.clientX;
-    startLeft.current = el.scrollLeft;
+    startLeft.current = getNormalizedScrollLeft(el, isRtl);
     el.setPointerCapture(e.pointerId);
   };
 
@@ -108,7 +176,9 @@ function useHorizontalScroll(ref: React.RefObject<HTMLDivElement>, deps: React.D
     const el = ref.current;
     if (!el || !dragging.current) return;
     const dx = e.clientX - startX.current;
-    el.scrollLeft = startLeft.current - dx;
+    const max = el.scrollWidth - el.clientWidth;
+    const next = clamp(startLeft.current - dx, 0, max);
+    el.scrollTo({ left: getNativeScrollLeft(next, el, isRtl) });
   };
 
   const endDrag = () => {
@@ -245,8 +315,8 @@ function HoverArrows({
 }
 
 export default function RelatedCategories({ products, loading }: { products: Product[]; loading: boolean }) {
-  const { t } = useLanguage();
-  console.log(products)
+  const { t, direction } = useLanguage();
+  const isRtl = direction === "rtl";
   const bestsellers = useMemo(() => (Array.isArray(products) ? products : []), [products]);
   const matching = useMemo(() => {
     const arr = Array.isArray(products) ? products : [];
@@ -266,7 +336,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     [t]
   );
 
-  const bestRef = useRef<null | any>(null);
+  const bestRef = useRef<HTMLDivElement | any>(null);
   const {
     canLeft: bestCanLeft,
     canRight: bestCanRight,
@@ -275,9 +345,9 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     onPointerDown: bestOnPointerDown,
     onPointerMove: bestOnPointerMove,
     endDrag: bestEndDrag,
-  } = useHorizontalScroll(bestRef, [bestsellers.length, loading]);
+  } = useHorizontalScroll(bestRef, isRtl, [bestsellers.length, loading]);
 
-  const relRef = useRef<null | any>(null);
+  const relRef = useRef<HTMLDivElement | any>(null);
   const {
     canLeft: relCanLeft,
     canRight: relCanRight,
@@ -286,9 +356,9 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     onPointerDown: relOnPointerDown,
     onPointerMove: relOnPointerMove,
     endDrag: relEndDrag,
-  } = useHorizontalScroll(relRef, [categories.length]);
+  } = useHorizontalScroll(relRef, isRtl, [categories.length]);
 
-  const matchRef = useRef<null | any>(null);
+  const matchRef = useRef<HTMLDivElement | any>(null);
   const {
     canLeft: matchCanLeft,
     canRight: matchCanRight,
@@ -297,7 +367,7 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     onPointerDown: matchOnPointerDown,
     onPointerMove: matchOnPointerMove,
     endDrag: matchEndDrag,
-  } = useHorizontalScroll(matchRef, [matching.length, loading]);
+  } = useHorizontalScroll(matchRef, isRtl, [matching.length, loading]);
 
   return (
     <section className="bg-white">
