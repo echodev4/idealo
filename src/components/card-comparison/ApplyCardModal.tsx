@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { X, ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 type ApplyCardModalProps = {
     open: boolean;
@@ -28,6 +29,7 @@ type FormState = {
 };
 
 export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalProps) {
+    const { t } = useLanguage();
     const [form, setForm] = useState<FormState>({
         fullName: "",
         email: "",
@@ -52,14 +54,14 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
 
     const errors = useMemo(() => {
         const e: Record<string, string> = {};
-        if (!form.fullName.trim()) e.fullName = "Full name is required";
-        if (!form.email.trim()) e.email = "Email is required";
-        else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) e.email = "Enter a valid email";
-        if (!form.phone.trim()) e.phone = "Phone is required";
-        if (!form.salary.trim()) e.salary = "Monthly salary is required";
-        if (!form.consent) e.consent = "Consent is required";
+        if (!form.fullName.trim()) e.fullName = t("cardComparison.applyModal.errors.fullNameRequired", "Full name is required");
+        if (!form.email.trim()) e.email = t("cardComparison.applyModal.errors.emailRequired", "Email is required");
+        else if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) e.email = t("cardComparison.applyModal.errors.validEmail", "Enter a valid email");
+        if (!form.phone.trim()) e.phone = t("cardComparison.applyModal.errors.phoneRequired", "Phone is required");
+        if (!form.salary.trim()) e.salary = t("cardComparison.applyModal.errors.salaryRequired", "Monthly salary is required");
+        if (!form.consent) e.consent = t("cardComparison.applyModal.errors.consentRequired", "Consent is required");
         return e;
-    }, [form]);
+    }, [form, t]);
 
     const showError = (key: string) => (submitted || touched[key]) && !!errors[key];
 
@@ -88,7 +90,7 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                     <button
                         onClick={onClose}
                         className="absolute right-5 top-5 text-neutral-600 hover:text-neutral-900 cursor-pointer"
-                        aria-label="Close"
+                        aria-label={t("cardComparison.applyModal.close", "Close")}
                     >
                         <X size={20} />
                     </button>
@@ -106,14 +108,14 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
 
                         <div className="min-w-0">
                             <h2 className="text-[18px] font-bold text-neutral-900 leading-tight">
-                                {card.title ?? `${card.bankName} Credit Card`}
+                                {card.title ?? `${card.bankName} ${t("cardComparison.applyModal.creditCard", "Credit Card")}`}
                             </h2>
                             <p className="text-sm text-neutral-600">{card.bankName}</p>
 
                             {/* Min salary badge (optional) */}
                             {card.minSalaryText && (
                                 <div className="mt-3 inline-flex items-center rounded-md bg-[#EFEDE6] px-3 py-1 text-sm text-neutral-700">
-                                    Min. salary: <span className="ml-1 font-semibold">{card.minSalaryText}</span>
+                                    {t("cardComparison.applyModal.minSalary", "Min. salary:")} <span className="ml-1 font-semibold">{card.minSalaryText}</span>
                                 </div>
                             )}
                         </div>
@@ -126,8 +128,8 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                         <div className="space-y-5">
                             {/* Full Name */}
                             <Field
-                                label="Full Name *"
-                                placeholder="Your full name"
+                                label={t("cardComparison.applyModal.fields.fullName", "Full Name *")}
+                                placeholder={t("cardComparison.applyModal.placeholders.fullName", "Your full name")}
                                 value={form.fullName}
                                 onBlur={() => setTouched((t) => ({ ...t, fullName: true }))}
                                 onChange={(v) => setForm((s) => ({ ...s, fullName: v }))}
@@ -136,8 +138,8 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
 
                             {/* Email */}
                             <Field
-                                label="Email *"
-                                placeholder="email@example.com"
+                                label={t("cardComparison.applyModal.fields.email", "Email *")}
+                                placeholder={t("cardComparison.applyModal.placeholders.email", "email@example.com")}
                                 value={form.email}
                                 onBlur={() => setTouched((t) => ({ ...t, email: true }))}
                                 onChange={(v) => setForm((s) => ({ ...s, email: v }))}
@@ -147,7 +149,7 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                             {/* Phone row (AE +971 + input) */}
                             <div>
                                 <label className="block text-sm font-semibold text-neutral-800 mb-2">
-                                    Phone *
+                                    {t("cardComparison.applyModal.fields.phone", "Phone *")}
                                 </label>
 
                                 <div
@@ -170,7 +172,7 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                                         value={form.phone}
                                         onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
                                         onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
-                                        placeholder="50 123 4567"
+                                        placeholder={t("cardComparison.applyModal.placeholders.phone", "50 123 4567")}
                                         className="flex-1 px-4 text-sm outline-none"
                                     />
                                 </div>
@@ -183,8 +185,8 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                             {/* Salary + Nationality row */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Field
-                                    label="Monthly Salary (AED) *"
-                                    placeholder="15,000"
+                                    label={t("cardComparison.applyModal.fields.salary", "Monthly Salary (AED) *")}
+                                    placeholder={t("cardComparison.applyModal.placeholders.salary", "15,000")}
                                     value={form.salary}
                                     onBlur={() => setTouched((t) => ({ ...t, salary: true }))}
                                     onChange={(v) => setForm((s) => ({ ...s, salary: v }))}
@@ -192,15 +194,15 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                                 />
 
                                 <SelectField
-                                    label="Nationality"
+                                    label={t("cardComparison.applyModal.fields.nationality", "Nationality")}
                                     value={form.nationality}
                                     onChange={(v) => setForm((s) => ({ ...s, nationality: v }))}
                                     options={[
-                                        { label: "Select", value: "" },
-                                        { label: "UAE", value: "UAE" },
-                                        { label: "Pakistan", value: "Pakistan" },
-                                        { label: "India", value: "India" },
-                                        { label: "Other", value: "Other" },
+                                        { label: t("cardComparison.applyModal.nationality.select", "Select"), value: "" },
+                                        { label: t("cardComparison.applyModal.nationality.uae", "UAE"), value: "UAE" },
+                                        { label: t("cardComparison.applyModal.nationality.pakistan", "Pakistan"), value: "Pakistan" },
+                                        { label: t("cardComparison.applyModal.nationality.india", "India"), value: "India" },
+                                        { label: t("cardComparison.applyModal.nationality.other", "Other"), value: "Other" },
                                     ]}
                                 />
                             </div>
@@ -219,7 +221,7 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                                         ].join(" ")}
                                     />
                                     <span>
-                                        I agree to be contacted by Credit Match and partners regarding my credit card.{" "}
+                                        {t("cardComparison.applyModal.consentText", "I agree to be contacted by Credit Match and partners regarding my credit card.")}{" "}
                                         <span className="text-red-500">*</span>
                                     </span>
                                 </label>
@@ -235,7 +237,7 @@ export default function ApplyCardModal({ open, onClose, card }: ApplyCardModalPr
                                 onClick={handleSubmit}
                                 className="mt-2 w-full h-12 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 transition cursor-pointer"
                             >
-                                Submit Application
+                                {t("cardComparison.applyModal.submit", "Submit Application")}
                             </button>
                         </div>
                     </div>

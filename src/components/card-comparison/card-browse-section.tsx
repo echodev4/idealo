@@ -6,8 +6,7 @@ import { Plus, ChevronDown } from "lucide-react";
 import { CardData } from "@/types/card";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-
-
+import { useLanguage } from "@/contexts/language-context";
 
 interface Props {
     cards: CardData[];
@@ -16,8 +15,6 @@ interface Props {
     setApplyCard: (card: CardData) => void;
     setOpenApply: (open: boolean) => void;
 }
-
-/* ---------- helpers ---------- */
 
 const splitList = (text?: string) => {
     if (!text) return [];
@@ -34,11 +31,10 @@ export default function CardBrowseSection({
     setApplyCard,
     setOpenApply
 }: Props) {
+    const { t } = useLanguage();
     const [searchQuery, setSearchQuery] = useState("");
     const [openFeaturesId, setOpenFeaturesId] = useState<string | null>(null);
 
-
-    // filters
     const [salaryTransfer, setSalaryTransfer] =
         useState<"any" | "required" | "not-required">("any");
 
@@ -53,7 +49,6 @@ export default function CardBrowseSection({
     const filterBase =
         "h-10 px-4 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-green-500";
 
-
     const resetFilters = () => {
         setSearchQuery("");
         setSalaryTransfer("any");
@@ -63,12 +58,9 @@ export default function CardBrowseSection({
         setSortOrder("asc");
     };
 
-
-
     const filteredCards = useMemo(() => {
         let list = [...cards];
 
-        /* ---------- search ---------- */
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
             list = list.filter((c) =>
@@ -87,7 +79,6 @@ export default function CardBrowseSection({
             );
         }
 
-        /* ---------- salary transfer ---------- */
         if (salaryTransfer !== "any") {
             list = list.filter((c) =>
                 salaryTransfer === "required"
@@ -96,7 +87,6 @@ export default function CardBrowseSection({
             );
         }
 
-        /* ---------- annual fee ---------- */
         if (annualFeeFilter !== "any") {
             list = list.filter((c) => {
                 const fee = c.joiningAnnualFee?.toLowerCase() || "";
@@ -121,12 +111,10 @@ export default function CardBrowseSection({
             });
         }
 
-        /* ---------- bank ---------- */
         if (selectedBank !== "all") {
             list = list.filter((c) => c.bankName === selectedBank);
         }
 
-        /* ---------- islamic ---------- */
         if (isIslamicOnly) {
             list = list.filter((c) =>
                 (
@@ -139,7 +127,6 @@ export default function CardBrowseSection({
             );
         }
 
-        /* ---------- sort ---------- */
         list.sort((a, b) =>
             sortOrder === "asc"
                 ? a.bankName.localeCompare(b.bankName)
@@ -157,19 +144,16 @@ export default function CardBrowseSection({
         sortOrder,
     ]);
 
-
     return (
         <section className="bg-white">
             <div className="mx-auto max-w-7xl px-4">
-                {/* Filters */}
                 <div className="mt-8 rounded-2xl border bg-gray-50/60 p-6 shadow-sm">
-
                     <div className="mb-8 text-center">
                         <h2 className="text-2xl md:text-3xl font-semibold text-neutral-darkest">
-                            Browse Credit Cards
+                            {t("cardComparison.browseSection.title", "Browse Credit Cards")}
                         </h2>
                         <p className="text-muted-foreground mt-2">
-                            Search and add cards to compare features, fees, and benefits
+                            {t("cardComparison.browseSection.subtitle", "Search and add cards to compare features, fees, and benefits")}
                         </p>
 
                         <div className="relative max-w-2xl mx-auto">
@@ -189,7 +173,7 @@ export default function CardBrowseSection({
 
                             <input
                                 type="search"
-                                placeholder="Search cards by bank, fee, benefits..."
+                                placeholder={t("cardComparison.browseSection.searchPlaceholder", "Search cards by bank, fee, benefits...")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full h-12 pl-11 pr-4 rounded-lg border bg-white focus:ring-2 focus:ring-green-500 focus:outline-none"
@@ -198,25 +182,22 @@ export default function CardBrowseSection({
 
                         <div className="mt-6 flex flex-wrap gap-3 items-center justify-between">
                             <div className="flex flex-wrap gap-3">
-
-                                {/* Salary Transfer */}
                                 <select
                                     className={filterBase}
                                     value={salaryTransfer}
                                     onChange={(e) => setSalaryTransfer(e.target.value as any)}
                                 >
-                                    <option value="any">Any salary transfer</option>
-                                    <option value="required">Required</option>
-                                    <option value="not-required">Not required</option>
+                                    <option value="any">{t("cardComparison.browseSection.filters.anySalaryTransfer", "Any salary transfer")}</option>
+                                    <option value="required">{t("cardComparison.browseSection.required", "Required")}</option>
+                                    <option value="not-required">{t("cardComparison.browseSection.notRequired", "Not required")}</option>
                                 </select>
 
-                                {/* Bank */}
                                 <select
                                     value={selectedBank}
                                     className={filterBase}
                                     onChange={(e) => setSelectedBank(e.target.value)}
                                 >
-                                    <option value="all">All banks</option>
+                                    <option value="all">{t("cardComparison.browseSection.filters.allBanks", "All banks")}</option>
                                     {[...new Set(cards.map((c) => c.bankName))]
                                         .sort()
                                         .map((bank) => (
@@ -226,34 +207,31 @@ export default function CardBrowseSection({
                                         ))}
                                 </select>
 
-                                {/* Annual Fee */}
                                 <select
                                     className={filterBase}
                                     value={annualFeeFilter}
                                     onChange={(e) => setAnnualFeeFilter(e.target.value as any)}
                                 >
-                                    <option value="any">Any fee</option>
-                                    <option value="free-life">Free for life</option>
-                                    <option value="free-first-year">Free for 1st year</option>
-                                    <option value="under-500">Under AED 500</option>
-                                    <option value="under-1000">Under AED 1,000</option>
+                                    <option value="any">{t("cardComparison.browseSection.filters.anyFee", "Any fee")}</option>
+                                    <option value="free-life">{t("cardComparison.browseSection.filters.freeForLife", "Free for life")}</option>
+                                    <option value="free-first-year">{t("cardComparison.browseSection.filters.freeFirstYear", "Free for 1st year")}</option>
+                                    <option value="under-500">{t("cardComparison.browseSection.filters.under500", "Under AED 500")}</option>
+                                    <option value="under-1000">{t("cardComparison.browseSection.filters.under1000", "Under AED 1,000")}</option>
                                 </select>
 
-                                {/* Islamic */}
                                 <label className="flex items-center gap-2 px-3 h-10 border rounded-md text-sm cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={isIslamicOnly}
                                         onChange={(e) => setIsIslamicOnly(e.target.checked)}
                                     />
-                                    Islamic
+                                    {t("cardComparison.browseSection.filters.islamic", "Islamic")}
                                 </label>
                             </div>
 
-                            {/* Right side */}
                             <div className="flex items-center gap-4">
                                 <span className="text-sm text-muted-foreground">
-                                    {filteredCards.length} cards
+                                    {filteredCards.length} {t("cardComparison.browseSection.cardsCount", "cards")}
                                 </span>
 
                                 <select
@@ -261,24 +239,21 @@ export default function CardBrowseSection({
                                     onChange={(e) => setSortOrder(e.target.value as any)}
                                     className={filterBase}
                                 >
-                                    <option value="asc">Bank (A–Z)</option>
-                                    <option value="desc">Bank (Z–A)</option>
+                                    <option value="asc">{t("cardComparison.browseSection.sort.bankAsc", "Bank (A–Z)")}</option>
+                                    <option value="desc">{t("cardComparison.browseSection.sort.bankDesc", "Bank (Z–A)")}</option>
                                 </select>
 
-                                {/* Reset */}
                                 <button
                                     onClick={resetFilters}
                                     className="h-10 px-4 rounded-md border text-sm font-semibold hover:bg-gray-50"
                                 >
-                                    Reset filters
+                                    {t("cardComparison.browseSection.resetFilters", "Reset filters")}
                                 </button>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
-                {/* Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
                     {filteredCards.map((card) => {
                         const isSelected = selectedCardIds.includes(card._id);
@@ -299,8 +274,6 @@ export default function CardBrowseSection({
                                 className={`relative flex flex-col h-full border rounded-xl bg-white p-4
     ${isSelected ? "opacity-60 cursor-not-allowed" : ""}`}
                             >
-
-                                {/* Add button */}
                                 {!isSelected && (
                                     <button
                                         onClick={() => onSelectCard(card)}
@@ -312,14 +285,10 @@ export default function CardBrowseSection({
 
                                 {isSelected && (
                                     <span className="absolute top-3 right-3 bg-green-600 text-white text-xs px-3 py-1 rounded-full">
-                                        Selected
+                                        {t("cardComparison.browseSection.selected", "Selected")}
                                     </span>
                                 )}
 
-
-
-
-                                {/* Image */}
                                 <Image
                                     src={card.cardImageUrl}
                                     alt={card.bankName}
@@ -328,26 +297,25 @@ export default function CardBrowseSection({
                                     className="w-full aspect-[1.6/1] object-cover rounded-md mb-4"
                                 />
 
-                                {/* Bank name */}
                                 <p className="text-xs uppercase text-muted-foreground font-semibold">
                                     {card.bankName}
                                 </p>
 
-                                {/* Info row */}
                                 <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                        <p className="text-muted-foreground">Salary Transfer</p>
+                                        <p className="text-muted-foreground">{t("cardComparison.browseSection.salaryTransfer", "Salary Transfer")}</p>
                                         <p className="font-semibold">
-                                            {card.salaryTransferRequired ? "Required" : "Not Required"}
+                                            {card.salaryTransferRequired
+                                                ? t("cardComparison.browseSection.required", "Required")
+                                                : t("cardComparison.browseSection.notRequiredTitleCase", "Not Required")}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-muted-foreground">Annual Fee</p>
+                                        <p className="text-muted-foreground">{t("cardComparison.browseSection.annualFee", "Annual Fee")}</p>
                                         <p className="font-semibold">{card.joiningAnnualFee}</p>
                                     </div>
                                 </div>
 
-                                {/* Feature pills */}
                                 <div className="flex flex-wrap gap-2 mt-4">
                                     {pills.map((item, i) => (
                                         <span
@@ -359,7 +327,6 @@ export default function CardBrowseSection({
                                     ))}
                                 </div>
 
-                                {/* View features */}
                                 <button
                                     onClick={() =>
                                         setOpenFeaturesId(
@@ -385,7 +352,9 @@ export default function CardBrowseSection({
                                         }
   `}
                                 >
-                                    {openFeaturesId === card._id ? "Hide Features" : "View Features"}
+                                    {openFeaturesId === card._id
+                                        ? t("cardComparison.browseSection.hideFeatures", "Hide Features")
+                                        : t("cardComparison.browseSection.viewFeatures", "View Features")}
 
                                     <ChevronDown
                                         size={16}
@@ -402,11 +371,10 @@ export default function CardBrowseSection({
   `}
                                 >
                                     <div className="max-h-[180px] overflow-y-auto pr-2">
-                                        {/* Welcome Bonus */}
                                         {card.welcomeBonus && card.welcomeBonus !== "-" && (
                                             <div className="mb-3">
                                                 <p className="mb-1 font-semibold text-neutral-darkest">
-                                                    Welcome Bonus
+                                                    {t("cardComparison.browseSection.welcomeBonus", "Welcome Bonus")}
                                                 </p>
                                                 <ul className="space-y-1 text-muted-foreground">
                                                     {splitList(card.welcomeBonus).map((item, i) => (
@@ -416,11 +384,10 @@ export default function CardBrowseSection({
                                             </div>
                                         )}
 
-                                        {/* Earn Rates */}
                                         {card.earnRates && (
                                             <div className="mb-3">
                                                 <p className="mb-1 font-semibold text-neutral-darkest">
-                                                    Earn Rates
+                                                    {t("cardComparison.browseSection.earnRates", "Earn Rates")}
                                                 </p>
                                                 <ul className="space-y-1 text-muted-foreground">
                                                     {splitList(card.earnRates).map((item, i) => (
@@ -430,11 +397,10 @@ export default function CardBrowseSection({
                                             </div>
                                         )}
 
-                                        {/* Lifestyle Benefits */}
                                         {card.keyLifestyleBenefits && (
                                             <div>
                                                 <p className="mb-1 font-semibold text-neutral-darkest">
-                                                    Key Lifestyle Benefits
+                                                    {t("cardComparison.browseSection.keyLifestyleBenefits", "Key Lifestyle Benefits")}
                                                 </p>
                                                 <ul className="space-y-1 text-muted-foreground">
                                                     {splitList(card.keyLifestyleBenefits).map((item, i) => (
@@ -446,30 +412,24 @@ export default function CardBrowseSection({
                                     </div>
                                 </div>
 
-
-
-                                {/* CTA */}
                                 <div className="mt-auto pt-6 grid grid-cols-2 gap-3">
                                     <p
                                         className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-green-600 font-bold py-3 bg-green-600 text-white hover:bg-green-700 cursor-pointer"
                                         onClick={() => {
-                                            setApplyCard(card)
-                                            setOpenApply(true)
-                                        }
-                                        }
+                                            setApplyCard(card);
+                                            setOpenApply(true);
+                                        }}
                                     >
-                                        Apply Now
+                                        {t("cardComparison.browseSection.applyNow", "Apply Now")}
                                     </p>
 
                                     <Link
                                         href={`/card-comparison/${card._id}`}
                                         className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-green-600 text-green-700 font-bold py-3 hover:bg-green-50"
                                     >
-                                        Details
+                                        {t("cardComparison.browseSection.details", "Details")}
                                         <ArrowRight className="w-5 h-5" />
                                     </Link>
-
-
                                 </div>
                             </div>
                         );

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { CardData } from "@/types/card";
+import { useLanguage } from "@/contexts/language-context";
 
 interface Props {
     isOpen: boolean;
@@ -27,6 +28,7 @@ export default function CardSelectionModal({
     onSelectCard,
     selectedCardIds
 }: Props) {
+    const { t } = useLanguage();
     const [isRendered, setIsRendered] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -80,11 +82,12 @@ export default function CardSelectionModal({
             >
                 {/* Header */}
                 <div className="p-6 border-b flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Select a Credit Card</h2>
+                    <h2 className="text-xl font-semibold">{t("cardComparison.selectionModal.title", "Select a Credit Card")}</h2>
                     <button
                         ref={closeBtnRef}
                         onClick={handleClose}
                         className="p-2 rounded hover:bg-muted cursor-pointer"
+                        aria-label={t("cardComparison.selectionModal.close", "Close")}
                     >
                         <X />
                     </button>
@@ -94,7 +97,7 @@ export default function CardSelectionModal({
                 <div className="p-6 border-b">
                     <input
                         type="search"
-                        placeholder="Search by bank name, fee, or earn rate..."
+                        placeholder={t("cardComparison.selectionModal.searchPlaceholder", "Search by bank name, fee, or earn rate...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full h-11 px-4 border rounded-md"
@@ -105,7 +108,7 @@ export default function CardSelectionModal({
                 <div className="flex-1 overflow-y-auto p-6">
                     {filteredCards.length === 0 ? (
                         <p className="text-center text-muted-foreground py-12">
-                            No cards found
+                            {t("cardComparison.selectionModal.noCardsFound", "No cards found")}
                         </p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -142,15 +145,15 @@ export default function CardSelectionModal({
 
                                         <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
                                             <div>
-                                                <p className="text-muted-foreground">Salary Transfer</p>
+                                                <p className="text-muted-foreground">{t("cardComparison.selectionModal.salaryTransfer", "Salary Transfer")}</p>
                                                 <p className="font-semibold">
                                                     {card.salaryTransferRequired
-                                                        ? "Required"
-                                                        : "Not Required"}
+                                                        ? t("cardComparison.selectionModal.required", "Required")
+                                                        : t("cardComparison.selectionModal.notRequired", "Not Required")}
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-muted-foreground">Annual Fee</p>
+                                                <p className="text-muted-foreground">{t("cardComparison.selectionModal.annualFee", "Annual Fee")}</p>
                                                 <p className="font-semibold">
                                                     {card.joiningAnnualFee}
                                                 </p>

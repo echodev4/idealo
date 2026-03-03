@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import ApplyCardModal from "@/components/card-comparison/ApplyCardModal";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
 import {
     ChevronRight,
     Briefcase,
@@ -14,9 +15,6 @@ import {
     ArrowRight,
 } from "lucide-react";
 
-/* =========================
-   Types
-========================= */
 type Card = {
     _id: string;
     bankName: string;
@@ -31,10 +29,6 @@ type Card = {
     cardImageUrl: string;
 };
 
-
-/* =========================
-   Helpers
-========================= */
 const splitList = (text?: string) =>
     text
         ? text
@@ -43,10 +37,8 @@ const splitList = (text?: string) =>
             .filter(Boolean)
         : [];
 
-/* =========================
-   Page
-========================= */
 export default function CardDetailsPage() {
+    const { t } = useLanguage();
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
@@ -55,10 +47,6 @@ export default function CardDetailsPage() {
     const [error, setError] = useState("");
     const [openApply, setOpenApply] = useState(false);
 
-
-    /* =========================
-       Fetch card
-    ========================= */
     useEffect(() => {
         if (!id) return;
 
@@ -66,7 +54,7 @@ export default function CardDetailsPage() {
         fetch(`/api/cards/${id}`)
             .then(async (res) => {
                 const data = await res.json();
-                if (!res.ok) throw new Error(data?.message || "Failed to load card");
+                if (!res.ok) throw new Error(data?.message || t("cardComparison.cardDetails.errors.failedToLoad", "Failed to load card"));
                 return data.item;
             })
             .then((item) => {
@@ -74,10 +62,10 @@ export default function CardDetailsPage() {
                 setLoading(false);
             })
             .catch((err) => {
-                setError(err.message || "Something went wrong");
+                setError(err.message || t("cardComparison.cardDetails.errors.somethingWentWrong", "Something went wrong"));
                 setLoading(false);
             });
-    }, [id]);
+    }, [id, t]);
 
     const annualFee = useMemo(
         () => splitList(card?.joiningAnnualFee)[0],
@@ -85,7 +73,7 @@ export default function CardDetailsPage() {
     );
 
     if (loading) {
-        return <div className="py-20 text-center">Loading card…</div>;
+        return <div className="py-20 text-center">{t("cardComparison.cardDetails.loading", "Loading card...")}</div>;
     }
 
     if (error || !card) {
@@ -96,7 +84,7 @@ export default function CardDetailsPage() {
                     onClick={() => router.push("/card-comparison")}
                     className="px-6 py-3 border rounded-md"
                 >
-                    Go Back
+                    {t("cardComparison.cardDetails.goBack", "Go Back")}
                 </button>
             </div>
         );
@@ -114,29 +102,25 @@ export default function CardDetailsPage() {
                         _id: card._id,
                         bankName: card.bankName,
                         cardImageUrl: card.cardImageUrl,
-                        title: `${card.bankName} Credit Card`,
-                        minSalaryText: "AED 5,000",
+                        title: `${card.bankName} ${t("cardComparison.cardDetails.creditCard", "Credit Card")}`,
+                        minSalaryText: t("cardComparison.cardDetails.minSalaryValue", "AED 5,000"),
                     }}
                 />
             )}
 
-
             <div className="max-w-[1100px] mx-auto px-4 py-8">
-
-                {/* ================= Breadcrumb ================= */}
                 <nav className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
-                    <Link href="/" className="hover:text-neutral-800">Home</Link>
+                    <Link href="/" className="hover:text-neutral-800">{t("cardComparison.cardDetails.breadcrumb.home", "Home")}</Link>
                     <ChevronRight className="w-4 h-4" />
                     <Link href="/card-comparison" className="hover:text-neutral-800">
-                        Explore
+                        {t("cardComparison.cardDetails.breadcrumb.explore", "Explore")}
                     </Link>
                     <ChevronRight className="w-4 h-4" />
                     <span className="text-neutral-800 font-medium">
-                        {card.bankName} Credit Card
+                        {card.bankName} {t("cardComparison.cardDetails.creditCard", "Credit Card")}
                     </span>
                 </nav>
 
-                {/* ================= Hero Card ================= */}
                 <section className="bg-white rounded-2xl border shadow-sm p-6 md:p-10">
                     <div className="flex justify-center">
                         <div className="max-w-[520px] w-full">
@@ -154,54 +138,53 @@ export default function CardDetailsPage() {
                     <div className="mt-8">
                         <p className="text-sm text-neutral-500">{card.bankName}</p>
                         <h1 className="text-3xl md:text-4xl font-bold mt-2">
-                            {card.bankName} Credit Card
+                            {card.bankName} {t("cardComparison.cardDetails.creditCard", "Credit Card")}
                         </h1>
 
-                        {/* ================= Stats ================= */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                             <StatBox
                                 icon={<Briefcase />}
-                                label="Min. Salary"
-                                value="AED 5,000"
+                                label={t("cardComparison.cardDetails.stats.minSalary", "Min. Salary")}
+                                value={t("cardComparison.cardDetails.minSalaryValue", "AED 5,000")}
                             />
                             <StatBox
                                 icon={<Calendar />}
-                                label="Annual Fee"
-                                value={annualFee || "—"}
+                                label={t("cardComparison.cardDetails.stats.annualFee", "Annual Fee")}
+                                value={annualFee || t("cardComparison.cardDetails.emptyValue", "—")}
                             />
                             <StatBox
                                 icon={<Percent />}
-                                label="Interest Rate"
-                                value={card.apr || "N/A"}
+                                label={t("cardComparison.cardDetails.stats.interestRate", "Interest Rate")}
+                                value={card.apr || t("cardComparison.cardDetails.na", "N/A")}
                             />
                             <StatBox
                                 icon={<Building2 />}
-                                label="Salary Transfer"
-                                value={card.salaryTransferRequired ? "Required" : "Not Required"}
+                                label={t("cardComparison.cardDetails.stats.salaryTransfer", "Salary Transfer")}
+                                value={card.salaryTransferRequired
+                                    ? t("cardComparison.cardDetails.required", "Required")
+                                    : t("cardComparison.cardDetails.notRequired", "Not Required")}
                             />
                         </div>
 
-                        {/* ================= Apply ================= */}
                         <div className="mt-8">
                             <p
                                 className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 cursor-pointer"
                                 onClick={() => setOpenApply(true)}
                             >
-                                Apply for This Card
+                                {t("cardComparison.cardDetails.applyForCard", "Apply for This Card")}
                                 <ArrowRight className="w-5 h-5" />
                             </p>
                         </div>
                     </div>
                 </section>
 
-                {/* ================= Features ================= */}
                 <FeaturesSection
-                    title="Travel & Lifestyle"
+                    title={t("cardComparison.cardDetails.sections.travelLifestyle", "Travel & Lifestyle")}
                     items={splitList(card.keyLifestyleBenefits)}
                 />
 
                 <FeaturesSection
-                    title="Rewards & Cashback"
+                    title={t("cardComparison.cardDetails.sections.rewardsCashback", "Rewards & Cashback")}
                     items={[
                         ...splitList(card.earnRates),
                         ...splitList(card.pointsRedemption),
@@ -210,23 +193,22 @@ export default function CardDetailsPage() {
 
                 {card.welcomeBonus && card.welcomeBonus !== "-" && (
                     <FeaturesSection
-                        title="Welcome & Special Offers"
+                        title={t("cardComparison.cardDetails.sections.welcomeOffers", "Welcome & Special Offers")}
                         items={splitList(card.welcomeBonus)}
                     />
                 )}
 
                 <FeaturesSection
-                    title="Documents Required"
+                    title={t("cardComparison.cardDetails.sections.documentsRequired", "Documents Required")}
                     items={splitList(card.documentsRequired)}
                 />
 
-                {/* ================= Go Back ================= */}
                 <div className="flex justify-center mt-12 pb-12">
                     <button
                         onClick={() => router.push("/card-comparison")}
                         className="px-8 py-3 rounded-md border font-semibold bg-white hover:bg-gray-50 cursor-pointer"
                     >
-                        Go Back
+                        {t("cardComparison.cardDetails.goBack", "Go Back")}
                     </button>
                 </div>
             </div>
@@ -234,9 +216,6 @@ export default function CardDetailsPage() {
     );
 }
 
-/* =========================
-   Small Components
-========================= */
 function StatBox({
     icon,
     label,

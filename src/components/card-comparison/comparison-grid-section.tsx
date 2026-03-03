@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CardData } from "@/types/card";
 import styles from "@/app/card-comparison/comparison-grid-section.module.css";
+import { useLanguage } from "@/contexts/language-context";
 
 const AttributeRow = ({
   icon: Icon,
@@ -28,7 +29,6 @@ const AttributeRow = ({
   children: React.ReactNode;
   className?: string;
 }) => (
-  // Enforce consistent row height by default so headings stay aligned across columns.
   <div className={cn("border-t border-border py-4", styles.comparisonRow, className)}>
     <div className="flex items-center gap-2 mb-1">
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -40,8 +40,9 @@ const AttributeRow = ({
 
 
 const ExpandableText = ({ text }: { text?: string }) => {
+    const { t } = useLanguage();
     const [open, setOpen] = useState(false);
-    if (!text) return <span className="text-muted-foreground">—</span>;
+    if (!text) return <span className="text-muted-foreground">{t("cardComparison.comparisonGrid.emptyValue", "—")}</span>;
 
     const needs = text.length > 250;
 
@@ -64,7 +65,9 @@ const ExpandableText = ({ text }: { text?: string }) => {
                     onClick={() => setOpen(!open)}
                     className="mt-2 text-sm font-medium text-[#0066cc] hover:underline"
                 >
-                    {open ? "Show less" : "Read more"}
+                    {open
+                        ? t("cardComparison.comparisonGrid.showLess", "Show less")
+                        : t("cardComparison.comparisonGrid.readMore", "Read more")}
                 </button>
             )}
         </div>
@@ -82,15 +85,15 @@ const FilledCardSlot = ({
     setApplyCard: any;
     setOpenApply: any;
 }) => {
+    const { t } = useLanguage();
     return (
         <div className="flex flex-col rounded-lg border bg-white">
-            {/* Keep header visible below the fixed site header */}
             <div className={cn("border-b px-4 pt-3 pb-4", styles.stickyCardHeader)}>
                 <button
                     onClick={onRemove}
                     className="ml-auto mb-2 block text-sm text-[#0066cc] hover:underline"
                 >
-                    Remove Card
+                    {t("cardComparison.comparisonGrid.removeCard", "Remove Card")}
                 </button>
 
                 <Image
@@ -102,13 +105,15 @@ const FilledCardSlot = ({
                 />
 
                 <h3 className="mt-4 text-center text-base font-semibold leading-snug">
-                    {card.bankName} Credit Card
+                    {card.bankName} {t("cardComparison.comparisonGrid.creditCard", "Credit Card")}
                 </h3>
 
                 <p className="text-center text-sm text-neutral-500 mt-1">
-                    Salary Transfer:{" "}
+                    {t("cardComparison.comparisonGrid.salaryTransfer", "Salary Transfer:")}{" "}
                     <span className="font-semibold text-neutral-800">
-                        {card.salaryTransferRequired ? "Required" : "Not Required"}
+                        {card.salaryTransferRequired
+                            ? t("cardComparison.comparisonGrid.required", "Required")
+                            : t("cardComparison.comparisonGrid.notRequired", "Not Required")}
                     </span>
                 </p>
 
@@ -119,7 +124,7 @@ const FilledCardSlot = ({
                     }}
                     className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary py-3 text-sm font-bold text-primary-foreground hover:opacity-95 cursor-pointer"
                 >
-                    APPLY NOW
+                    {t("cardComparison.comparisonGrid.applyNow", "APPLY NOW")}
                     <ArrowUpRight className="h-4 w-4" />
                 </p>
             </div>
@@ -127,15 +132,14 @@ const FilledCardSlot = ({
             <div className="px-4 py-4 space-y-6">
                 <AttributeRow
                     icon={DollarSign}
-                    label="Annual Fee"
+                    label={t("cardComparison.comparisonGrid.annualFee", "Annual Fee")}
                 >
                     <ExpandableText text={card.joiningAnnualFee} />
                 </AttributeRow>
 
-                {/* Always render Welcome Bonus so rows align across all columns */}
                 <AttributeRow
                     icon={Gift}
-                    label="Welcome Bonus"
+                    label={t("cardComparison.comparisonGrid.welcomeBonus", "Welcome Bonus")}
                 >
                     <ExpandableText
                         text={
@@ -146,21 +150,21 @@ const FilledCardSlot = ({
 
                 <AttributeRow
                     icon={Percent}
-                    label="Earn Rates"
+                    label={t("cardComparison.comparisonGrid.earnRates", "Earn Rates")}
                 >
                     <ExpandableText text={card.earnRates} />
                 </AttributeRow>
 
                 <AttributeRow
                     icon={ThumbsUp}
-                    label="Lifestyle Benefits"
+                    label={t("cardComparison.comparisonGrid.lifestyleBenefits", "Lifestyle Benefits")}
                 >
                     <ExpandableText text={card.keyLifestyleBenefits} />
                 </AttributeRow>
 
                 <AttributeRow
                     icon={Calendar}
-                    label="Points Redemption"
+                    label={t("cardComparison.comparisonGrid.pointsRedemption", "Points Redemption")}
                 >
                     <ExpandableText text={card.pointsRedemption} />
                 </AttributeRow>
@@ -169,12 +173,12 @@ const FilledCardSlot = ({
                     icon={TrendingUp}
                     label="APR"
                 >
-                    {card.apr || <span className="text-muted-foreground">—</span>}
+                    {card.apr || <span className="text-muted-foreground">{t("cardComparison.comparisonGrid.emptyValue", "—")}</span>}
                 </AttributeRow>
 
                 <AttributeRow
                     icon={Check}
-                    label="Documents Required"
+                    label={t("cardComparison.comparisonGrid.documentsRequired", "Documents Required")}
                 >
                     <ExpandableText text={card.documentsRequired} />
                 </AttributeRow>
@@ -183,19 +187,22 @@ const FilledCardSlot = ({
     );
 };
 
-const EmptyCardSlot = ({ onClick }: { onClick: () => void }) => (
-    <button
-        onClick={onClick}
-        className="group flex min-h-[240px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d0d0d0] bg-white py-8 px-4 text-center hover:border-primary transition"
-    >
-        <div className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-dashed">
-            <Plus className="h-6 w-6 text-[#999999] group-hover:text-primary" />
-        </div>
-        <p className="mt-3 text-sm font-medium text-[#999999] group-hover:text-primary">
-            Click to add card
-        </p>
-    </button>
-);
+const EmptyCardSlot = ({ onClick }: { onClick: () => void }) => {
+    const { t } = useLanguage();
+    return (
+        <button
+            onClick={onClick}
+            className="group flex min-h-[240px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d0d0d0] bg-white py-8 px-4 text-center hover:border-primary transition"
+        >
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-dashed">
+                <Plus className="h-6 w-6 text-[#999999] group-hover:text-primary" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-[#999999] group-hover:text-primary">
+                {t("cardComparison.comparisonGrid.clickToAddCard", "Click to add card")}
+            </p>
+        </button>
+    );
+};
 
 interface Props {
     selectedCards: (CardData | null)[];
