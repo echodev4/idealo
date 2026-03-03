@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/language-context";
 
 function Sparkline() {
     return (
@@ -21,11 +22,12 @@ function Sparkline() {
 
 export default function PriceDevelopmentPanel() {
     const [active, setActive] = React.useState<"3M" | "6M" | "1Y">("3M");
+    const { t } = useLanguage();
 
     return (
         <section className="w-full">
             <div className="flex items-center justify-between gap-3">
-                <div className="text-[14px] font-semibold text-[#111827]">Price development</div>
+                <div className="text-[14px] font-semibold text-[#111827]">{t("singleProduct.priceDevelopmentPanel.title", "Price development")}</div>
 
                 <div className="flex items-center gap-1">
                     {(["3M", "6M", "1Y"] as const).map((k) => {
@@ -40,7 +42,7 @@ export default function PriceDevelopmentPanel() {
                                     selected ? "bg-[#1a73e8] text-white border-[#1a73e8]" : "bg-white text-[#1a73e8] border-[#1a73e8]"
                                 )}
                             >
-                                {k === "1Y" ? "1 y" : k}
+                                {k === "1Y" ? t("singleProduct.priceDevelopmentPanel.oneYear", "1 y") : k}
                             </button>
                         );
                     })}
@@ -60,7 +62,7 @@ export default function PriceDevelopmentPanel() {
                         className="inline-flex items-center justify-center gap-2 h-10 px-8 rounded-[3px] border border-[#1a73e8] bg-white text-[#1a73e8] font-semibold text-[13px] cursor-not-allowed"
                     >
                         <Bell className="w-4 h-4" />
-                        Price alerts
+                        {t("singleProduct.priceDevelopmentPanel.priceAlerts", "Price alerts")}
                     </button>
                 </div>
             </div>

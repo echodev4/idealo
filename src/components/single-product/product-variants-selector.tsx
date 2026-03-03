@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
+import { useLanguage } from "@/contexts/language-context";
 
 function parseAEDPrice(price: string): number | null {
     if (!price) return null;
@@ -35,6 +36,7 @@ const ProductVariantsSelectorSkeleton = () => {
 
 export default function ProductVariantsSelector() {
     const { relatedProducts, relatedLoading } = useProduct();
+    const { t } = useLanguage();
     const [selectedIdx, setSelectedIdx] = React.useState(0);
 
     const scrollerRef = React.useRef<HTMLDivElement | null>(null);
@@ -134,8 +136,8 @@ export default function ProductVariantsSelector() {
         <section className="mt-2">
             <div className="flex items-center justify-between gap-4">
                 <div className="text-[13px] text-[#111827]">
-                    <span className="font-semibold">{items.length} variants</span>{" "}
-                    <span className="text-[#6b7280]">from</span>{" "}
+                    <span className="font-semibold">{items.length} {t("singleProduct.variantsSelector.variants", "variants")}</span>{" "}
+                    <span className="text-[#6b7280]">{t("singleProduct.variantsSelector.from", "from")}</span>{" "}
                     <span className="font-semibold">AED {minPrice.toLocaleString()}</span>
                 </div>
 
@@ -145,7 +147,7 @@ export default function ProductVariantsSelector() {
                     className="inline-flex items-center justify-center gap-2 h-9 px-7 rounded-[3px] border border-[#1a73e8] text-[#1a73e8] bg-white text-[13px] font-semibold cursor-not-allowed"
                 >
                     <Play className="w-4 h-4 fill-[#1a73e8] text-[#1a73e8]" />
-                    filter
+                    {t("singleProduct.variantsSelector.filter", "filter")}
                 </button>
             </div>
 
@@ -170,9 +172,9 @@ export default function ProductVariantsSelector() {
                         <div className="px-2 pt-2">
                             <div className="rounded-[3px] bg-[#f3f4f6] border border-[#e5e7eb] p-2">
                                 <div className="grid grid-cols-2 gap-2">
-                                    {allThumbs.map((t) => (
-                                        <div key={t.key} className="relative aspect-square overflow-hidden rounded-[2px] bg-white">
-                                            <Image src={t.imageUrl} alt={t.name} fill className="object-contain p-1" sizes="52px" />
+                                    {allThumbs.map((thumb) => (
+                                        <div key={thumb.key} className="relative aspect-square overflow-hidden rounded-[2px] bg-white">
+                                            <Image src={thumb.imageUrl} alt={thumb.name} fill className="object-contain p-1" sizes="52px" />
                                         </div>
                                     ))}
                                 </div>
@@ -180,8 +182,8 @@ export default function ProductVariantsSelector() {
                         </div>
 
                         <div className="px-2 pt-2">
-                            <div className="text-[12.5px] font-semibold text-[#111827]">All variants</div>
-                            <div className="mt-2 text-[12px] text-[#6b7280]">away</div>
+                            <div className="text-[12.5px] font-semibold text-[#111827]">{t("singleProduct.variantsSelector.allVariants", "All variants")}</div>
+                            <div className="mt-2 text-[12px] text-[#6b7280]">{t("singleProduct.variantsSelector.away", "away")}</div>
                             <div className="text-[18px] font-semibold text-[#f97316] leading-none">
                                 AED {minPrice.toLocaleString()}
                             </div>
@@ -216,7 +218,7 @@ export default function ProductVariantsSelector() {
                                     <div className="text-[12px] leading-[1.15] font-semibold text-[#111827] min-h-[30px]">
                                         {truncate(item.name, 28)}
                                     </div>
-                                    <div className="mt-2 text-[12px] text-[#6b7280]">away</div>
+                                    <div className="mt-2 text-[12px] text-[#6b7280]">{t("singleProduct.variantsSelector.away", "away")}</div>
                                     <div className="text-[18px] font-semibold text-[#f97316] leading-none">
                                         AED {item.price.toLocaleString()}
                                     </div>
@@ -231,7 +233,7 @@ export default function ProductVariantsSelector() {
                         type="button"
                         onClick={() => scrollByAmount("left")}
                         className="w-6 h-6 flex items-center justify-center text-[#6b7280] hover:text-[#111827]"
-                        aria-label="Scroll left"
+                        aria-label={t("singleProduct.variantsSelector.aria.scrollLeft", "Scroll left")}
                     >
                         ‹
                     </button>
@@ -251,7 +253,7 @@ export default function ProductVariantsSelector() {
                         type="button"
                         onClick={() => scrollByAmount("right")}
                         className="w-6 h-6 flex items-center justify-center text-[#6b7280] hover:text-[#111827]"
-                        aria-label="Scroll right"
+                        aria-label={t("singleProduct.variantsSelector.aria.scrollRight", "Scroll right")}
                     >
                         ›
                     </button>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
+import { useLanguage } from "@/contexts/language-context";
 
 const ProductDetailsSpecificationsSkeleton = () => {
     return (
@@ -72,6 +73,7 @@ const SpecificationRow = ({
 export default function ProductDetailsSpecifications() {
     const [isExpanded, setIsExpanded] = useState(false);
     const { product, loading } = useProduct();
+    const { t } = useLanguage();
 
     if (loading) {
         return <ProductDetailsSpecificationsSkeleton />;
@@ -98,7 +100,7 @@ export default function ProductDetailsSpecifications() {
             className="bg-white p-6 md:p-8 rounded-lg mt-6 shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
         >
             <h2 className="text-2xl font-semibold text-text-primary mb-6">
-                Product Details
+                {t("singleProduct.detailsSpecifications.title", "Product Details")}
             </h2>
 
             <div className="flex flex-col md:flex-row gap-x-8">
@@ -143,11 +145,11 @@ export default function ProductDetailsSpecifications() {
                         >
                             {isExpanded ? (
                                 <>
-                                    Show fewer details <ChevronUp className="h-4 w-4" />
+                                    {t("singleProduct.detailsSpecifications.showFewer", "Show fewer details")} <ChevronUp className="h-4 w-4" />
                                 </>
                             ) : (
                                 <>
-                                    Show all details <ChevronDown className="h-4 w-4" />
+                                    {t("singleProduct.detailsSpecifications.showAll", "Show all details")} <ChevronDown className="h-4 w-4" />
                                 </>
                             )}
                         </button>

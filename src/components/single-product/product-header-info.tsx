@@ -4,6 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { FileText, LineChart, Bell } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
+import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
 function parseRating(v: any): number {
@@ -43,6 +44,7 @@ const ProductHeaderInfoSkeleton = () => {
 
 export default function ProductHeaderInfo() {
   const { product, loading, relatedProducts, relatedLoading } = useProduct();
+  const { t } = useLanguage();
 
   if (loading || relatedLoading) return <ProductHeaderInfoSkeleton />;
 
@@ -59,15 +61,15 @@ export default function ProductHeaderInfo() {
       </h1>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#111827] lg:justify-start">
-        <span className="text-[#374151]">10 product reviews:</span>
+        <span className="text-[#374151]">{t("singleProduct.headerInfo.reviewsLabel", "10 product reviews:")}</span>
         <div className="flex items-center gap-2">
           <Stars value={ratingValue} />
-          <span className="text-[#111827]">{reviewsCount ? `(${reviewsCount})` : "(—)"}</span>
+          <span className="text-[#111827]">{reviewsCount ? `(${reviewsCount})` : t("singleProduct.headerInfo.reviewsEmpty", "(—)")}</span>
         </div>
-        <span className="text-[#6b7280]">2 test reports:</span>
+        <span className="text-[#6b7280]">{t("singleProduct.headerInfo.testReportsLabel", "2 test reports:")}</span>
       </div>
 
-      <div className="mt-1 text-[13px] font-semibold text-[#111827]">Average grade 2.0</div>
+      <div className="mt-1 text-[13px] font-semibold text-[#111827]">{t("singleProduct.headerInfo.averageGrade", "Average grade 2.0")}</div>
 
       <div className="lg:hidden mt-4 border-t border-[#e5e7eb]">
         <div className="flex divide-x divide-[#e5e7eb]">
@@ -77,7 +79,7 @@ export default function ProductHeaderInfo() {
             className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
           >
             <FileText className="w-5 h-5 text-[#111827]" />
-            Product details
+            {t("singleProduct.headerInfo.actions.productDetails", "Product details")}
           </button>
 
           <button
@@ -86,7 +88,7 @@ export default function ProductHeaderInfo() {
             className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
           >
             <LineChart className="w-5 h-5 text-[#111827]" />
-            Price history
+            {t("singleProduct.headerInfo.actions.priceHistory", "Price history")}
           </button>
 
           <button
@@ -95,7 +97,7 @@ export default function ProductHeaderInfo() {
             className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
           >
             <Bell className="w-5 h-5 text-[#111827]" />
-            Price alert
+            {t("singleProduct.headerInfo.actions.priceAlert", "Price alert")}
           </button>
         </div>
       </div>
@@ -106,7 +108,7 @@ export default function ProductHeaderInfo() {
             <div className="pt-[2px] flex-shrink-0">
               <Image
                 src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/8d3a1cc2-409a-47cb-abb2-a933b24d9e94-idealo-de/assets/svgs/A-Right-WithAGScale-2.svg?"
-                alt="Energy efficiency class"
+                alt={t("singleProduct.headerInfo.energyClassAlt", "Energy efficiency class")}
                 width={39}
                 height={28}
                 unoptimized
@@ -115,7 +117,7 @@ export default function ProductHeaderInfo() {
           ) : null}
 
           <div className="min-w-0">
-            <span className="font-semibold">Product overview:</span>{" "}
+            <span className="font-semibold">{t("singleProduct.headerInfo.productOverview", "Product overview:")}</span>{" "}
             {specs.length ? (
               <span className="text-[#374151]">
                 {specs.map(([k, v], idx) => (
@@ -125,13 +127,13 @@ export default function ProductHeaderInfo() {
                   </span>
                 ))}{" "}
                 <a href="#specifications" className="text-[#1a73e8] hover:underline whitespace-nowrap">
-                  product details
+                  {t("singleProduct.headerInfo.productDetailsLink", "product details")}
                 </a>
               </span>
             ) : (
               <span className="text-[#374151]">
                 <a href="#specifications" className="text-[#1a73e8] hover:underline whitespace-nowrap">
-                  product details
+                  {t("singleProduct.headerInfo.productDetailsLink", "product details")}
                 </a>
               </span>
             )}
@@ -140,13 +142,15 @@ export default function ProductHeaderInfo() {
       </div>
 
       <div className="mt-2 text-[13px] leading-[1.55] text-[#111827]">
-        <span className="font-semibold">Similar products:</span>{" "}
+        <span className="font-semibold">{t("singleProduct.headerInfo.similarProducts", "Similar products:")}</span>{" "}
         <a
           href="#"
           onClick={(e) => e.preventDefault()}
           className="text-[#1a73e8] hover:underline cursor-not-allowed"
         >
-          {relatedProducts?.length ? `${relatedProducts.length} products` : "products"}
+          {relatedProducts?.length
+            ? `${relatedProducts.length} ${t("singleProduct.headerInfo.productsCount", "products")}`
+            : t("singleProduct.headerInfo.productsCount", "products")}
         </a>
       </div>
     </div>

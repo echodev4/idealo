@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { useProduct } from "@/context/ProductContext";
+import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
 /* =========================================================
@@ -147,6 +148,7 @@ function ButtonPill({
 
 export default function OfferComparisonTable() {
     const { relatedProducts, relatedLoading } = useProduct();
+    const { t } = useLanguage();
 
     const [availableImmediately, setAvailableImmediately] = React.useState(false);
     const [noReturnShippingCosts, setNoReturnShippingCosts] = React.useState(false);
@@ -166,7 +168,7 @@ export default function OfferComparisonTable() {
 
             return {
                 id: String(p?._id || p?.product_url || idx),
-                title: String(p?.product_name || "Offer"),
+                title: String(p?.product_name || t("singleProduct.offerComparisonTable.offerFallback", "Offer")),
                 price,
                 oldPrice: oldP,
                 url: String(p?.product_url || "#"),
@@ -194,7 +196,7 @@ export default function OfferComparisonTable() {
         <section>
             <div className="py-6">
                 {/* Title */}
-                <div className="text-[28px] font-semibold text-[#111827] mb-4">Price comparison</div>
+                <div className="text-[28px] font-semibold text-[#111827] mb-4">{t("singleProduct.offerComparisonTable.title", "Price comparison")}</div>
 
                 {/* Layout: left Top 10 + right table */}
                 <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
@@ -202,7 +204,7 @@ export default function OfferComparisonTable() {
                     <aside className="hidden lg:block">
                         <div className="bg-[#dbeafe] rounded-md p-3">
                             <div className="text-[16px] mb-2 font-semibold text-[#111827] leading-tight">
-                                Top 10 products
+                                {t("singleProduct.offerComparisonTable.topProducts", "Top 10 products")}
                             </div>
                             <div className="space-y-2">
                                 {top10.map((p, idx) => (
@@ -231,7 +233,7 @@ export default function OfferComparisonTable() {
                                                 {truncate(p.title, 28)}
                                             </div>
                                             <div className="text-[13px] text-[#111827]">
-                                                <span className="text-[#6b7280]">from </span>
+                                                <span className="text-[#6b7280]">{t("singleProduct.offerComparisonTable.from", "from")} </span>
                                                 <span className="font-semibold">{formatAED(p.price)}</span>
                                             </div>
                                         </div>
@@ -253,7 +255,7 @@ export default function OfferComparisonTable() {
                                         onChange={(e) => setAvailableImmediately(e.target.checked)}
                                         className="w-4 h-4 accent-[#111827]"
                                     />
-                                    <span>Available immediately</span>
+                                    <span>{t("singleProduct.offerComparisonTable.filters.availableImmediately", "Available immediately")}</span>
                                 </label>
 
                                 <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
@@ -263,33 +265,33 @@ export default function OfferComparisonTable() {
                                         onChange={(e) => setNoReturnShippingCosts(e.target.checked)}
                                         className="w-4 h-4 accent-[#111827]"
                                     />
-                                    <span>No return shipping costs</span>
+                                    <span>{t("singleProduct.offerComparisonTable.filters.noReturnShippingCosts", "No return shipping costs")}</span>
                                 </label>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <span className="text-[12px] text-[#111827]">Sort by:</span>
+                                <span className="text-[12px] text-[#111827]">{t("singleProduct.offerComparisonTable.sortBy", "Sort by:")}</span>
                                 <ButtonPill
                                     active={sortKey === "price"}
                                     onClick={() => setSortKey("price")}
                                 >
-                                    Price
+                                    {t("singleProduct.offerComparisonTable.sort.price", "Price")}
                                 </ButtonPill>
                                 <ButtonPill
                                     active={sortKey === "total"}
                                     onClick={() => setSortKey("total")}
                                 >
-                                    Total price
+                                    {t("singleProduct.offerComparisonTable.sort.totalPrice", "Total price")}
                                 </ButtonPill>
                             </div>
                         </div>
 
 
                         <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
-                            <div>Offer title</div>
-                            <div>Price &amp; Shipping</div>
-                            <div>Payment methods*</div>
-                            <div>Shop &amp; Shop Review</div>
+                            <div>{t("singleProduct.offerComparisonTable.columns.offerTitle", "Offer title")}</div>
+                            <div>{t("singleProduct.offerComparisonTable.columns.priceShipping", "Price & Shipping")}</div>
+                            <div>{t("singleProduct.offerComparisonTable.columns.paymentMethods", "Payment methods*")}</div>
+                            <div>{t("singleProduct.offerComparisonTable.columns.shopReview", "Shop & Shop Review")}</div>
                             <div className="text-right"></div>
                         </div>
 
@@ -317,7 +319,7 @@ export default function OfferComparisonTable() {
                                                 </div>
 
                                                 <div className="mt-2">
-                                                    <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">Details</span>
+                                                    <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.details", "Details")}</span>
                                                 </div>
                                             </div>
 
@@ -329,23 +331,23 @@ export default function OfferComparisonTable() {
 
                                                 {isCheapest && (
                                                     <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
-                                                        Cheapest total price
-                                                        <div className="text-[#111827]">{formatAED(o.price)} incl. shipping</div>
+                                                        {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
+                                                        <div className="text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
                                                     </div>
                                                 )}
 
                                                 {!isCheapest && (
                                                     <div className="mt-2 text-[12px] text-[#111827]">
-                                                        {formatAED(o.price)} incl. shipping
+                                                        {formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
                                                     </div>
                                                 )}
 
                                                 {o.oldPrice && o.oldPrice > o.price ? (
                                                     <div className="mt-2 inline-flex items-center gap-2">
                                                         <span className="text-[12px] border border-[#d1d5db] px-2 py-0.5 rounded-sm">
-                                                            Price includes
+                                                            {t("singleProduct.offerComparisonTable.priceIncludes", "Price includes")}
                                                         </span>
-                                                        <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">voucher</span>
+                                                        <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.voucher", "voucher")}</span>
                                                     </div>
                                                 ) : null}
                                             </div>
@@ -377,18 +379,20 @@ export default function OfferComparisonTable() {
                                                         <Image src={shop.src} alt={shop.alt} fill sizes="110px" className="object-contain" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <div className="text-[12px] text-[#111827] font-semibold">{shop.label}</div>
+                                                        <div className="text-[12px] text-[#111827] font-semibold">
+                                                            {shop.label ? t("singleProduct.offerComparisonTable.marketplace", "Marketplace") : ""}
+                                                        </div>
                                                         <div className="mt-1">
                                                             <Rating value={ratingValue} />
                                                         </div>
                                                         <div className="mt-2 text-[12px] text-[#111827]">
-                                                            <span className="text-[#6b7280]">Sold by: </span>
+                                                            <span className="text-[#6b7280]">{t("singleProduct.offerComparisonTable.soldBy", "Sold by:")} </span>
                                                             <span className="cursor-not-allowed">handyshopandmore-bochum</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">Shop details</div>
+                                                <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}</div>
                                             </div>
 
                                             {/* CTA */}
@@ -398,7 +402,7 @@ export default function OfferComparisonTable() {
                                                     onClick={() => window.open(o.url, "_blank")}
                                                     className="h-10 px-5 rounded bg-[#22c55e] hover:bg-[#16a34a] text-white text-[14px] font-semibold"
                                                 >
-                                                    Visit the shop
+                                                    {t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
                                                 </button>
                                             </div>
                                         </div>
@@ -416,11 +420,11 @@ export default function OfferComparisonTable() {
 
                                                     {isCheapest ? (
                                                         <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
-                                                            Cheapest total price
-                                                            <div className="text-[#111827]">{formatAED(o.price)} incl. shipping</div>
+                                                            {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
+                                                            <div className="text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
                                                         </div>
                                                     ) : (
-                                                        <div className="mt-2 text-[12px] text-[#111827]">{formatAED(o.price)} incl. shipping</div>
+                                                        <div className="mt-2 text-[12px] text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
                                                     )}
                                                 </div>
 
@@ -429,7 +433,7 @@ export default function OfferComparisonTable() {
                                                     onClick={() => window.open(o.url, "_blank")}
                                                     className="h-10 px-5 rounded bg-[#22c55e] hover:bg-[#16a34a] text-white text-[14px] font-semibold whitespace-nowrap"
                                                 >
-                                                    Visit  the shop
+                                                    {t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
                                                 </button>
                                             </div>
 
@@ -454,8 +458,8 @@ export default function OfferComparisonTable() {
                                             </div>
 
                                             <div className="mt-3 flex items-center justify-between">
-                                                <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">Details</span>
-                                                <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">Shop details</span>
+                                                <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.details", "Details")}</span>
+                                                <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -473,7 +477,7 @@ export default function OfferComparisonTable() {
                                     }}
                                     className="h-10 px-4 rounded border border-[#d1d5db] bg-white text-[#111827] text-[13px] font-semibold cursor-not-allowed"
                                 >
-                                    Show more offers
+                                    {t("singleProduct.offerComparisonTable.showMoreOffers", "Show more offers")}
                                 </button>
                             </div>
                         ) : null}

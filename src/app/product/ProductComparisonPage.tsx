@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Home } from "lucide-react";
 import { ProductProvider, useProduct } from "@/context/ProductContext";
+import { useLanguage } from "@/contexts/language-context";
 import ProductGallery from "@/components/single-product/product-gallery";
 import ProductHeaderInfo from "@/components/single-product/product-header-info";
 import ProductVariantsSelector from "@/components/single-product/product-variants-selector";
@@ -18,15 +19,18 @@ interface Props {
 
 function ProductTopNav() {
   const { product, loading } = useProduct();
+  const { t } = useLanguage();
 
   return (
     <div className="hidden lg:flex items-center gap-2 text-[12px] text-[#6b7280] pt-1 pb-3">
       <Link href="/" className="inline-flex items-center text-[#111827] hover:text-[#1a73e8]">
         <Home className="w-3.5 h-3.5" />
       </Link>
-      <span className="text-[#9ca3af]">›</span>
+      <span className="text-[#9ca3af]">&gt;</span>
       <span className="truncate max-w-[900px] text-[#111827] cursor-not-allowed">
-        {loading ? "Loading..." : product?.title || "Product"}
+        {loading
+          ? t("singleProduct.comparison.breadcrumb.loading", "Loading...")
+          : product?.title || t("singleProduct.comparison.breadcrumb.product", "Product")}
       </span>
     </div>
   );

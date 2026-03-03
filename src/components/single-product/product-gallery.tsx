@@ -4,6 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
+import { useLanguage } from "@/contexts/language-context";
 
 const ProductGallerySkeleton = () => {
   return (
@@ -19,6 +20,7 @@ const ProductGallerySkeleton = () => {
 
 export default function ProductGallery() {
   const { product, loading } = useProduct();
+  const { t } = useLanguage();
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   if (loading) return <ProductGallerySkeleton />;
@@ -30,7 +32,7 @@ export default function ProductGallery() {
   if (!safeImages.length) {
     return (
       <div className="w-full aspect-square rounded-[4px] bg-muted flex items-center justify-center text-sm text-muted-foreground">
-        No images available
+        {t("singleProduct.gallery.noImages", "No images available")}
       </div>
     );
   }
