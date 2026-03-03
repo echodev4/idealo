@@ -75,17 +75,14 @@ export default function ProductDetailsSpecifications() {
     const { product, loading } = useProduct();
     const { t } = useLanguage();
 
-    if (loading) {
-        return <ProductDetailsSpecificationsSkeleton />;
-    }
+    if (loading) return <ProductDetailsSpecificationsSkeleton />;
 
+    if (!product || !product.specifications) return null;
 
-
-    const specs =
-        Object.entries(product.specifications).map(([label, value]) => ({
-            label,
-            value,
-        }))
+    const specs = Object.entries(product.specifications).map(([label, value]) => ({
+        label,
+        value,
+    }));
 
     const initialSpecs = specs.slice(0, INITIAL_VISIBLE_COUNT);
     const expandableSpecs = specs.slice(INITIAL_VISIBLE_COUNT);

@@ -6,6 +6,7 @@ import { Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
+import { useRouter } from "next/navigation";
 
 function parseAEDPrice(price: string): number | null {
     if (!price) return null;
@@ -35,6 +36,7 @@ const ProductVariantsSelectorSkeleton = () => {
 };
 
 export default function ProductVariantsSelector() {
+    const router = useRouter()
     const { relatedProducts, relatedLoading } = useProduct();
     const { t } = useLanguage();
     const [selectedIdx, setSelectedIdx] = React.useState(0);
@@ -98,9 +100,11 @@ export default function ProductVariantsSelector() {
                 name: p.product_name,
                 imageUrl: p.image_url,
                 price,
+                router: p.product_url,
+                source: p.source
             };
         })
-        .filter(Boolean) as { key: string; name: string; imageUrl: string; price: number }[];
+        .filter(Boolean) as { key: string; name: string; imageUrl: string; price: number; router: string; source: string }[];
 
     if (!items.length) return null;
 
@@ -192,7 +196,6 @@ export default function ProductVariantsSelector() {
 
                     {items.map((item, idx) => {
                         const selected = idx === selectedIdx;
-
                         return (
                             <a
                                 key={item.key}
@@ -200,6 +203,7 @@ export default function ProductVariantsSelector() {
                                 onClick={(e) => {
                                     e.preventDefault();
                                     setSelectedIdx(idx);
+                                    router.push(`/product/${encodeURIComponent(item.router)}?product_name=${encodeURIComponent(item.name)}&source=${encodeURIComponent(item.source)}`);
                                 }}
                                 className={cn(
                                     "relative flex-shrink-0 w-[124px] h-[196px] rounded-[3px] border bg-white",

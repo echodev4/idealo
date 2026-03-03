@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 /* =========================================================
    Static assets (idealo-like)
@@ -70,6 +71,7 @@ type Offer = {
     url: string;
     imageUrl: string;
     available: boolean; // we don't truly have; use a stable fallback
+    source: string;
 };
 
 function OfferComparisonTableSkeleton() {
@@ -147,6 +149,7 @@ function ButtonPill({
 ========================================================= */
 
 export default function OfferComparisonTable() {
+    const router = useRouter();
     const { relatedProducts, relatedLoading } = useProduct();
     const { t } = useLanguage();
 
@@ -174,6 +177,7 @@ export default function OfferComparisonTable() {
                 url: String(p?.product_url || "#"),
                 imageUrl: String(p?.image_url || ""),
                 available,
+                source: String(p?.source || "unknown"),
             } as Offer;
         })
         .filter(Boolean) as Offer[];
@@ -210,7 +214,10 @@ export default function OfferComparisonTable() {
                                 {top10.map((p, idx) => (
                                     <div
                                         key={p.id}
-                                        className="bg-white border border-[#cbd5e1] rounded-md p-2 flex items-center gap-2"
+                                        className="bg-white border border-[#cbd5e1] rounded-md p-2 flex items-center gap-2 cursor-pointer"
+                                        onClick={() => {
+                                            router.push(`/product/${encodeURIComponent(p.url)}?product_name=${encodeURIComponent(p.title)}&source=${encodeURIComponent(p.source)}`);
+                                        }}
                                     >
                                         <div className="w-6 text-center text-[13px] font-semibold text-[#111827]">
                                             {idx + 1}
