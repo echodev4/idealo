@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
 
     async function logout() {
@@ -21,14 +23,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Link href="/admin/cards" className="text-lg font-semibold text-gray-900">
-                            Ideolo Admin
+                            {t("admin.shell.title", "Ideolo Admin")}
                         </Link>
                         <nav className="flex items-center gap-3 text-sm">
                             <Link href="/admin/cards" className="text-gray-700 hover:text-gray-900">
-                                Cards
+                                {t("admin.shell.navCards", "Cards")}
                             </Link>
                             <Link href="/admin/cards/new" className="text-gray-700 hover:text-gray-900">
-                                Add Card
+                                {t("admin.shell.navAddCard", "Add Card")}
                             </Link>
                         </nav>
                     </div>
@@ -37,7 +39,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                         disabled={loading}
                         className="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60 cursor-pointer"
                     >
-                        {loading ? "Logging out..." : "Logout"}
+                        {loading
+                            ? t("admin.shell.loggingOut", "Logging out...")
+                            : t("admin.shell.logout", "Logout")}
                     </button>
                 </div>
             </header>

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/contexts/language-context";
 
 export default function AdminLoginForm() {
     const router = useRouter();
     const sp = useSearchParams();
+    const { t } = useLanguage();
     const next = sp.get("next") || "/admin/cards";
 
     const [password, setPassword] = useState("");
@@ -27,7 +29,7 @@ export default function AdminLoginForm() {
 
         if (!res.ok) {
             const j = await res.json().catch(() => null);
-            setErr(j?.error || "Login failed");
+            setErr(j?.error || t("admin.login.errorFailed", "Login failed"));
             return;
         }
 
@@ -37,14 +39,16 @@ export default function AdminLoginForm() {
 
     return (
         <form onSubmit={onSubmit} className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg border">
-            <h1 className="text-2xl font-semibold text-gray-900">Confirm us that you are the right person!</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+                {t("admin.login.title", "Confirm us that you are the right person!")}
+            </h1>
 
             <div className="mt-6">
                 <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
+                    placeholder={t("admin.login.passwordPlaceholder", "Password")}
                     className="w-full rounded-md border px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>
@@ -55,7 +59,9 @@ export default function AdminLoginForm() {
                 disabled={loading || !password}
                 className="mt-6 w-full rounded-md bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
             >
-                {loading ? "Logging in..." : "LOGIN"}
+                {loading
+                    ? t("admin.login.loggingIn", "Logging in...")
+                    : t("admin.login.loginButton", "LOGIN")}
             </button>
         </form>
     );

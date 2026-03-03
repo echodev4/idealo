@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AdminShell from "@/components/admin/AdminShell";
 import type { AdminCard } from "@/types/admin-card";
+import { useLanguage } from "@/contexts/language-context";
 
 type ApiList = {
     items: (AdminCard & { _id: string })[];
@@ -14,6 +15,7 @@ type ApiList = {
 };
 
 export default function AdminCardsPage() {
+    const { t } = useLanguage();
     const [data, setData] = useState<ApiList | null>(null);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -39,7 +41,7 @@ export default function AdminCardsPage() {
     const rows = useMemo(() => data?.items || [], [data]);
 
     async function remove(id: string) {
-        if (!confirm("Delete this card?")) return;
+        if (!confirm(t("admin.cards.confirmDelete", "Delete this card?"))) return;
         const res = await fetch(`/api/admin/cards/${id}`, { method: "DELETE" });
         if (res.ok) load(page);
     }
@@ -47,9 +49,9 @@ export default function AdminCardsPage() {
     return (
         <AdminShell>
             <div className="flex items-center justify-between gap-3">
-                <h1 className="text-2xl font-semibold text-gray-900">Cards</h1>
+                <h1 className="text-2xl font-semibold text-gray-900">{t("admin.cards.title", "Cards")}</h1>
                 <Link href="/admin/cards/new" className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                    Add Card
+                    {t("admin.cards.addCard", "Add Card")}
                 </Link>
             </div>
 
@@ -58,25 +60,25 @@ export default function AdminCardsPage() {
                     <table className="min-w-full text-sm">
                         <thead className="bg-gray-50 text-gray-700">
                             <tr>
-                                <th className="px-4 py-3 text-left font-semibold">Bank</th>
-                                <th className="px-4 py-3 text-left font-semibold">Joining / Annual Fee</th>
-                                <th className="px-4 py-3 text-left font-semibold">APR</th>
-                                <th className="px-4 py-3 text-left font-semibold">Salary Transfer</th>
-                                <th className="px-4 py-3 text-left font-semibold">Image</th>
-                                <th className="px-4 py-3 text-right font-semibold">Actions</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t("admin.cards.table.bank", "Bank")}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t("admin.cards.table.joiningAnnualFee", "Joining / Annual Fee")}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t("admin.cards.table.apr", "APR")}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t("admin.cards.table.salaryTransfer", "Salary Transfer")}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t("admin.cards.table.image", "Image")}</th>
+                                <th className="px-4 py-3 text-right font-semibold">{t("admin.cards.table.actions", "Actions")}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
                                     <td className="px-4 py-6 text-gray-600" colSpan={6}>
-                                        Loading...
+                                        {t("admin.common.loading", "Loading...")}
                                     </td>
                                 </tr>
                             ) : rows.length === 0 ? (
                                 <tr>
                                     <td className="px-4 py-6 text-gray-600" colSpan={6}>
-                                        No cards found
+                                        {t("admin.cards.noCardsFound", "No cards found")}
                                     </td>
                                 </tr>
                             ) : (
@@ -85,10 +87,14 @@ export default function AdminCardsPage() {
                                         <td className="px-4 py-3 font-medium text-gray-900">{c.bankName}</td>
                                         <td className="px-4 py-3 text-gray-700">{c.joiningAnnualFee}</td>
                                         <td className="px-4 py-3 text-gray-700">{c.apr}</td>
-                                        <td className="px-4 py-3 text-gray-700">{c.salaryTransferRequired ? "Yes" : "No"}</td>
+                                        <td className="px-4 py-3 text-gray-700">
+                                            {c.salaryTransferRequired
+                                                ? t("admin.common.yes", "Yes")
+                                                : t("admin.common.no", "No")}
+                                        </td>
                                         <td className="px-4 py-3 text-gray-700">
                                             <a className="text-blue-600 hover:underline" href={c.cardImageUrl} target="_blank" rel="noreferrer">
-                                                View
+                                                {t("admin.cards.view", "View")}
                                             </a>
                                         </td>
                                         <td className="px-4 py-3">
@@ -97,13 +103,13 @@ export default function AdminCardsPage() {
                                                     href={`/admin/cards/${c._id}/edit`}
                                                     className="rounded-md border px-3 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-50"
                                                 >
-                                                    Edit
+                                                    {t("admin.cards.edit", "Edit")}
                                                 </Link>
                                                 <button
                                                     onClick={() => remove(c._id)}
                                                     className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 cursor-pointer"
                                                 >
-                                                    Delete
+                                                    {t("admin.cards.delete", "Delete")}
                                                 </button>
                                             </div>
                                         </td>
@@ -117,8 +123,9 @@ export default function AdminCardsPage() {
                 {data ? (
                     <div className="flex items-center justify-between px-4 py-3 border-t bg-white">
                         <div className="text-sm text-gray-700">
-                            Page <span className="font-semibold">{data.page}</span> of <span className="font-semibold">{data.totalPages}</span> • Total{" "}
-                            <span className="font-semibold">{data.total}</span>
+                            {t("admin.cards.pagination.page", "Page")} <span className="font-semibold">{data.page}</span>{" "}
+                            {t("admin.cards.pagination.of", "of")} <span className="font-semibold">{data.totalPages}</span> |{" "}
+                            {t("admin.cards.pagination.total", "Total")} <span className="font-semibold">{data.total}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
@@ -126,14 +133,14 @@ export default function AdminCardsPage() {
                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                 className="rounded-md border px-3 py-1.5 text-sm font-semibold disabled:opacity-50"
                             >
-                                Prev
+                                {t("admin.cards.pagination.prev", "Prev")}
                             </button>
                             <button
                                 disabled={page >= data.totalPages}
                                 onClick={() => setPage((p) => p + 1)}
                                 className="rounded-md border px-3 py-1.5 text-sm font-semibold disabled:opacity-50"
                             >
-                                Next
+                                {t("admin.cards.pagination.next", "Next")}
                             </button>
                         </div>
                     </div>

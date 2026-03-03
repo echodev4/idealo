@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { AdminCard } from "@/types/admin-card";
+import { useLanguage } from "@/contexts/language-context";
 
 type Props = {
     mode: "create" | "edit";
@@ -12,6 +13,7 @@ type Props = {
 
 export default function CardForm({ mode, initial, id }: Props) {
     const router = useRouter();
+    const { t } = useLanguage();
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -44,7 +46,6 @@ export default function CardForm({ mode, initial, id }: Props) {
         );
     }, [form, imageFile]);
 
-
     function set<K extends keyof AdminCard>(key: K, value: AdminCard[K]) {
         setForm((p) => ({ ...p, [key]: value }));
     }
@@ -66,7 +67,7 @@ export default function CardForm({ mode, initial, id }: Props) {
             });
 
             if (!uploadRes.ok) {
-                setError("Image upload failed");
+                setError(t("admin.cardForm.errorImageUploadFailed", "Image upload failed"));
                 setSaving(false);
                 return;
             }
@@ -93,7 +94,7 @@ export default function CardForm({ mode, initial, id }: Props) {
 
         if (!res.ok) {
             const j = await res.json().catch(() => null);
-            setError(j?.error || "Failed");
+            setError(j?.error || t("admin.cardForm.errorFailed", "Failed"));
             return;
         }
 
@@ -101,14 +102,18 @@ export default function CardForm({ mode, initial, id }: Props) {
         router.refresh();
     }
 
-
     return (
         <form onSubmit={onSubmit} className="rounded-lg border bg-white p-6 shadow-sm">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Field label="Bank Name">
-                    <input className="w-full rounded-md border px-3 py-2" value={form.bankName} onChange={(e) => set("bankName", e.target.value)} placeholder="e.g. ADCB" />
+                <Field label={t("admin.cardForm.fields.bankName", "Bank Name")}>
+                    <input
+                        className="w-full rounded-md border px-3 py-2"
+                        value={form.bankName}
+                        onChange={(e) => set("bankName", e.target.value)}
+                        placeholder={t("admin.cardForm.placeholders.bankName", "e.g. ADCB")}
+                    />
                 </Field>
-                <Field label="Card Image">
+                <Field label={t("admin.cardForm.fields.cardImage", "Card Image")}>
                     <input
                         type="file"
                         accept="image/*"
@@ -116,75 +121,102 @@ export default function CardForm({ mode, initial, id }: Props) {
                         onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                     />
                     {form.cardImageUrl && (
-                        <img src={form.cardImageUrl} className="mt-2 h-20 rounded border" />
+                        <img
+                            src={form.cardImageUrl}
+                            alt={t("admin.cardForm.imagePreviewAlt", "Card image preview")}
+                            className="mt-2 h-20 rounded border"
+                        />
                     )}
                 </Field>
 
-
-
-                <Field label="APR">
-                    <input className="w-full rounded-md border px-3 py-2" value={form.apr} onChange={(e) => set("apr", e.target.value)} placeholder="e.g. 3.69% or 18.99%–27.99%" />
+                <Field label={t("admin.cardForm.fields.apr", "APR")}>
+                    <input
+                        className="w-full rounded-md border px-3 py-2"
+                        value={form.apr}
+                        onChange={(e) => set("apr", e.target.value)}
+                        placeholder={t("admin.cardForm.placeholders.apr", "e.g. 3.69% or 18.99%-27.99%")}
+                    />
                 </Field>
 
-                <Field label="Salary Transfer Required">
+                <Field label={t("admin.cardForm.fields.salaryTransferRequired", "Salary Transfer Required")}>
                     <select
                         className="w-full rounded-md border px-3 py-2"
                         value={form.salaryTransferRequired ? "yes" : "no"}
                         onChange={(e) => set("salaryTransferRequired", e.target.value === "yes")}
                     >
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
+                        <option value="yes">{t("admin.common.yes", "Yes")}</option>
+                        <option value="no">{t("admin.common.no", "No")}</option>
                     </select>
                 </Field>
 
-
-                <Field label="Welcome Bonus">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.welcomeBonus} onChange={(e) => set("welcomeBonus", e.target.value)} placeholder={`Put each condition on a new line:
-• AED 2,000 hotel voucher
-• AED 15,000 spend in 60 days`}
+                <Field label={t("admin.cardForm.fields.welcomeBonus", "Welcome Bonus")}>
+                    <textarea
+                        className="w-full rounded-md border px-3 py-2 min-h-[120px]"
+                        value={form.welcomeBonus}
+                        onChange={(e) => set("welcomeBonus", e.target.value)}
+                        placeholder={t(
+                            "admin.cardForm.placeholders.welcomeBonus",
+                            "Put each condition on a new line:\n- AED 2,000 hotel voucher\n- AED 15,000 spend in 60 days"
+                        )}
                     />
                 </Field>
-                <Field label="Joining / Annual Fee">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.joiningAnnualFee} onChange={(e) => set("joiningAnnualFee", e.target.value)} placeholder={`Examples:
-• Free for life
-• Free for 1st year, AED 630 from 2nd year
-• AED 1,575`}
-                    />
-                </Field>
-
-                <Field label="Earn Rates">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.earnRates} onChange={(e) => set("earnRates", e.target.value)} placeholder={`One earn rate per line:
-• 10% on flights and hotels
-• 50% on online movies
-• 1.5% on other spends`}
-                    />
-                </Field>
-
-                <Field label="Key Lifestyle Benefits">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.keyLifestyleBenefits} onChange={(e) => set("keyLifestyleBenefits", e.target.value)}
-                        placeholder={`One benefit per line:
-• Airport lounge access
-• Careem discounts`}
-
+                <Field label={t("admin.cardForm.fields.joiningAnnualFee", "Joining / Annual Fee")}>
+                    <textarea
+                        className="w-full rounded-md border px-3 py-2 min-h-[120px]"
+                        value={form.joiningAnnualFee}
+                        onChange={(e) => set("joiningAnnualFee", e.target.value)}
+                        placeholder={t(
+                            "admin.cardForm.placeholders.joiningAnnualFee",
+                            "Examples:\n- Free for life\n- Free for 1st year, AED 630 from 2nd year\n- AED 1,575"
+                        )}
                     />
                 </Field>
 
-                <Field label="Points Redemption">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.pointsRedemption} onChange={(e) => set("pointsRedemption", e.target.value)}
-                        placeholder={`One redemption option per line:
-• Redeem via Expedia vouchers
-• Cashback to card statement
-• Airline miles transfer`}
-
+                <Field label={t("admin.cardForm.fields.earnRates", "Earn Rates")}>
+                    <textarea
+                        className="w-full rounded-md border px-3 py-2 min-h-[120px]"
+                        value={form.earnRates}
+                        onChange={(e) => set("earnRates", e.target.value)}
+                        placeholder={t(
+                            "admin.cardForm.placeholders.earnRates",
+                            "One earn rate per line:\n- 10% on flights and hotels\n- 50% on online movies\n- 1.5% on other spends"
+                        )}
                     />
                 </Field>
 
-                <Field label="Documents Required">
-                    <textarea className="w-full rounded-md border px-3 py-2 min-h-[120px]" value={form.documentsRequired} onChange={(e) => set("documentsRequired", e.target.value)}
-                        placeholder={`Separate each document with a semicolon (;)
-Example:
-Passport (original + copy); Emirates ID (original + copy); Last 3 months bank statement; Salary certificate (≤ 30 days old)`}
+                <Field label={t("admin.cardForm.fields.keyLifestyleBenefits", "Key Lifestyle Benefits")}>
+                    <textarea
+                        className="w-full rounded-md border px-3 py-2 min-h-[120px]"
+                        value={form.keyLifestyleBenefits}
+                        onChange={(e) => set("keyLifestyleBenefits", e.target.value)}
+                        placeholder={t(
+                            "admin.cardForm.placeholders.keyLifestyleBenefits",
+                            "One benefit per line:\n- Airport lounge access\n- Careem discounts"
+                        )}
+                    />
+                </Field>
 
+                <Field label={t("admin.cardForm.fields.pointsRedemption", "Points Redemption")}>
+                    <textarea
+                        className="w-full rounded-md border px-3 py-2 min-h-[120px]"
+                        value={form.pointsRedemption}
+                        onChange={(e) => set("pointsRedemption", e.target.value)}
+                        placeholder={t(
+                            "admin.cardForm.placeholders.pointsRedemption",
+                            "One redemption option per line:\n- Redeem via Expedia vouchers\n- Cashback to card statement\n- Airline miles transfer"
+                        )}
+                    />
+                </Field>
+
+                <Field label={t("admin.cardForm.fields.documentsRequired", "Documents Required")}>
+                    <textarea
+                        className="w-full rounded-md border px-3 py-2 min-h-[120px]"
+                        value={form.documentsRequired}
+                        onChange={(e) => set("documentsRequired", e.target.value)}
+                        placeholder={t(
+                            "admin.cardForm.placeholders.documentsRequired",
+                            "Separate each document with a semicolon (;)\nExample:\nPassport (original + copy); Emirates ID (original + copy); Last 3 months bank statement; Salary certificate (<= 30 days old)"
+                        )}
                     />
                 </Field>
             </div>
@@ -197,13 +229,17 @@ Passport (original + copy); Emirates ID (original + copy); Last 3 months bank st
                     onClick={() => router.back()}
                     className="rounded-md border px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50 cursor-pointer"
                 >
-                    Cancel
+                    {t("admin.cardForm.cancel", "Cancel")}
                 </button>
                 <button
                     disabled={!canSave || saving}
                     className="rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60 cursor-pointer"
                 >
-                    {saving ? "Saving..." : mode === "create" ? "Create" : "Update"}
+                    {saving
+                        ? t("admin.cardForm.saving", "Saving...")
+                        : mode === "create"
+                            ? t("admin.cardForm.create", "Create")
+                            : t("admin.cardForm.update", "Update")}
                 </button>
             </div>
         </form>
