@@ -126,7 +126,7 @@ export const translations: Record<Locale, any> = {
       },
       disclaimer: {
         prices:
-          "All prices are in euros including VAT, plus shipping if applicable. Prices, rankings, delivery times, and shipping costs are subject to change. Delivery times are in days (Monday-Friday, excluding public holidays).",
+          "All prices are in dirhams including VAT, plus shipping if applicable. Prices, rankings, delivery times, and shipping costs are subject to change. Delivery times are in days (Monday-Friday, excluding public holidays).",
         reviews:
           'We publish consumer reviews (product opinions) on our website. We have not verified whether these reviews are from consumers who have actually used or purchased the reviewed product, unless the review is marked as "verified opinion."',
         moreInfo: "Further information can be found on the respective product detail page.",
@@ -708,7 +708,7 @@ export const translations: Record<Locale, any> = {
       },
       disclaimer: {
         prices:
-          "جميع الأسعار باليورو وتشمل ضريبة القيمة المضافة، بالإضافة إلى الشحن إن وجد. قد تتغير الأسعار والترتيبات وأوقات التسليم وتكاليف الشحن. أوقات التسليم محسوبة بالأيام (من الإثنين إلى الجمعة، باستثناء العطل الرسمية).",
+          "جميع الأسعار بالدرهم وتشمل ضريبة القيمة المضافة، بالإضافة إلى الشحن إن وجد. قد تتغير الأسعار والترتيبات وأوقات التسليم وتكاليف الشحن. أوقات التسليم محسوبة بالأيام (من الإثنين إلى الجمعة، باستثناء العطل الرسمية).",
         reviews:
           "ننشر تقييمات المستهلكين (آراء المنتجات) على موقعنا. لم نتحقق مما إذا كانت هذه التقييمات من مستهلكين استخدموا المنتج المراجع أو اشتروه فعلا، إلا إذا تم تمييز التقييم بأنه رأي موثق.",
         moreInfo: "يمكن العثور على مزيد من المعلومات في صفحة تفاصيل المنتج المعنية.",
