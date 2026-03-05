@@ -90,23 +90,13 @@ const bannerUrl =
 
 const tips = [
     {
-        title: "Deals of the day ⚡",
+        title: "Deals of the day",
+        translationKey: "landing.heroTeaser.tips.dealsOfDay",
         img: "https://db62cod6cnasq.cloudfront.net/user-media/10320/sg231687/4198699356_transcoded.gif",
     },
     {
-        title: "30 Years of Pokémon ⚡",
-        img: "https://db62cod6cnasq.cloudfront.net/user-media/10320/sg279024/3742896200_transcoded.gif",
-    },
-    {
-        title: "Your home cinema 🍿",
-        img: "https://db62cod6cnasq.cloudfront.net/user-media/10320/sg278323/3584561243_transcoded.gif",
-    },
-    {
-        title: "Off to the snow 🏂",
-        img: "https://db62cod6cnasq.cloudfront.net/user-media/10320/sg271870/3278376670.webp",
-    },
-    {
         title: "Our 3 Tips",
+        translationKey: "landing.heroTeaser.tips.ourTips",
         img: "https://db62cod6cnasq.cloudfront.net/user-media/10320/sg231691/3769503969.webp",
     },
 ];
@@ -227,17 +217,8 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 role="navigation"
                                 aria-label={t("landing.heroTeaser.aria.teaserTips", "Teaser tips")}
                             >
-                                {tips.map((tip, idx) => {
-                                    const tipTitle =
-                                        idx === 0
-                                            ? t("landing.heroTeaser.tips.dealsOfDay", "Deals of the day")
-                                            : idx === 1
-                                                ? t("landing.heroTeaser.tips.pokemon", "30 Years of Pokemon")
-                                                : idx === 2
-                                                    ? t("landing.heroTeaser.tips.homeCinema", "Your home cinema")
-                                                    : idx === 3
-                                                        ? t("landing.heroTeaser.tips.snow", "Off to the snow")
-                                                        : t("landing.heroTeaser.tips.ourTips", "Our 3 Tips");
+                                {tips.map((tip) => {
+                                    const tipTitle = t(tip.translationKey, tip.title);
                                     return (
                                     <div key={tip.title} className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[170px] cursor-not-allowed select-none snap-start">
                                         <div className="mx-auto w-[112px] h-[112px] rounded-full border-[3px] border-[#FF6600] flex items-center justify-center bg-[#0A3761] overflow-hidden">
@@ -250,6 +231,9 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                         </div>
                                     </div>
                                 )})}
+                                <div className="flex-shrink-0 self-center text-[12px] text-[#9AA3AF] font-medium select-none">
+                                    {t("landing.heroTeaser.tips.comingSoon", "Coming soon")}
+                                </div>
                             </div>
 
                             {tipsCanLeft && (

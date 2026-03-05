@@ -26,7 +26,6 @@ import {
   Car,
   Shirt,
   PawPrint,
-  Plane,
   ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
@@ -145,7 +144,6 @@ export default function Header() {
       { label: t("header.categories.carsMotorcycles", "Cars & Motorcycles"), query: "Cars & Motorcycles", icon: Car },
       { label: t("header.categories.fashionAccessories", "Fashion & Accessories"), query: "Fashion & Accessories", icon: Shirt },
       { label: t("header.categories.petSupplies", "Pet supplies"), query: "Pet supplies", icon: PawPrint },
-      { label: t("header.categories.flight", "Flight"), query: "Flight", icon: Plane },
     ],
     [t]
   );
@@ -493,16 +491,6 @@ export default function Header() {
                       <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide">
                         {t("header.navigation.shopping")}
                         <span className="absolute bottom-[8px] left-3 right-3 h-[3px] bg-[#FF6600]" />
-                      </span>
-                    </li>
-                    <li role="none" className="h-full">
-                      <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide cursor-not-allowed opacity-90">
-                        {t("header.navigation.flight")}
-                      </span>
-                    </li>
-                    <li role="none" className="h-full">
-                      <span className="relative flex h-full items-center px-3 text-[13px] font-bold uppercase tracking-wide cursor-not-allowed opacity-90">
-                        {t("header.navigation.magazine")}
                       </span>
                     </li>
                   </ul>

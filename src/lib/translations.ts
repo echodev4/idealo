@@ -140,6 +140,7 @@ export const translations: Record<Locale, any> = {
           homeCinema: "Your home cinema",
           snow: "Off to the snow",
           ourTips: "Our 3 Tips",
+          comingSoon: "Coming soon",
         },
         popularProducts: "Popular products",
         badges: {
@@ -721,6 +722,7 @@ export const translations: Record<Locale, any> = {
           homeCinema: "سينما منزلك",
           snow: "إلى الثلج",
           ourTips: "أفضل 3 نصائح",
+          comingSoon: "قريبا",
         },
         popularProducts: "المنتجات الشائعة",
         badges: {
