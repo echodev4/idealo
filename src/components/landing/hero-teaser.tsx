@@ -220,20 +220,24 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                 {tips.map((tip) => {
                                     const tipTitle = t(tip.translationKey, tip.title);
                                     return (
-                                    <div key={tip.title} className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[170px] cursor-not-allowed select-none snap-start">
-                                        <div className="mx-auto w-[112px] h-[112px] rounded-full border-[3px] border-[#FF6600] flex items-center justify-center bg-[#0A3761] overflow-hidden">
-                                            <div className="relative w-[98px] h-[98px] rounded-full overflow-hidden">
-                                                <Image src={tip.img} alt={tipTitle} fill className="object-cover" />
+                                        <div key={tip.title} className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[170px] cursor-not-allowed select-none snap-start">
+                                            <div className="mx-auto w-[112px] h-[112px] rounded-full border-[3px] border-[#FF6600] flex items-center justify-center bg-[#0A3761] overflow-hidden">
+                                                <div className="relative w-[98px] h-[98px] rounded-full overflow-hidden">
+                                                    <Image src={tip.img} alt={tipTitle} fill className="object-cover" />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <div className="mt-2 text-center text-[13px] leading-4 text-[#212121] font-semibold px-1">
+                                                    {tipTitle}
+                                                </div>
+                                                <div className="flex-shrink-0 self-center text-[12px] text-[#9AA3AF] font-medium select-none">
+                                                    {t("landing.heroTeaser.tips.comingSoon", "Coming soon")}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="mt-2 text-center text-[13px] leading-4 text-[#212121] font-semibold px-1">
-                                            {tipTitle}
-                                        </div>
-                                    </div>
-                                )})}
-                                <div className="flex-shrink-0 self-center text-[12px] text-[#9AA3AF] font-medium select-none">
-                                    {t("landing.heroTeaser.tips.comingSoon", "Coming soon")}
-                                </div>
+                                    )
+                                })}
+
                             </div>
 
                             {tipsCanLeft && (
@@ -340,7 +344,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
 
                                                 <div className="mt-auto">
                                                     <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none">
-                                                        
+
 
                                                         <div className="flex items-center gap-0.5">
                                                             {Array.from({ length: 5 }).map((_, i) => (
