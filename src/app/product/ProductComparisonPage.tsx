@@ -46,17 +46,17 @@ function MobileProductTabs({ activeTab, onChange }: { activeTab: MobileTab; onCh
   const tabs: { key: MobileTab; label: string; icon: React.ReactNode }[] = [
     {
       key: "offers",
-      label: t("singleProduct.mobileTabs.offers", "Offers"),
+      label: t("category.products.showOffers", "Offers"),
       icon: <BadgePercent className="w-5 h-5" />,
     },
     {
       key: "history",
-      label: t("singleProduct.mobileTabs.priceHistory", "Price History"),
+      label: t("singleProduct.headerInfo.actions.priceHistory", "Price History"),
       icon: <LineChart className="w-5 h-5" />,
     },
     {
       key: "specs",
-      label: t("singleProduct.mobileTabs.productSpecification", "Product Specification"),
+      label: t("singleProduct.detailsSpecifications.title", "Product Specification"),
       icon: <FileText className="w-5 h-5" />,
     },
   ];
@@ -141,3 +141,4 @@ export default function ProductComparisonPage({ productUrl, productName, sourceN
     </ProductProvider>
   );
 }
+

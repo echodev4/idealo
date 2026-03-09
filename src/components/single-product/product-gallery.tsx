@@ -81,7 +81,7 @@ export default function ProductGallery() {
         <div
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          className="overflow-hidden rounded-[4px] border border-[#e5e7eb] bg-[#f3f4f6]"
+          dir="ltr" className="overflow-hidden rounded-[4px] border border-[#e5e7eb] bg-[#f3f4f6]"
         >
           <div
             className="flex transition-transform duration-300 ease-out"
@@ -148,3 +148,4 @@ export default function ProductGallery() {
     </div>
   );
 }
+

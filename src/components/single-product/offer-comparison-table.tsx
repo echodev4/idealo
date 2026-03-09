@@ -195,7 +195,7 @@ export default function OfferComparisonTable() {
                 <div className="lg:hidden mb-3">
                     <div className="text-[44px] leading-none font-semibold text-[#111827]">{totalOffersCount}</div>
                     <div className="text-[22px] leading-none font-semibold text-[#111827] mt-1">
-                        {t("singleProduct.offerComparisonTable.mobile.offers", "offers")}
+                        {t("category.products.showOffers", "Offers")}
                     </div>
                 </div>
 
@@ -372,7 +372,7 @@ export default function OfferComparisonTable() {
                                         <div className="lg:hidden border border-[#d1d5db] rounded-md p-3">
                                             {isCheapest ? (
                                                 <div className="mb-2 inline-flex items-center rounded-[4px] border border-[#fb923c] bg-[#fff7ed] px-2 py-1 text-[12px] font-semibold text-[#ea580c]">
-                                                    {t("singleProduct.offerComparisonTable.mobile.lowestPrice", "Lowest price")}
+                                                    {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Lowest price")}
                                                 </div>
                                             ) : null}
 
@@ -441,3 +441,4 @@ export default function OfferComparisonTable() {
         </section>
     );
 }
+
