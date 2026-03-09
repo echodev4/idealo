@@ -1,7 +1,8 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Home, BadgePercent, LineChart, FileText } from "lucide-react";
 import { ProductProvider, useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import ProductGallery from "@/components/single-product/product-gallery";
@@ -10,6 +11,9 @@ import ProductVariantsSelector from "@/components/single-product/product-variant
 import OfferComparisonTable from "@/components/single-product/offer-comparison-table";
 import ProductDetailsSpecifications from "@/components/single-product/product-details-specifications";
 import PriceDevelopmentPanel from "@/components/single-product/price-development-panel";
+import { cn } from "@/lib/utils";
+
+type MobileTab = "offers" | "history" | "specs";
 
 interface Props {
   productUrl: string;
@@ -36,9 +40,58 @@ function ProductTopNav() {
   );
 }
 
-export default function ProductComparisonPage({ productUrl, productName, sourceName }: Props) {
+function MobileProductTabs({ activeTab, onChange }: { activeTab: MobileTab; onChange: (tab: MobileTab) => void }) {
+  const { t } = useLanguage();
+
+  const tabs: { key: MobileTab; label: string; icon: React.ReactNode }[] = [
+    {
+      key: "offers",
+      label: t("singleProduct.mobileTabs.offers", "Offers"),
+      icon: <BadgePercent className="w-5 h-5" />,
+    },
+    {
+      key: "history",
+      label: t("singleProduct.mobileTabs.priceHistory", "Price History"),
+      icon: <LineChart className="w-5 h-5" />,
+    },
+    {
+      key: "specs",
+      label: t("singleProduct.mobileTabs.productSpecification", "Product Specification"),
+      icon: <FileText className="w-5 h-5" />,
+    },
+  ];
+
   return (
-    <ProductProvider productUrl={productUrl} productName={productName} sourceName={sourceName}>
+    <div className="lg:hidden mt-4 border-y border-[#e5e7eb]">
+      <div className="grid grid-cols-3 divide-x divide-[#e5e7eb]">
+        {tabs.map((tab) => {
+          const active = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => onChange(tab.key)}
+              className={cn(
+                "relative flex flex-col items-center justify-center gap-2 py-3 text-[12px] font-medium",
+                active ? "text-[#1a73e8]" : "text-[#111827]"
+              )}
+            >
+              {tab.icon}
+              <span className="text-center leading-tight">{tab.label}</span>
+              {active ? <span className="absolute inset-x-0 bottom-0 h-[3px] bg-[#1a73e8]" /> : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProductComparisonContent() {
+  const [mobileTab, setMobileTab] = React.useState<MobileTab>("offers");
+
+  return (
+    <>
       <main className="container max-w-[1280px] mx-auto px-3 lg:px-0 pt-2 pb-6">
         <ProductTopNav />
 
@@ -52,23 +105,39 @@ export default function ProductComparisonPage({ productUrl, productName, sourceN
             <div className="mt-4 lg:mt-5">
               <ProductVariantsSelector />
             </div>
+
+            <MobileProductTabs activeTab={mobileTab} onChange={setMobileTab} />
+
+            <div className="lg:hidden mt-4">
+              {mobileTab === "offers" ? <OfferComparisonTable /> : null}
+              {mobileTab === "history" ? <PriceDevelopmentPanel /> : null}
+              {mobileTab === "specs" ? <ProductDetailsSpecifications /> : null}
+            </div>
           </div>
 
-          <div className="lg:pt-4">
+          <div className="hidden lg:block lg:pt-4">
             <PriceDevelopmentPanel />
           </div>
         </div>
 
-        <div className="mt-8 max-w-[1216px] mx-auto">
+        <div className="hidden lg:block mt-8 max-w-[1216px] mx-auto">
           <OfferComparisonTable />
         </div>
       </main>
 
-      <div className="container max-w-[1280px] mx-auto px-3 lg:px-0 pb-8">
+      <div className="hidden lg:block container max-w-[1280px] mx-auto px-3 lg:px-0 pb-8">
         <div className="max-w-[1216px] mx-auto">
           <ProductDetailsSpecifications />
         </div>
       </div>
+    </>
+  );
+}
+
+export default function ProductComparisonPage({ productUrl, productName, sourceName }: Props) {
+  return (
+    <ProductProvider productUrl={productUrl} productName={productName} sourceName={sourceName}>
+      <ProductComparisonContent />
     </ProductProvider>
   );
 }

@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { FileText, LineChart, Bell } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
@@ -94,37 +93,6 @@ export default function ProductHeaderInfo() {
           ))}
         </div>
       ) : null}
-
-      <div className="lg:hidden mt-4 border-t border-[#e5e7eb]">
-        <div className="flex divide-x divide-[#e5e7eb]">
-          <button
-            type="button"
-            onClick={(e) => e.preventDefault()}
-            className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
-          >
-            <FileText className="w-5 h-5 text-[#111827]" />
-            {t("singleProduct.headerInfo.actions.productDetails", "Product details")}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => e.preventDefault()}
-            className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
-          >
-            <LineChart className="w-5 h-5 text-[#111827]" />
-            {t("singleProduct.headerInfo.actions.priceHistory", "Price history")}
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => e.preventDefault()}
-            className="flex-1 flex flex-col items-center justify-center gap-2 py-4 text-[12px] text-[#111827] cursor-not-allowed"
-          >
-            <Bell className="w-5 h-5 text-[#111827]" />
-            {t("singleProduct.headerInfo.actions.priceAlert", "Price alert")}
-          </button>
-        </div>
-      </div>
 
       <div className="mt-4 text-[13px] leading-[1.55] text-[#111827]">
         <div className="flex items-start gap-3">

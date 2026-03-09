@@ -7,10 +7,6 @@ import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
-/* =========================================================
-   Static assets (idealo-like)
-========================================================= */
-
 const PAYMENT_ICONS = [
     {
         key: "paypal",
@@ -22,11 +18,6 @@ const PAYMENT_ICONS = [
         src: "https://cdn.idealo.com/storage/offerpage/assets/offerpage/img/payment-icons/2x/visa-ac94b93bc9a9921b1f11.png",
         alt: "Visa",
     },
-    // {
-    //     key: "mastercard",
-    //     src: "https://cdn.idealo.com/storage/offerpage/assets/offerpage/img/payment-icons/2x/mastercard-2e81fe3d252402ab0358.png",
-    //     alt: "Mastercard",
-    // },
 ];
 
 const SHOP_LOGOS = [
@@ -70,7 +61,7 @@ type Offer = {
     oldPrice?: number | null;
     url: string;
     imageUrl: string;
-    available: boolean; // we don't truly have; use a stable fallback
+    available: boolean;
     source: string;
 };
 
@@ -88,10 +79,6 @@ function OfferComparisonTableSkeleton() {
         </section>
     );
 }
-
-/* =========================================================
-   Small UI bits (idealo-like)
-========================================================= */
 
 function Star({ filled }: { filled: boolean }) {
     return (
@@ -144,10 +131,6 @@ function ButtonPill({
     );
 }
 
-/* =========================================================
-   Main
-========================================================= */
-
 export default function OfferComparisonTable() {
     const router = useRouter();
     const { relatedProducts, relatedLoading } = useProduct();
@@ -166,7 +149,6 @@ export default function OfferComparisonTable() {
             if (!price) return null;
 
             const oldP = parseAED(p?.old_price);
-            // fallback "availability": stable-ish (we don't have real stock)
             const available = idx % 3 !== 0;
 
             return {
@@ -191,20 +173,33 @@ export default function OfferComparisonTable() {
     });
 
     const filtered = availableImmediately ? sorted.filter((o) => o.available) : sorted;
-
     const cheapest = filtered.length ? Math.min(...filtered.map((o) => o.price)) : 0;
 
+    const ordered = [...filtered].sort((a, b) => {
+        const aCheapest = a.price === cheapest ? 0 : 1;
+        const bCheapest = b.price === cheapest ? 0 : 1;
+        if (aCheapest !== bCheapest) return aCheapest - bCheapest;
+        return a.price - b.price;
+    });
+
     const top10 = sorted.slice(0, 10);
+    const totalOffersCount = relatedProducts?.length || offers.length;
 
     return (
         <section>
             <div className="py-6">
-                {/* Title */}
-                <div className="text-[28px] font-semibold text-[#111827] mb-4">{t("singleProduct.offerComparisonTable.title", "Price comparison")}</div>
+                <div className="hidden lg:block text-[28px] font-semibold text-[#111827] mb-4">
+                    {t("singleProduct.offerComparisonTable.title", "Price comparison")}
+                </div>
 
-                {/* Layout: left Top 10 + right table */}
+                <div className="lg:hidden mb-3">
+                    <div className="text-[44px] leading-none font-semibold text-[#111827]">{totalOffersCount}</div>
+                    <div className="text-[22px] leading-none font-semibold text-[#111827] mt-1">
+                        {t("singleProduct.offerComparisonTable.mobile.offers", "offers")}
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-                    {/* LEFT: Top 10 (desktop only) */}
                     <aside className="hidden lg:block">
                         <div className="bg-[#dbeafe] rounded-md p-3">
                             <div className="text-[16px] mb-2 font-semibold text-[#111827] leading-tight">
@@ -219,26 +214,16 @@ export default function OfferComparisonTable() {
                                             router.push(`/product/${encodeURIComponent(p.url)}?product_name=${encodeURIComponent(p.title)}&source=${encodeURIComponent(p.source)}`);
                                         }}
                                     >
-                                        <div className="w-6 text-center text-[13px] font-semibold text-[#111827]">
-                                            {idx + 1}
-                                        </div>
+                                        <div className="w-6 text-center text-[13px] font-semibold text-[#111827]">{idx + 1}</div>
 
                                         <div className="w-[34px] h-[34px] rounded border border-[#e5e7eb] bg-white relative overflow-hidden">
                                             {!!p.imageUrl && (
-                                                <Image
-                                                    src={p.imageUrl}
-                                                    alt={p.title}
-                                                    fill
-                                                    sizes="34px"
-                                                    className="object-contain p-1"
-                                                />
+                                                <Image src={p.imageUrl} alt={p.title} fill sizes="34px" className="object-contain p-1" />
                                             )}
                                         </div>
 
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-[13px] text-[#111827] leading-tight font-medium">
-                                                {truncate(p.title, 28)}
-                                            </div>
+                                            <div className="text-[13px] text-[#111827] leading-tight font-medium">{truncate(p.title, 28)}</div>
                                             <div className="text-[13px] text-[#111827]">
                                                 <span className="text-[#6b7280]">{t("singleProduct.offerComparisonTable.from", "from")} </span>
                                                 <span className="font-semibold">{formatAED(p.price)}</span>
@@ -250,10 +235,8 @@ export default function OfferComparisonTable() {
                         </div>
                     </aside>
 
-                    {/* RIGHT: filters + table */}
                     <div className="bg-white border border-[#d1d5db] rounded-md">
-                        {/* Filters bar */}
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 border-b border-[#e5e7eb]">
+                        <div className="hidden lg:flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 border-b border-[#e5e7eb]">
                             <div className="flex flex-wrap items-center gap-6">
                                 <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
                                     <input
@@ -278,21 +261,14 @@ export default function OfferComparisonTable() {
 
                             <div className="flex items-center gap-2">
                                 <span className="text-[12px] text-[#111827]">{t("singleProduct.offerComparisonTable.sortBy", "Sort by:")}</span>
-                                <ButtonPill
-                                    active={sortKey === "price"}
-                                    onClick={() => setSortKey("price")}
-                                >
+                                <ButtonPill active={sortKey === "price"} onClick={() => setSortKey("price")}>
                                     {t("singleProduct.offerComparisonTable.sort.price", "Price")}
                                 </ButtonPill>
-                                <ButtonPill
-                                    active={sortKey === "total"}
-                                    onClick={() => setSortKey("total")}
-                                >
+                                <ButtonPill active={sortKey === "total"} onClick={() => setSortKey("total")}>
                                     {t("singleProduct.offerComparisonTable.sort.totalPrice", "Total price")}
                                 </ButtonPill>
                             </div>
                         </div>
-
 
                         <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
                             <div>{t("singleProduct.offerComparisonTable.columns.offerTitle", "Offer title")}</div>
@@ -303,24 +279,17 @@ export default function OfferComparisonTable() {
                         </div>
 
                         <div className="divide-y divide-[#e5e7eb]">
-                            {filtered.slice(0, visible).map((o, idx) => {
+                            {ordered.slice(0, visible).map((o, idx) => {
                                 const isCheapest = o.price === cheapest;
                                 const shop = pickShop(idx);
                                 const ratingValue = idx % 2 === 0 ? 5.0 : 3.7;
 
                                 return (
                                     <div key={o.id} className="p-3">
-                                        {/* Desktop row */}
                                         <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 items-start">
-                                            {/* Offer title */}
                                             <div className="min-w-0">
                                                 <div className="text-[13px] font-semibold text-[#111827]">
-                                                    <a
-                                                        href={o.url}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                        className="text-[#1a73e8] hover:underline"
-                                                    >
+                                                    <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
                                                         {o.title}
                                                     </a>
                                                 </div>
@@ -330,11 +299,8 @@ export default function OfferComparisonTable() {
                                                 </div>
                                             </div>
 
-                                            {/* Price & Shipping */}
                                             <div>
-                                                <div className="text-[24px] font-semibold text-[#111827] leading-none">
-                                                    {formatAED(o.price)}
-                                                </div>
+                                                <div className="text-[24px] font-semibold text-[#111827] leading-none">{formatAED(o.price)}</div>
 
                                                 {isCheapest && (
                                                     <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
@@ -359,27 +325,17 @@ export default function OfferComparisonTable() {
                                                 ) : null}
                                             </div>
 
-                                            {/* Payment methods */}
                                             <div className="flex items-start gap-2 pt-1">
                                                 {PAYMENT_ICONS.map((p, i) => (
                                                     <div
                                                         key={p.key}
-                                                        className={`w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden ${i > 0 ? "hidden sm:block" : ""
-                                                            }`}
+                                                        className={`w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden ${i > 0 ? "hidden sm:block" : ""}`}
                                                     >
-                                                        <Image
-                                                            src={p.src}
-                                                            alt={p.alt}
-                                                            fill
-                                                            sizes="46px"
-                                                            className="object-contain p-1"
-                                                        />
+                                                        <Image src={p.src} alt={p.alt} fill sizes="46px" className="object-contain p-1" />
                                                     </div>
                                                 ))}
-
                                             </div>
 
-                                            {/* Shop & review */}
                                             <div className="pt-1">
                                                 <div className="flex items-start gap-3">
                                                     <div className="relative w-[110px] h-[36px]">
@@ -402,7 +358,6 @@ export default function OfferComparisonTable() {
                                                 <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}</div>
                                             </div>
 
-                                            {/* CTA */}
                                             <div className="flex justify-end">
                                                 <button
                                                     type="button"
@@ -415,6 +370,12 @@ export default function OfferComparisonTable() {
                                         </div>
 
                                         <div className="lg:hidden border border-[#d1d5db] rounded-md p-3">
+                                            {isCheapest ? (
+                                                <div className="mb-2 inline-flex items-center rounded-[4px] border border-[#fb923c] bg-[#fff7ed] px-2 py-1 text-[12px] font-semibold text-[#ea580c]">
+                                                    {t("singleProduct.offerComparisonTable.mobile.lowestPrice", "Lowest price")}
+                                                </div>
+                                            ) : null}
+
                                             <div className="text-[14px] font-semibold text-[#111827]">
                                                 <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
                                                     {o.title}
@@ -424,15 +385,6 @@ export default function OfferComparisonTable() {
                                             <div className="mt-3 flex items-start justify-between gap-3">
                                                 <div>
                                                     <div className="text-[24px] font-semibold text-[#111827] leading-none">{formatAED(o.price)}</div>
-
-                                                    {isCheapest ? (
-                                                        <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
-                                                            {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
-                                                            <div className="text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="mt-2 text-[12px] text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
-                                                    )}
                                                 </div>
 
                                                 <button
@@ -463,18 +415,13 @@ export default function OfferComparisonTable() {
                                                     ))}
                                                 </div>
                                             </div>
-
-                                            <div className="mt-3 flex items-center justify-between">
-                                                <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.details", "Details")}</span>
-                                                <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}</span>
-                                            </div>
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
-                        {/* Load more */}
-                        {visible < filtered.length ? (
+
+                        {visible < ordered.length ? (
                             <div className="p-3">
                                 <button
                                     type="button"

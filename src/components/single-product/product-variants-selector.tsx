@@ -148,7 +148,7 @@ export default function ProductVariantsSelector() {
                 <button
                     type="button"
                     onClick={(e) => e.preventDefault()}
-                    className="inline-flex lg:hidden items-center justify-center gap-2 h-9 px-7 rounded-[3px] border border-[#1a73e8] text-[#1a73e8] bg-white text-[13px] font-semibold cursor-not-allowed"
+                    className="hidden lg:inline-flex items-center justify-center gap-2 h-9 px-7 rounded-[3px] border border-[#1a73e8] text-[#1a73e8] bg-white text-[13px] font-semibold cursor-not-allowed"
                 >
                     <Play className="w-4 h-4 fill-[#1a73e8] text-[#1a73e8]" />
                     {t("singleProduct.variantsSelector.filter", "filter")}
@@ -266,5 +266,6 @@ export default function ProductVariantsSelector() {
         </section>
     );
 }
+
 
 
