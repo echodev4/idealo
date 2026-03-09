@@ -51,11 +51,20 @@ export default function ProductHeaderInfo() {
   const ratingValue = parseRating(relatedProducts?.[0]?.average_rating);
   const reviewsCount = relatedProducts?.[0]?.reviews ? String(relatedProducts[0].reviews) : null;
 
-  const specs = Object.entries((product?.specifications || {}) as Record<string, string>).slice(0, 7);
+  const specifications = (product?.specifications || {}) as Record<string, string>;
+  const normalizedSpecs = Object.entries(specifications)
+    .map(([key, value]) => {
+      const k = String(key ?? "").trim();
+      const v = String(value ?? "").trim();
+      return [k, v] as const;
+    })
+    .filter(([k, v]) => k.length > 0 && v.length > 0);
+
+  const specs = normalizedSpecs.slice(0, 7);
+  const mobileSpecs = normalizedSpecs.slice(0, 3);
 
   return (
     <div className="w-full">
-
       <h1 className="lg:hidden mt-3 text-[#111827] text-[28px] font-semibold leading-[1.1]">
         {product?.title}
       </h1>
@@ -70,6 +79,21 @@ export default function ProductHeaderInfo() {
       </div>
 
       <div className="mt-1 text-[13px] font-semibold text-[#111827]">{t("singleProduct.headerInfo.averageGrade", "Average grade 2.0")}</div>
+
+      {mobileSpecs.length ? (
+        <div className="lg:hidden mt-3 grid grid-cols-3 gap-2">
+          {mobileSpecs.map(([label, value], idx) => (
+            <div key={`${label}-${idx}`} className="overflow-hidden rounded-[10px] border border-[#2d7fd9]">
+              <div className="bg-[#63b3ff] px-2 py-1.5 text-[12px] font-semibold leading-tight text-[#0f172a] truncate" title={value}>
+                {value}
+              </div>
+              <div className="bg-[#1f2937] px-2 py-1 text-[11px] leading-tight text-white/95 truncate" title={label}>
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="lg:hidden mt-4 border-t border-[#e5e7eb]">
         <div className="flex divide-x divide-[#e5e7eb]">
