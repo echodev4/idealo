@@ -281,6 +281,8 @@ export const translations: Record<Locale, any> = {
       },
       offerComparisonTable: {
         offerFallback: "Offer",
+        toShop: "To Shop",
+        offersAvailable: "Offers Available",
         title: "Price comparison",
         topProducts: "Top 10 products",
         from: "from",
@@ -863,6 +865,8 @@ export const translations: Record<Locale, any> = {
       },
       offerComparisonTable: {
         offerFallback: "عرض",
+        toShop: "للتسوق",
+        offersAvailable: "العروض المتاحة",
         title: "مقارنة الأسعار",
         topProducts: "أفضل 10 منتجات",
         from: "من",

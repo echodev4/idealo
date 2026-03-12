@@ -140,6 +140,7 @@ export default function OfferComparisonTable() {
     const [noReturnShippingCosts, setNoReturnShippingCosts] = React.useState(false);
     const [sortKey, setSortKey] = React.useState<"price" | "total">("price");
     const [visible, setVisible] = React.useState(10);
+    const [expandedOffers, setExpandedOffers] = React.useState<Record<string, boolean>>({});
 
     if (relatedLoading) return <OfferComparisonTableSkeleton />;
 
@@ -193,9 +194,8 @@ export default function OfferComparisonTable() {
                 </div>
 
                 <div className="lg:hidden mb-3">
-                    <div className="text-[44px] leading-none font-semibold text-[#111827]">{totalOffersCount}</div>
                     <div className="text-[22px] leading-none font-semibold text-[#111827] mt-1">
-                        {t("category.products.showOffers", "Offers")}
+                        {totalOffersCount} {""}    {t("singleProduct.offerComparisonTable.offersAvailable", "Offers")}
                     </div>
                 </div>
 
@@ -235,207 +235,253 @@ export default function OfferComparisonTable() {
                         </div>
                     </aside>
 
-                    <div className="bg-white border border-[#d1d5db] rounded-md">
-                        <div className="hidden lg:flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 border-b border-[#e5e7eb]">
-                            <div className="flex flex-wrap items-center gap-6">
-                                <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={availableImmediately}
-                                        onChange={(e) => setAvailableImmediately(e.target.checked)}
-                                        className="w-4 h-4 accent-[#111827]"
-                                    />
-                                    <span>{t("singleProduct.offerComparisonTable.filters.availableImmediately", "Available immediately")}</span>
-                                </label>
+                    <div>
+                        <div className="bg-white border border-[#d1d5db] rounded-md">
+                            <div className="hidden lg:flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-3 border-b border-[#e5e7eb]">
+                                <div className="flex flex-wrap items-center gap-6">
+                                    <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={availableImmediately}
+                                            onChange={(e) => setAvailableImmediately(e.target.checked)}
+                                            className="w-4 h-4 accent-[#111827]"
+                                        />
+                                        <span>{t("singleProduct.offerComparisonTable.filters.availableImmediately", "Available immediately")}</span>
+                                    </label>
 
-                                <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={noReturnShippingCosts}
-                                        onChange={(e) => setNoReturnShippingCosts(e.target.checked)}
-                                        className="w-4 h-4 accent-[#111827]"
-                                    />
-                                    <span>{t("singleProduct.offerComparisonTable.filters.noReturnShippingCosts", "No return shipping costs")}</span>
-                                </label>
+                                    <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={noReturnShippingCosts}
+                                            onChange={(e) => setNoReturnShippingCosts(e.target.checked)}
+                                            className="w-4 h-4 accent-[#111827]"
+                                        />
+                                        <span>{t("singleProduct.offerComparisonTable.filters.noReturnShippingCosts", "No return shipping costs")}</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[12px] text-[#111827]">{t("singleProduct.offerComparisonTable.sortBy", "Sort by:")}</span>
+                                    <ButtonPill active={sortKey === "price"} onClick={() => setSortKey("price")}>
+                                        {t("singleProduct.offerComparisonTable.sort.price", "Price")}
+                                    </ButtonPill>
+                                    <ButtonPill active={sortKey === "total"} onClick={() => setSortKey("total")}>
+                                        {t("singleProduct.offerComparisonTable.sort.totalPrice", "Total price")}
+                                    </ButtonPill>
+                                </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <span className="text-[12px] text-[#111827]">{t("singleProduct.offerComparisonTable.sortBy", "Sort by:")}</span>
-                                <ButtonPill active={sortKey === "price"} onClick={() => setSortKey("price")}>
-                                    {t("singleProduct.offerComparisonTable.sort.price", "Price")}
-                                </ButtonPill>
-                                <ButtonPill active={sortKey === "total"} onClick={() => setSortKey("total")}>
-                                    {t("singleProduct.offerComparisonTable.sort.totalPrice", "Total price")}
-                                </ButtonPill>
+                            <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
+                                <div>{t("singleProduct.offerComparisonTable.columns.offerTitle", "Offer title")}</div>
+                                <div>{t("singleProduct.offerComparisonTable.columns.priceShipping", "Price & Shipping")}</div>
+                                <div>{t("singleProduct.offerComparisonTable.columns.paymentMethods", "Payment methods*")}</div>
+                                <div>{t("singleProduct.offerComparisonTable.columns.shopReview", "Shop & Shop Review")}</div>
+                                <div className="text-right"></div>
                             </div>
-                        </div>
 
-                        <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
-                            <div>{t("singleProduct.offerComparisonTable.columns.offerTitle", "Offer title")}</div>
-                            <div>{t("singleProduct.offerComparisonTable.columns.priceShipping", "Price & Shipping")}</div>
-                            <div>{t("singleProduct.offerComparisonTable.columns.paymentMethods", "Payment methods*")}</div>
-                            <div>{t("singleProduct.offerComparisonTable.columns.shopReview", "Shop & Shop Review")}</div>
-                            <div className="text-right"></div>
-                        </div>
+                            <div className="divide-y divide-[#e5e7eb]">
+                                {ordered.slice(0, visible).map((o, idx) => {
+                                    const isCheapest = o.price === cheapest;
+                                    const shop = pickShop(idx);
+                                    const ratingValue = idx % 2 === 0 ? 5.0 : 3.7;
+                                    const isExpanded = !!expandedOffers[o.id];
 
-                        <div className="divide-y divide-[#e5e7eb]">
-                            {ordered.slice(0, visible).map((o, idx) => {
-                                const isCheapest = o.price === cheapest;
-                                const shop = pickShop(idx);
-                                const ratingValue = idx % 2 === 0 ? 5.0 : 3.7;
+                                    return (
+                                        <div key={o.id} className="p-3">
+                                            <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 items-start">
+                                                <div className="min-w-0">
+                                                    <div className="text-[13px] font-semibold text-[#111827]">
+                                                        <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
+                                                            {o.title}
+                                                        </a>
+                                                    </div>
 
-                                return (
-                                    <div key={o.id} className="p-3">
-                                        <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 items-start">
-                                            <div className="min-w-0">
-                                                <div className="text-[13px] font-semibold text-[#111827]">
+                                                    <div className="mt-2">
+                                                        <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.details", "Details")}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <div className="text-[24px] font-semibold text-[#111827] leading-none">{formatAED(o.price)}</div>
+
+                                                    {isCheapest && (
+                                                        <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
+                                                            {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
+                                                            <div className="text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
+                                                        </div>
+                                                    )}
+
+                                                    {!isCheapest && (
+                                                        <div className="mt-2 text-[12px] text-[#111827]">
+                                                            {formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
+                                                        </div>
+                                                    )}
+
+                                                    {o.oldPrice && o.oldPrice > o.price ? (
+                                                        <div className="mt-2 inline-flex items-center gap-2">
+                                                            <span className="text-[12px] border border-[#d1d5db] px-2 py-0.5 rounded-sm">
+                                                                {t("singleProduct.offerComparisonTable.priceIncludes", "Price includes")}
+                                                            </span>
+                                                            <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.voucher", "voucher")}</span>
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+
+                                                <div className="flex items-start gap-2 pt-1">
+                                                    {PAYMENT_ICONS.map((p, i) => (
+                                                        <div
+                                                            key={p.key}
+                                                            className={`w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden ${i > 0 ? "hidden sm:block" : ""}`}
+                                                        >
+                                                            <Image src={p.src} alt={p.alt} fill sizes="46px" className="object-contain p-1" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="pt-1">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="relative w-[110px] h-[36px]">
+                                                            <Image src={shop.src} alt={shop.alt} fill sizes="110px" className="object-contain" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="text-[12px] text-[#111827] font-semibold">
+                                                                {shop.label ? t("singleProduct.offerComparisonTable.marketplace", "Marketplace") : ""}
+                                                            </div>
+                                                            <div className="mt-1">
+                                                                <Rating value={ratingValue} />
+                                                            </div>
+                                                            <div className="mt-2 text-[12px] text-[#111827]">
+                                                                <span className="text-[#6b7280]">{t("singleProduct.offerComparisonTable.soldBy", "Sold by:")} </span>
+                                                                <span className="cursor-not-allowed">handyshopandmore-bochum</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}</div>
+                                                </div>
+
+                                                <div className="flex justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => window.open(o.url, "_blank")}
+                                                        className="h-10 px-5 rounded bg-[#22c55e] hover:bg-[#16a34a] text-white text-[14px] font-semibold"
+                                                    >
+                                                        {t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="lg:hidden border border-[#d1d5db] rounded-xl p-3">
+                                                {isCheapest ? (
+                                                    <div className="mb-2 inline-flex items-center rounded-[4px] border border-[#fb923c] bg-[#fff7ed] px-2 py-1 text-[12px] font-semibold text-[#ea580c]">
+                                                        {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Lowest price")}
+                                                    </div>
+                                                ) : null}
+
+                                                <div className="text-[14px] font-semibold text-[#111827]">
                                                     <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
                                                         {o.title}
                                                     </a>
                                                 </div>
 
-                                                <div className="mt-2">
-                                                    <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.details", "Details")}</span>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div className="text-[24px] font-semibold text-[#111827] leading-none">{formatAED(o.price)}</div>
-
-                                                {isCheapest && (
-                                                    <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
-                                                        {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
-                                                        <div className="text-[#111827]">{formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}</div>
-                                                    </div>
-                                                )}
-
-                                                {!isCheapest && (
-                                                    <div className="mt-2 text-[12px] text-[#111827]">
+                                                <div className="mt-3">
+                                                    <div className="text-[24px] font-semibold text-[#111827] leading-none">{formatAED(o.price)}</div>
+                                                    <div className="mt-1 text-[14px] text-[#374151]">
                                                         {formatAED(o.price)} {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
                                                     </div>
-                                                )}
+                                                </div>
 
-                                                {o.oldPrice && o.oldPrice > o.price ? (
-                                                    <div className="mt-2 inline-flex items-center gap-2">
-                                                        <span className="text-[12px] border border-[#d1d5db] px-2 py-0.5 rounded-sm">
-                                                            {t("singleProduct.offerComparisonTable.priceIncludes", "Price includes")}
+                                                <div className="mt-3 flex items-center justify-between gap-2">
+                                                    <div className="min-w-0 flex items-center gap-2">
+                                                        <div className="relative w-[120px] h-[40px]">
+                                                            <Image src={shop.src} alt={shop.alt} fill sizes="120px" className="object-contain" />
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        aria-label={isExpanded ? "Collapse offer details" : "Expand offer details"}
+                                                        onClick={() =>
+                                                            setExpandedOffers((prev) => ({
+                                                                ...prev,
+                                                                [o.id]: !prev[o.id],
+                                                            }))
+                                                        }
+                                                        className="shrink-0 h-11 w-11 rounded-full border border-[#d1d5db] bg-[#f3f4f6] flex items-center justify-center"
+                                                    >
+                                                        <span
+                                                            className={cn(
+                                                                "text-[#6b7280] transition-transform",
+                                                                isExpanded ? "rotate-180" : "rotate-0"
+                                                            )}
+                                                        >
+                                                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+                                                                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
                                                         </span>
-                                                        <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.voucher", "voucher")}</span>
+                                                    </button>
+                                                </div>
+
+                                                <div className="mt-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => window.open(o.url, "_blank")}
+                                                        className="w-full h-12 rounded-2xl border border-[#d1d5db] bg-[#f3f4f6] text-[#111827] text-[18px] font-semibold flex items-center justify-center gap-2"
+                                                    >
+                                                        <span className="text-[18px] leading-none">
+                                                            {t("singleProduct.offerComparisonTable.toShop", "To Shop")}
+                                                        </span>
+                                                        <span className="text-[#1a73e8] leading-none" aria-hidden="true"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+                                                    </button>
+                                                </div>
+
+                                                {isExpanded ? (
+                                                    <div className="mt-3 pt-3 border-t border-[#e5e7eb]">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <Rating value={ratingValue} />
+                                                            <div className="shrink-0 flex items-center gap-2">
+                                                                {PAYMENT_ICONS.map((p) => (
+                                                                    <div
+                                                                        key={p.key}
+                                                                        className="w-[44px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden"
+                                                                    >
+                                                                        <Image src={p.src} alt={p.alt} fill sizes="44px" className="object-contain p-1" />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-2 flex items-center justify-between text-[13px]">
+                                                            <span className="text-[#1a73e8] cursor-not-allowed">
+                                                                {t("singleProduct.offerComparisonTable.details", "Details")}
+                                                            </span>
+                                                            <span className="text-[#1a73e8] cursor-not-allowed">
+                                                                {t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 ) : null}
                                             </div>
-
-                                            <div className="flex items-start gap-2 pt-1">
-                                                {PAYMENT_ICONS.map((p, i) => (
-                                                    <div
-                                                        key={p.key}
-                                                        className={`w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden ${i > 0 ? "hidden sm:block" : ""}`}
-                                                    >
-                                                        <Image src={p.src} alt={p.alt} fill sizes="46px" className="object-contain p-1" />
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="pt-1">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="relative w-[110px] h-[36px]">
-                                                        <Image src={shop.src} alt={shop.alt} fill sizes="110px" className="object-contain" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="text-[12px] text-[#111827] font-semibold">
-                                                            {shop.label ? t("singleProduct.offerComparisonTable.marketplace", "Marketplace") : ""}
-                                                        </div>
-                                                        <div className="mt-1">
-                                                            <Rating value={ratingValue} />
-                                                        </div>
-                                                        <div className="mt-2 text-[12px] text-[#111827]">
-                                                            <span className="text-[#6b7280]">{t("singleProduct.offerComparisonTable.soldBy", "Sold by:")} </span>
-                                                            <span className="cursor-not-allowed">handyshopandmore-bochum</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">{t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}</div>
-                                            </div>
-
-                                            <div className="flex justify-end">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => window.open(o.url, "_blank")}
-                                                    className="h-10 px-5 rounded bg-[#22c55e] hover:bg-[#16a34a] text-white text-[14px] font-semibold"
-                                                >
-                                                    {t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
-                                                </button>
-                                            </div>
                                         </div>
-
-                                        <div className="lg:hidden border border-[#d1d5db] rounded-md p-3">
-                                            {isCheapest ? (
-                                                <div className="mb-2 inline-flex items-center rounded-[4px] border border-[#fb923c] bg-[#fff7ed] px-2 py-1 text-[12px] font-semibold text-[#ea580c]">
-                                                    {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Lowest price")}
-                                                </div>
-                                            ) : null}
-
-                                            <div className="text-[14px] font-semibold text-[#111827]">
-                                                <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
-                                                    {o.title}
-                                                </a>
-                                            </div>
-
-                                            <div className="mt-3 flex items-start justify-between gap-3">
-                                                <div>
-                                                    <div className="text-[24px] font-semibold text-[#111827] leading-none">{formatAED(o.price)}</div>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => window.open(o.url, "_blank")}
-                                                    className="h-10 px-5 rounded bg-[#22c55e] hover:bg-[#16a34a] text-white text-[14px] font-semibold whitespace-nowrap"
-                                                >
-                                                    {t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
-                                                </button>
-                                            </div>
-
-                                            <div className="mt-3 flex items-start justify-between gap-3">
-                                                <div className="min-w-0 flex items-center gap-2">
-                                                    <div className="relative w-[120px] h-[40px]">
-                                                        <Image src={shop.src} alt={shop.alt} fill sizes="120px" className="object-contain" />
-                                                    </div>
-                                                    <Rating value={idx % 2 === 0 ? 5.0 : 3.7} />
-                                                </div>
-
-                                                <div className="shrink-0 flex items-center gap-2">
-                                                    {PAYMENT_ICONS.slice(0, 1).map((p) => (
-                                                        <div
-                                                            key={p.key}
-                                                            className="w-[44px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden"
-                                                        >
-                                                            <Image src={p.src} alt={p.alt} fill sizes="44px" className="object-contain p-1" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {visible < ordered.length ? (
-                            <div className="p-3">
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setVisible((v) => v + 10);
-                                    }}
-                                    className="h-10 px-4 rounded border border-[#d1d5db] bg-white text-[#111827] text-[13px] font-semibold cursor-not-allowed"
-                                >
-                                    {t("singleProduct.offerComparisonTable.showMoreOffers", "Show more offers")}
-                                </button>
+                                    );
+                                })}
                             </div>
-                        ) : null}
+
+                            {visible < ordered.length ? (
+                                <div className="p-3">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setVisible((v) => v + 10);
+                                        }}
+                                        className="h-10 px-4 rounded border border-[#d1d5db] bg-white text-[#111827] text-[13px] font-semibold cursor-not-allowed"
+                                    >
+                                        {t("singleProduct.offerComparisonTable.showMoreOffers", "Show more offers")}
+                                    </button>
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
+
                 </div>
             </div>
         </section>
