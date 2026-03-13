@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -14,13 +14,6 @@ type Product = {
     image_url: string;
     price: string;
 };
-
-function parsePriceToNumber(price?: string) {
-    if (!price) return null;
-    const cleaned = price.replace(/[^0-9.,]/g, "").replace(",", ".");
-    const num = Number(cleaned);
-    return Number.isFinite(num) ? num : null;
-}
 
 function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
@@ -292,14 +285,34 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     role="region"
                                     aria-label={t("landing.heroTeaser.aria.popularProducts", "Popular products")}
                                 >
-                                    {items.map((p, idx) => {
+                                    {items.map((p: any) => {
                                         const name = p.product_name;
                                         const encodedUrl = encodeURIComponent(p.product_url);
-                                        const price = parsePriceToNumber(p.price);
 
-                                        const grade = idx % 3 === 0 ? "1.4" : idx % 3 === 1 ? "1.5" : "";
                                         const starsFilled = 4;
                                         const count = "10";
+
+                                        const sourceLabel =
+                                            p.source?.toLowerCase() === "carrefouruae"
+                                                ? "Carrefour"
+                                                : p.source?.toLowerCase() === "sharafdg"
+                                                    ? "SharafDG"
+                                                    : p.source?.toLowerCase() === "noon"
+                                                        ? "Noon"
+                                                        : p.source || "";
+
+                                        const parsedPrice =
+                                            typeof p.numericPrice === "number"
+                                                ? p.numericPrice
+                                                : Number(String(p.price || "").replace(/[^\d.]/g, ""));
+
+                                        const formattedPrice =
+                                            Number.isFinite(parsedPrice) && parsedPrice > 0
+                                                ? `AED ${parsedPrice.toLocaleString("en-AE", {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}`
+                                                : "AED 0.00";
 
                                         return (
                                             <Link
@@ -307,21 +320,9 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                 href={`/product/${encodedUrl}?product_name=${encodeURIComponent(name)}&source=${encodeURIComponent(
                                                     p.source
                                                 )}`}
-                                                className="card-idealo flex-none w-[48%] min-[420px]:w-[42%] sm:w-[calc((100%-24px)/3)] p-4 flex flex-col h-full relative no-underline hover:no-underline snap-start"
+                                                className="card-idealo flex-none w-[48%] min-[420px]:w-[42%] sm:w-[calc((100%-24px)/3)] p-4 flex flex-col h-full relative no-underline hover:no-underline snap-start overflow-hidden"
                                             >
-                                                <button
-                                                    type="button"
-                                                    aria-label={t("landing.heroTeaser.aria.wishlist", "Wishlist")}
-                                                    className="absolute top-3 right-3 hidden h-9 w-9 items-center justify-center rounded-full border border-[#E0E0E0] bg-white text-[#0474BA] sm:flex"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                    }}
-                                                >
-                                                    <Heart size={20} strokeWidth={2} />
-                                                </button>
-
-                                                <div className="relative h-[170px] sm:h-[200px] w-full mb-3 flex items-center justify-center">
+                                                <div className="relative h-[170px] sm:h-[200px] w-full mb-3 flex items-center justify-center overflow-hidden">
                                                     <Image
                                                         src={p.image_url}
                                                         alt={name}
@@ -331,22 +332,23 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                     />
                                                 </div>
 
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase">
+                                                <div className="flex items-center gap-2 mb-2 min-w-0 flex-wrap">
+                                                    <span className="bg-[#0066C0] text-white text-[12px] font-bold px-2 py-0.5 rounded-[2px] lowercase shrink-0">
                                                         {t("landing.heroTeaser.badges.bestseller", "bestseller")}
                                                     </span>
-                                                    <span className="text-[#666666] text-[14px] truncate">{t("landing.heroTeaser.inSource", "in")} {p.source}</span>
+
+                                                    <span className="text-[#666666] text-[14px] min-w-0 truncate">
+                                                        {t("landing.heroTeaser.inSource", "in")} {sourceLabel}
+                                                    </span>
                                                 </div>
 
-                                                <div className="text-[#212121] text-[15px] sm:text-[16px] font-bold leading-[1.2] line-clamp-2 mb-3">
+                                                <div className="text-[#212121] text-[15px] sm:text-[16px] font-bold leading-[1.2] line-clamp-2 mb-3 min-h-[38px]">
                                                     {name}
                                                 </div>
 
                                                 <div className="mt-auto">
-                                                    <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none">
-
-
-                                                        <div className="flex items-center gap-0.5">
+                                                    <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none flex-wrap">
+                                                        <div className="flex items-center gap-0.5 shrink-0">
                                                             {Array.from({ length: 5 }).map((_, i) => (
                                                                 <Star
                                                                     key={i}
@@ -361,10 +363,12 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                         <span className="text-[12px] text-[#666666]">{count}</span>
                                                     </div>
 
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-[14px] text-[#666666]">{t("landing.heroTeaser.from", "from")}</span>
-                                                        <span className="text-[20px] font-bold text-[#FF6600]">
-                                                            {price !== null ? `€${price.toFixed(2)}` : p.price}
+                                                    <div className="flex items-baseline gap-2 flex-wrap">
+                                                        <span className="text-[14px] text-[#666666]">
+                                                            {t("landing.heroTeaser.from", "from")}
+                                                        </span>
+                                                        <span className="text-[20px] font-bold text-[#FF6600] break-words">
+                                                            {formattedPrice}
                                                         </span>
                                                     </div>
                                                 </div>
