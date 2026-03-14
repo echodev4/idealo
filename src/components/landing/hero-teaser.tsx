@@ -320,7 +320,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                 href={`/product/${encodedUrl}?product_name=${encodeURIComponent(name)}&source=${encodeURIComponent(
                                                     p.source
                                                 )}`}
-                                                className="card-idealo flex-none w-[48%] min-[420px]:w-[42%] sm:w-[calc((100%-24px)/3)] p-4 flex flex-col h-full relative no-underline hover:no-underline snap-start overflow-hidden"
+                                                className="card-idealo flex-none w-[78%] min-[380px]:w-[68%] sm:w-[calc((100%-24px)/3)]  p-4 flex flex-col h-full relative no-underline hover:no-underline snap-start overflow-hidden"
                                             >
                                                 <div className="relative h-[170px] sm:h-[200px] w-full mb-3 flex items-center justify-center overflow-hidden">
                                                     <Image
