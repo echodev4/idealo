@@ -64,7 +64,7 @@ export default function ProductHeaderInfo() {
 
   return (
     <div className="w-full">
-      <h1 className="lg:hidden mt-3 text-[#111827] text-[28px] font-semibold leading-[1.1]">
+      <h1 className="mt-3 text-[#111827] text-[28px] font-semibold leading-[1.1]">
         {product?.title}
       </h1>
 
