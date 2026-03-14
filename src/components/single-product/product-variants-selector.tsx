@@ -27,7 +27,7 @@ const ProductVariantsSelectorSkeleton = () => {
             <div className="h-4 w-56 bg-muted rounded" />
             <div className="mt-3 flex gap-2 overflow-hidden">
                 {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="w-[124px] h-[196px] bg-muted rounded" />
+                    <div key={i} className="w-[124px] h-[204px] bg-muted rounded" />
                 ))}
             </div>
             <div className="mt-3 h-2 w-full bg-muted rounded" />
@@ -36,7 +36,7 @@ const ProductVariantsSelectorSkeleton = () => {
 };
 
 export default function ProductVariantsSelector() {
-    const router = useRouter()
+    const router = useRouter();
     const { relatedProducts, relatedLoading } = useProduct();
     const { t } = useLanguage();
     const [selectedIdx, setSelectedIdx] = React.useState(0);
@@ -166,10 +166,10 @@ export default function ProductVariantsSelector() {
                     <a
                         href="#"
                         onClick={(e) => e.preventDefault()}
-                        className="relative flex-shrink-0 w-[124px] h-[196px] rounded-[3px] border-2 border-[#1a73e8] bg-white"
+                        className="relative flex-shrink-0 w-[124px] min-h-[204px] rounded-[3px] border-2 border-[#1a73e8] bg-white flex flex-col overflow-hidden"
                     >
-                        <div className="absolute top-0 left-0 w-0 h-0 border-t-[28px] border-t-[#1a73e8] border-r-[28px] border-r-transparent" />
-                        <div className="absolute top-[6px] left-[6px] text-white">
+                        <div className="absolute top-0 left-0 w-0 h-0 border-t-[28px] border-t-[#1a73e8] border-r-[28px] border-r-transparent z-10" />
+                        <div className="absolute top-[6px] left-[6px] text-white z-10">
                             <Check className="w-4 h-4" />
                         </div>
 
@@ -185,11 +185,18 @@ export default function ProductVariantsSelector() {
                             </div>
                         </div>
 
-                        <div className="px-2 pt-2">
-                            <div className="text-[12.5px] font-semibold text-[#111827]">{t("singleProduct.variantsSelector.allVariants", "All variants")}</div>
-                            <div className="mt-2 text-[12px] text-[#6b7280]">{t("singleProduct.variantsSelector.away", "away")}</div>
-                            <div className="text-[18px] font-semibold text-[#f97316] leading-none">
-                                AED {minPrice.toLocaleString()}
+                        <div className="px-2 pt-2 pb-2 flex-1 flex flex-col min-h-0">
+                            <div className="text-[12.5px] font-semibold text-[#111827] leading-[1.2] line-clamp-2 min-h-[32px]">
+                                {t("singleProduct.variantsSelector.allVariants", "All variants")}
+                            </div>
+
+                            <div className="mt-auto pt-2">
+                                <div className="text-[12px] text-[#6b7280] leading-[1.2]">
+                                    {t("singleProduct.variantsSelector.away", "away")}
+                                </div>
+                                <div className="text-[18px] font-semibold text-[#f97316] leading-[1.1] break-words">
+                                    AED {minPrice.toLocaleString()}
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -206,7 +213,7 @@ export default function ProductVariantsSelector() {
                                     router.push(`/product/${encodeURIComponent(item.router)}?product_name=${encodeURIComponent(item.name)}&source=${encodeURIComponent(item.source)}`);
                                 }}
                                 className={cn(
-                                    "relative flex-shrink-0 w-[124px] h-[196px] rounded-[3px] border bg-white",
+                                    "relative flex-shrink-0 w-[124px] min-h-[204px] rounded-[3px] border bg-white flex flex-col overflow-hidden",
                                     selected ? "border-[#1a73e8]" : "border-[#d1d5db] hover:border-[#1a73e8]"
                                 )}
                             >
@@ -218,13 +225,18 @@ export default function ProductVariantsSelector() {
                                     </div>
                                 </div>
 
-                                <div className="px-2 pt-2">
-                                    <div className="text-[12px] leading-[1.15] font-semibold text-[#111827] min-h-[30px]">
+                                <div className="px-2 pt-2 pb-2 flex-1 flex flex-col min-h-0">
+                                    <div className="text-[12px] leading-[1.15] font-semibold text-[#111827] line-clamp-2 min-h-[30px] break-words">
                                         {truncate(item.name, 28)}
                                     </div>
-                                    <div className="mt-2 text-[12px] text-[#6b7280]">{t("singleProduct.variantsSelector.away", "away")}</div>
-                                    <div className="text-[18px] font-semibold text-[#f97316] leading-none">
-                                        AED {item.price.toLocaleString()}
+
+                                    <div className="mt-auto pt-2">
+                                        <div className="text-[12px] text-[#6b7280] leading-[1.2]">
+                                            {t("singleProduct.variantsSelector.away", "away")}
+                                        </div>
+                                        <div className="text-[18px] font-semibold text-[#f97316] leading-[1.1] break-words">
+                                            AED {item.price.toLocaleString()}
+                                        </div>
                                     </div>
                                 </div>
                             </a>
@@ -266,6 +278,3 @@ export default function ProductVariantsSelector() {
         </section>
     );
 }
-
-
-

@@ -7,6 +7,8 @@ import React, {
     useState,
 } from "react";
 
+import toast from "react-hot-toast";
+
 export interface Product {
     product_url: string;
     _id: string;
@@ -92,6 +94,12 @@ export function ProductProvider({
 
                 const res = await fetch(url);
                 const json = await res.json();
+
+
+                if (!res.ok || json?.success === false) {
+                    toast.error("Live scraping failed. Please try again later.");
+                    return;
+                }
 
                 if (!active) return;
 

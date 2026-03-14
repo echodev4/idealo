@@ -5,6 +5,8 @@ import { VisualEditsMessenger } from "orchids-visual-edits";
 import { LanguageProvider } from "@/contexts/language-context";
 import Header from "@/components/common/header";
 import Footer from "@/components/common/footer";
+import { Toaster } from "react-hot-toast";
+
 
 
 export const metadata: Metadata = {
@@ -24,6 +26,7 @@ export default function RootLayout({
         <LanguageProvider>
           <Header />
           {children}
+          <Toaster position="top-right" />
           <Footer />
         </LanguageProvider>
         <VisualEditsMessenger />
