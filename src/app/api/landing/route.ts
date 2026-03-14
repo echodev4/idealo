@@ -124,8 +124,6 @@ async function fetchFaissByVector(
     return acc;
   }, {});
 
-  console.log("Landing raw source counts (without sharafdg):", sourceCounts);
-
   return diversifyProducts(validProducts, limit);
 }
 

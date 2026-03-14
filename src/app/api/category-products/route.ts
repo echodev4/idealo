@@ -22,38 +22,131 @@ type CatalogProduct = {
     discount?: string | null;
     reviews?: string;
     average_rating?: number | string | null;
-
     category_path_text?: string;
     category?: string;
     main_category?: string;
+    scraped_at?: unknown;
+    faiss_score?: number;
 };
 
-type NoonDetail = {
+type CategoryProduct = {
+    _id?: string;
     product_url: string;
-    title?: string;
-    currentPrice?: string;
+    title: string;
+    currentPrice: string;
     previousPrice?: string;
     discountPercentage?: string;
     rating?: string;
     ratingCount?: string;
-    images?: { src: string; alt?: string }[];
-    overview?: string;
-    highlights?: string[];
-    specifications?: Record<string, any>;
+    images: { src: string; alt?: string }[];
+    category_path_text?: string;
+    category?: string;
+    main_category?: string;
+    source?: string;
+    source_record_id?: string;
+    scraped_at?: unknown;
 };
+
+function normalizeSource(source?: string): string {
+    const s = String(source || "").trim().toLowerCase();
+
+    if (s === "noon") return "noon";
+    if (s === "carrefour" || s === "carrefouruae") return "carrefour";
+    if (s === "sharafdg") return "sharafdg";
+
+    return "other";
+}
+
+function isValidCatalogProduct(p: unknown): p is CatalogProduct {
+    if (!p || typeof p !== "object") return false;
+
+    const item = p as Record<string, unknown>;
+
+    return (
+        typeof item._id === "string" &&
+        typeof item.product_url === "string" &&
+        item.product_url.startsWith("http") &&
+        typeof item.source === "string" &&
+        typeof item.product_name === "string" &&
+        item.product_name.trim() !== "" &&
+        typeof item.image_url === "string" &&
+        item.image_url.startsWith("http") &&
+        typeof item.price === "string" &&
+        item.price.trim() !== ""
+    );
+}
+
+function diversifyProducts(products: CatalogProduct[]): CatalogProduct[] {
+    const noon: CatalogProduct[] = [];
+    const carrefour: CatalogProduct[] = [];
+    const other: CatalogProduct[] = [];
+
+    for (const product of products) {
+        const source = normalizeSource(product.source);
+
+        if (source === "sharafdg") continue;
+        if (source === "noon") noon.push(product);
+        else if (source === "carrefour") carrefour.push(product);
+        else other.push(product);
+    }
+
+    const selected: CatalogProduct[] = [];
+    let i = 0;
+
+    while (i < noon.length || i < carrefour.length || i < other.length) {
+        if (i < noon.length) selected.push(noon[i]);
+        if (i < carrefour.length) selected.push(carrefour[i]);
+        if (i < other.length) selected.push(other[i]);
+        i += 1;
+    }
+
+    return selected;
+}
+
+function mapCatalogToCategoryProduct(p: CatalogProduct): CategoryProduct {
+    return {
+        _id: p._id,
+        product_url: p.product_url,
+        title: p.product_name,
+        currentPrice: p.price,
+        previousPrice: p.old_price || "",
+        discountPercentage: p.discount || "",
+        rating:
+            p.average_rating !== null && p.average_rating !== undefined
+                ? String(p.average_rating)
+                : "",
+        ratingCount: p.reviews || "",
+        images: [{ src: p.image_url, alt: p.product_name }],
+        category_path_text: p.category_path_text,
+        category: p.category,
+        main_category: p.main_category,
+        source: p.source,
+        source_record_id: p._id,
+        scraped_at: p.scraped_at,
+    };
+}
 
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
 
         const q = searchParams.get("q")?.trim() || "";
-        const limit = Math.min(Number(searchParams.get("limit") || "100"), 200);
+        const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
+        const limit = Math.min(
+            Math.max(parseInt(searchParams.get("limit") || "20", 10), 1),
+            50
+        );
 
         if (q.length < 2) {
-            return NextResponse.json({ count: 0, products: [] });
+            return NextResponse.json({
+                total: 0,
+                page,
+                limit,
+                totalPages: 0,
+                products: [],
+            });
         }
 
-        // 1) embedding
         const embeddingResponse = await openai.embeddings.create({
             model: "text-embedding-3-small",
             input: q,
@@ -61,84 +154,72 @@ export async function GET(req: Request) {
 
         const vector = embeddingResponse.data[0].embedding;
 
-        // 2) faiss search (catalog records)
+        const candidateLimit = 500;
+
         const faissRes = await fetch(`${BASE_URL}/faiss/search_by_vector`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ vector, limit }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                vector,
+                limit: candidateLimit,
+            }),
             cache: "no-store",
         });
 
         if (!faissRes.ok) {
             const errorText = await faissRes.text();
             console.error("FAISS backend error:", errorText);
-            return NextResponse.json({ count: 0, products: [] }, { status: 500 });
+
+            return NextResponse.json(
+                {
+                    total: 0,
+                    page,
+                    limit,
+                    totalPages: 0,
+                    products: [],
+                },
+                { status: 500 }
+            );
         }
 
         const faissJson = await faissRes.json();
 
         const catalogProducts: CatalogProduct[] = Array.isArray(faissJson.products)
-            ? faissJson.products.filter((p: any) => {
-                return (
-                    typeof p._id === "string" &&
-                    typeof p.product_url === "string" &&
-                    p.product_url.startsWith("http") &&
-                    typeof p.source === "string" &&
-                    typeof p.product_name === "string" &&
-                    typeof p.image_url === "string" &&
-                    p.image_url.startsWith("http")
-                );
-            })
+            ? faissJson.products
+                .filter(isValidCatalogProduct)
+                .filter((p:any) => normalizeSource(p.source) !== "sharafdg")
             : [];
 
-        if (!catalogProducts.length) {
-            return NextResponse.json({ count: 0, products: [] });
-        }
+        const diversified = diversifyProducts(catalogProducts);
+        const total = diversified.length;
+        const totalPages = total > 0 ? Math.ceil(total / limit) : 0;
 
-        // 3) batch fetch details by URLs
-        const urls = catalogProducts.map((p) => p.product_url);
+        const start = (page - 1) * limit;
+        const end = start + limit;
 
-        const detailsRes = await fetch(`${BASE_URL}/lookup/by-urls`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ product_urls: urls }),
-            cache: "no-store",
-        });
-
-        const detailsList: NoonDetail[] = detailsRes.ok ? await detailsRes.json() : [];
-
-        // 4) map details by product_url
-        const detailsMap = new Map<string, NoonDetail>();
-        for (const d of detailsList) {
-            if (d?.product_url) detailsMap.set(d.product_url, d);
-        }
-
-        // 5) merge: detail fields + category fields
-        // and FILTER OUT missing details
-        const merged = catalogProducts
-            .map((c) => {
-                const d = detailsMap.get(c.product_url);
-                if (!d) return null;
-
-                return {
-                    ...d,
-
-                    category_path_text: c.category_path_text,
-                    category: c.category,
-                    main_category: c.main_category,
-
-                    source: c.source,
-                    source_record_id: c._id,
-                };
-            })
-            .filter(Boolean);
+        const products = diversified.slice(start, end).map(mapCatalogToCategoryProduct);
 
         return NextResponse.json({
-            count: merged.length,
-            products: merged,
+            total,
+            page,
+            limit,
+            totalPages,
+            products,
         });
     } catch (error) {
         console.error("API /category-products error:", error);
-        return NextResponse.json({ count: 0, products: [] }, { status: 500 });
+
+        return NextResponse.json(
+            {
+                total: 0,
+                page: 1,
+                limit: 20,
+                totalPages: 0,
+                products: [],
+            },
+            { status: 500 }
+        );
     }
 }
