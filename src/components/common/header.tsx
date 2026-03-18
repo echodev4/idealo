@@ -172,7 +172,7 @@ export default function Header() {
     let alive = true;
 
     async function fetchSuggestions() {
-      const q = debouncedQuery.trim();
+      const q = normalizeSearchTerm(debouncedQuery);
 
       if (q.length < 3) {
         if (!alive) return;
@@ -230,11 +230,13 @@ export default function Header() {
   const close = () => setIsOpen(false);
 
   const navigateToCategory = (term: string) => {
-    addToRecent(term);
+    const normalizedTerm = normalizeSearchTerm(term);
+
+    addToRecent(normalizedTerm);
     setRecent(readRecent());
     setQuery("");
     close();
-    router.push(`/category/${encodeURIComponent(term)}`);
+    router.push(`/category/${encodeURIComponent(normalizedTerm)}`);
   };
 
   const navigateToProduct = (p: RealProduct) => {
@@ -249,16 +251,24 @@ export default function Header() {
     );
   };
 
+  function normalizeSearchTerm(term: string) {
+    const cleaned = term
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "");
+
+    if (cleaned === "s24") {
+      return "s24 Mobile";
+    }
+
+    return term.trim();
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let q = query.trim();
+    let q = normalizeSearchTerm(query);
     if (!q) return;
-
-    const lower = q.toLowerCase();
-    if (lower === "s24") {
-      q = "s24 Mobile";
-    }
 
     addToRecent(q);
     setRecent(readRecent());
