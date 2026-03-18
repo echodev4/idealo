@@ -251,8 +251,14 @@ export default function Header() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const q = query.trim();
+
+    let q = query.trim();
     if (!q) return;
+
+    const lower = q.toLowerCase();
+    if (lower === "s24") {
+      q = "s24 Mobile";
+    }
 
     addToRecent(q);
     setRecent(readRecent());
@@ -261,13 +267,21 @@ export default function Header() {
       const res = await fetch(`/api/search-products?q=${encodeURIComponent(q)}`);
       const data = await res.json();
       const tags: string[] = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
-      sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags, ts: Date.now() }));
+
+      sessionStorage.setItem(
+        SUGGESTIONS_KEY,
+        JSON.stringify({ q, tags, ts: Date.now() })
+      );
     } catch {
-      sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags: [], ts: Date.now() }));
+      sessionStorage.setItem(
+        SUGGESTIONS_KEY,
+        JSON.stringify({ q, tags: [], ts: Date.now() })
+      );
     }
 
     setQuery("");
     close();
+
     router.push(`/category/${encodeURIComponent(q)}?view=suggestions`);
   };
 
