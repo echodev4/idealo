@@ -45,16 +45,21 @@ type CategoryProduct = {
     source?: string;
     source_record_id?: string;
     scraped_at?: unknown;
+    offerCount?: number;
 };
 
 function normalizeSource(source?: string): string {
     const s = String(source || "").trim().toLowerCase();
 
     if (s === "noon") return "noon";
-    if (s === "carrefour" || s === "carrefouruae") return "carrefour";
+    if (s === "carrefour" || s === "carrefouruae") return "carrefouruae";
     if (s === "sharafdg") return "sharafdg";
 
     return "other";
+}
+
+function makeItemKey(product_url: string, source?: string): string {
+    return `${normalizeSource(source)}|${product_url}`;
 }
 
 function isValidCatalogProduct(p: unknown): p is CatalogProduct {
@@ -86,7 +91,7 @@ function diversifyProducts(products: CatalogProduct[]): CatalogProduct[] {
 
         if (source === "sharafdg") continue;
         if (source === "noon") noon.push(product);
-        else if (source === "carrefour") carrefour.push(product);
+        else if (source === "carrefouruae") carrefour.push(product);
         else other.push(product);
     }
 
@@ -123,7 +128,46 @@ function mapCatalogToCategoryProduct(p: CatalogProduct): CategoryProduct {
         source: p.source,
         source_record_id: p._id,
         scraped_at: p.scraped_at,
+        offerCount: 0,
     };
+}
+
+async function fetchOfferCountsBatch(
+    products: CategoryProduct[],
+    baseUrl: string
+): Promise<Record<string, number>> {
+    try {
+        if (!products.length) return {};
+
+        const res = await fetch(`${baseUrl}/offers/counts-by-products`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                items: products.map((p) => ({
+                    product_url: p.product_url,
+                    source: p.source || "",
+                })),
+                include_self: true,
+            }),
+            cache: "no-store",
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error("Offer counts batch backend error:", errorText);
+            return {};
+        }
+
+        const json = await res.json();
+        if (!json?.success || !json?.counts) return {};
+
+        return json.counts as Record<string, number>;
+    } catch (err) {
+        console.error("Offer counts batch fetch failed:", err);
+        return {};
+    }
 }
 
 export async function GET(req: Request) {
@@ -189,7 +233,7 @@ export async function GET(req: Request) {
         const catalogProducts: CatalogProduct[] = Array.isArray(faissJson.products)
             ? faissJson.products
                 .filter(isValidCatalogProduct)
-                .filter((p:any) => normalizeSource(p.source) !== "sharafdg")
+                .filter((p: any) => normalizeSource(p.source) !== "sharafdg")
             : [];
 
         const diversified = diversifyProducts(catalogProducts);
@@ -199,14 +243,25 @@ export async function GET(req: Request) {
         const start = (page - 1) * limit;
         const end = start + limit;
 
-        const products = diversified.slice(start, end).map(mapCatalogToCategoryProduct);
+        const paginatedProducts = diversified.slice(start, end);
+        const mappedProducts = paginatedProducts.map(mapCatalogToCategoryProduct);
+
+        const countsMap = await fetchOfferCountsBatch(mappedProducts, BASE_URL);
+
+        const enrichedProducts = mappedProducts.map((product) => {
+            const key = makeItemKey(product.product_url, product.source);
+            return {
+                ...product,
+                offerCount: Number(countsMap[key] || 0),
+            };
+        });
 
         return NextResponse.json({
             total,
             page,
             limit,
             totalPages,
-            products,
+            products: enrichedProducts,
         });
     } catch (error) {
         console.error("API /category-products error:", error);

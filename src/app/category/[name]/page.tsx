@@ -30,6 +30,7 @@ export interface Product {
   numericOldPrice?: number;
 
   scraped_at?: any;
+  offerCount?: number;
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -121,6 +122,7 @@ export default function CategoryPage() {
             ...p,
             numericPrice: cleanPrice(p.currentPrice),
             numericOldPrice: cleanPrice(p.previousPrice),
+            offerCount: typeof p.offerCount === "number" ? p.offerCount : 0,
           }));
 
         setProducts(mapped);

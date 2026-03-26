@@ -9,7 +9,7 @@ import React, {
 
 import toast from "react-hot-toast";
 
-export interface Product {
+export interface OfferProduct {
     product_url: string;
     _id: string;
     source: string;
@@ -18,38 +18,43 @@ export interface Product {
     price: string;
     old_price?: string;
     discount?: string;
-    reviews?: string;
+    reviews?: string | number;
     average_rating?: number | null;
     created_at?: string;
     updated_at?: string;
+    match_score?: number;
+    match_signals?: {
+        title_ratio?: number;
+        title_token_jaccard?: number;
+        combined_token_jaccard?: number;
+        spec_overlap?: number;
+        price_similarity?: number;
+        penalty?: number;
+    };
 
     // derived (frontend-only)
     numericPrice?: number;
     numericOldPrice?: number;
 }
 
-/**
- * Converts formatted price strings to numeric values.
- * Safe for strings like "AED 3,499" or "$1,299"
- */
-function cleanPrice(p?: string): number {
-    return Number((p || "").replace(/[^\d.]/g, "")) || 0;
+function cleanPrice(p?: string | number | null): number {
+    return Number(String(p || "").replace(/[^\d.]/g, "")) || 0;
 }
 
 interface ProductContextType {
     product: any | null;
     loading: boolean;
 
-    relatedProducts: any[];
-    relatedLoading: boolean;
+    offers: OfferProduct[];
+    offersLoading: boolean;
 }
 
 const ProductContext = createContext<ProductContextType>({
     product: null,
     loading: true,
 
-    relatedProducts: [],
-    relatedLoading: true,
+    offers: [],
+    offersLoading: true,
 });
 
 export function ProductProvider({
@@ -66,15 +71,11 @@ export function ProductProvider({
     const [product, setProduct] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
-    const [relatedLoading, setRelatedLoading] = useState(true);
+    const [offers, setOffers] = useState<OfferProduct[]>([]);
+    const [offersLoading, setOffersLoading] = useState(true);
 
     useEffect(() => {
         let active = true;
-
-        /* ============================
-           Fetch Product Details
-        ============================ */
 
         async function fetchProduct() {
             try {
@@ -92,9 +93,8 @@ export function ProductProvider({
                     )}&sourceName=${encodeURIComponent(sourceName || "")}`;
                 }
 
-                const res = await fetch(url);
+                const res = await fetch(url, { cache: "no-store" });
                 const json = await res.json();
-
 
                 if (!res.ok || json?.success === false) {
                     toast.error("Live scraping failed. Please try again later.");
@@ -105,72 +105,81 @@ export function ProductProvider({
 
                 if (sourceName === "noon" && json?.success && json?.data) {
                     setProduct(json.data);
+                    return;
                 }
 
                 if (sourceName !== "noon" && json?.success && json?.scraped?.data) {
                     setProduct(json.scraped.data);
+                    return;
                 }
+
+                setProduct(null);
             } catch (err) {
                 console.error("❌ Product fetch error:", err);
+                if (active) setProduct(null);
             } finally {
                 if (active) setLoading(false);
             }
         }
 
-        /* ============================
-           Fetch Related Products
-        ============================ */
-
-        async function fetchRelated() {
-            if (!productName) {
-                setRelatedProducts([]);
-                setRelatedLoading(false);
+        async function fetchOffers() {
+            if (!productUrl) {
+                setOffers([]);
+                setOffersLoading(false);
                 return;
             }
 
             try {
-                setRelatedLoading(true);
+                setOffersLoading(true);
 
-                const res = await fetch(
-                    `/api/products?q=${encodeURIComponent(productName)}&limit=10`,
-                    { cache: "no-store" }
-                );
+                const res = await fetch("/api/product-offers", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    cache: "no-store",
+                    body: JSON.stringify({
+                        product_url: productUrl,
+                        source: sourceName || "",
+                        limit: 20,
+                    }),
+                });
 
                 const json = await res.json();
-                const apiProducts: Product[] = json.products || [];
 
-                const mapped: Product[] = apiProducts
+                if (!active) return;
+
+                if (!res.ok || json?.success === false) {
+                    setOffers([]);
+                    return;
+                }
+
+                const apiOffers: OfferProduct[] = json.offers || [];
+
+                const mapped: OfferProduct[] = apiOffers
                     .filter(
                         (p) =>
-                            p.product_name &&
-                            p.image_url &&
-                            p.product_url
+                            p?.product_name &&
+                            p?.image_url &&
+                            p?.product_url
                     )
-                    .map((p) => {
-                        const numericPrice = cleanPrice(p.price);
-                        const numericOldPrice = cleanPrice(p.old_price);
+                    .map((p) => ({
+                        ...p,
+                        numericPrice: cleanPrice(p.price),
+                        numericOldPrice: cleanPrice(p.old_price),
+                    }));
 
-                        return {
-                            ...p,
-                            numericPrice,
-                            numericOldPrice,
-                        };
-                    });
-
-                setRelatedProducts(mapped);
+                setOffers(mapped);
             } catch (err) {
-                console.error("❌ Related products fetch error:", err);
+                console.error("❌ Offers fetch error:", err);
+                if (active) setOffers([]);
             } finally {
-                if (active) setRelatedLoading(false);
+                if (active) setOffersLoading(false);
             }
         }
 
-        /* ============================
-           Run BOTH
-        ============================ */
-
         fetchProduct();
-        fetchRelated();
+        fetchOffers();
 
         return () => {
             active = false;
@@ -182,8 +191,8 @@ export function ProductProvider({
             value={{
                 product,
                 loading,
-                relatedProducts,
-                relatedLoading,
+                offers,
+                offersLoading,
             }}
         >
             {children}
