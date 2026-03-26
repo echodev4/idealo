@@ -12,6 +12,8 @@ export interface Product {
     image_url?: string;
     price?: string;
 
+    offerCount?: number;
+
     title?: string;
     currentPrice?: string;
     images?: { src: string; alt?: string }[];
@@ -105,6 +107,13 @@ function ProductCellGrid({ product }: { product: Product }) {
                         AED {formatPriceAED(product.numericPrice)}
                     </span>
                 </div>
+
+
+                {typeof product.offerCount === "number" && product.offerCount > 0 ? (
+                    <div className="mt-1 text-[12px] text-[#1a73e8] font-medium">
+                        {product.offerCount} {product.offerCount === 1 ? "offer available" : "offers available"}
+                    </div>
+                ) : null}
             </div>
         </div>
     );

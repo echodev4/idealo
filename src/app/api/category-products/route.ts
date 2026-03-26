@@ -52,14 +52,10 @@ function normalizeSource(source?: string): string {
     const s = String(source || "").trim().toLowerCase();
 
     if (s === "noon") return "noon";
-    if (s === "carrefour" || s === "carrefouruae") return "carrefouruae";
+    if (s === "carrefour" || s === "carrefouruae") return "carrefour";
     if (s === "sharafdg") return "sharafdg";
 
     return "other";
-}
-
-function makeItemKey(product_url: string, source?: string): string {
-    return `${normalizeSource(source)}|${product_url}`;
 }
 
 function isValidCatalogProduct(p: unknown): p is CatalogProduct {
@@ -91,7 +87,7 @@ function diversifyProducts(products: CatalogProduct[]): CatalogProduct[] {
 
         if (source === "sharafdg") continue;
         if (source === "noon") noon.push(product);
-        else if (source === "carrefouruae") carrefour.push(product);
+        else if (source === "carrefour") carrefour.push(product);
         else other.push(product);
     }
 
@@ -132,41 +128,41 @@ function mapCatalogToCategoryProduct(p: CatalogProduct): CategoryProduct {
     };
 }
 
-async function fetchOfferCountsBatch(
-    products: CategoryProduct[],
+async function fetchOfferCountForProduct(
+    product: CategoryProduct,
     baseUrl: string
-): Promise<Record<string, number>> {
+): Promise<number> {
     try {
-        if (!products.length) return {};
-
-        const res = await fetch(`${baseUrl}/offers/counts-by-products`, {
+        const res = await fetch(`${baseUrl}/offers/by-product`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                items: products.map((p) => ({
-                    product_url: p.product_url,
-                    source: p.source || "",
-                })),
-                include_self: true,
+                product_url: product.product_url,
+                source: product.source || "",
+                limit: 20,
             }),
             cache: "no-store",
         });
 
         if (!res.ok) {
             const errorText = await res.text();
-            console.error("Offer counts batch backend error:", errorText);
-            return {};
+            console.error("Offer count backend error:", errorText);
+            return 0;
         }
 
         const json = await res.json();
-        if (!json?.success || !json?.counts) return {};
 
-        return json.counts as Record<string, number>;
+        if (!json?.success) return 0;
+
+        // Includes the selected product itself.
+        // If later you want ONLY other offers, use:
+        // return Math.max(0, Number(json.offer_count || 0) - 1);
+        return Number(json.offer_count || 0);
     } catch (err) {
-        console.error("Offer counts batch fetch failed:", err);
-        return {};
+        console.error("Offer count fetch failed:", product?.product_url, err);
+        return 0;
     }
 }
 
@@ -246,15 +242,15 @@ export async function GET(req: Request) {
         const paginatedProducts = diversified.slice(start, end);
         const mappedProducts = paginatedProducts.map(mapCatalogToCategoryProduct);
 
-        const countsMap = await fetchOfferCountsBatch(mappedProducts, BASE_URL);
-
-        const enrichedProducts = mappedProducts.map((product) => {
-            const key = makeItemKey(product.product_url, product.source);
-            return {
-                ...product,
-                offerCount: Number(countsMap[key] || 0),
-            };
-        });
+        const enrichedProducts = await Promise.all(
+            mappedProducts.map(async (product) => {
+                const offerCount = await fetchOfferCountForProduct(product, BASE_URL);
+                return {
+                    ...product,
+                    offerCount,
+                };
+            })
+        );
 
         return NextResponse.json({
             total,

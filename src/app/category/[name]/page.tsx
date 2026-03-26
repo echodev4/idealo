@@ -281,8 +281,9 @@ export default function CategoryPage() {
                           setSortKey(o.k as SortKey);
                           setSortOpen(false);
                         }}
-                        className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                          }`}
+                        className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${
+                          active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                        }`}
                       >
                         <span>{o.t}</span>
                       </button>
@@ -296,16 +297,18 @@ export default function CategoryPage() {
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                  }`}
+                className={`grid h-10 w-10 place-items-center ${
+                  viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                }`}
               >
                 <GridIcon active={viewMode === "grid"} />
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("list")}
-                className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                  }`}
+                className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${
+                  viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                }`}
               >
                 <ListIcon active={viewMode === "list"} />
               </button>
@@ -344,8 +347,9 @@ export default function CategoryPage() {
                             setSortKey(o.k as SortKey);
                             setSortOpen(false);
                           }}
-                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                            }`}
+                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${
+                            active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                          }`}
                         >
                           <span>{o.t}</span>
                         </button>
@@ -359,16 +363,18 @@ export default function CategoryPage() {
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
-                  className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                    }`}
+                  className={`grid h-10 w-10 place-items-center ${
+                    viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                  }`}
                 >
                   <GridIcon active={viewMode === "grid"} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
-                  className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                    }`}
+                  className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${
+                    viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                  }`}
                 >
                   <ListIcon active={viewMode === "list"} />
                 </button>
@@ -416,10 +422,11 @@ export default function CategoryPage() {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`h-10 w-10 rounded border text-sm font-medium ${active
+                    className={`h-10 w-10 rounded border text-sm font-medium ${
+                      active
                         ? "border-[#0b63c8] bg-[#0b63c8] text-white"
                         : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
-                      }`}
+                    }`}
                   >
                     {page}
                   </button>
@@ -429,10 +436,11 @@ export default function CategoryPage() {
 
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
+              className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${
+                currentPage === totalPages
                   ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
                   : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
-                }`}
+              }`}
               disabled={currentPage === totalPages}
             >
               →
