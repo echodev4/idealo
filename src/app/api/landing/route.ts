@@ -5,10 +5,6 @@ export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
 
-if (!BASE_URL) {
-  throw new Error("SCRAPER_API_BASE_URL is not defined");
-}
-
 type Product = {
   _id: string;
   product_url: string;
@@ -23,69 +19,101 @@ type Product = {
   faiss_score?: number;
 };
 
-function isValidProduct(p: any): p is Product {
-  return (
-    typeof p?._id === "string" &&
-    typeof p?.product_url === "string" &&
-    p.product_url.startsWith("http") &&
-    typeof p?.source === "string" &&
-    typeof p?.product_name === "string" &&
-    p.product_name.trim() !== "" &&
-    typeof p?.image_url === "string" &&
-    p.image_url.startsWith("http") &&
-    typeof p?.price === "string" &&
-    p.price.trim() !== ""
-  );
+type RawProduct = {
+  _id?: string;
+  source?: string;
+  product_url?: string;
+  title?: string;
+  product_name?: string;
+  image_url?: string;
+  images?: { src?: string; alt?: string }[];
+  price?: string | number;
+  currentPrice?: string | number;
+  old_price?: string | number;
+  previousPrice?: string | number;
+  discount?: string | number;
+  reviews?: string | number;
+  average_rating?: number | null;
+  faiss_score?: number;
+};
+
+function toPriceString(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "";
+  return String(value);
 }
 
-function normalizeSource(source: string): string {
-  const s = String(source || "").trim().toLowerCase();
+function normalizeProduct(raw: RawProduct): Product | null {
+  const id = typeof raw?._id === "string" ? raw._id : "";
+  const productUrl = typeof raw?.product_url === "string" ? raw.product_url : "";
+  const source = typeof raw?.source === "string" ? raw.source : "";
 
-  if (s === "noon") return "noon";
-  if (s === "sharafdg") return "sharafdg";
-  if (s === "carrefour" || s === "carrefouruae") return "carrefour";
+  const productName =
+    typeof raw?.product_name === "string" && raw.product_name.trim() !== ""
+      ? raw.product_name.trim()
+      : typeof raw?.title === "string" && raw.title.trim() !== ""
+        ? raw.title.trim()
+        : "";
 
-  return "other";
-}
+  const imageUrl =
+    typeof raw?.image_url === "string" && raw.image_url.trim() !== ""
+      ? raw.image_url
+      : typeof raw?.images?.[0]?.src === "string"
+        ? raw.images[0].src
+        : "";
 
-function diversifyProducts(products: Product[], limit: number): Product[] {
-  const buckets: Record<string, Product[]> = {
-    noon: [],
-    sharafdg: [],
-    carrefour: [],
-    other: [],
+  const price =
+    raw?.price !== undefined && raw?.price !== null && raw?.price !== ""
+      ? toPriceString(raw.price)
+      : toPriceString(raw.currentPrice);
+
+  const oldPrice =
+    raw?.old_price !== undefined && raw?.old_price !== null && raw?.old_price !== ""
+      ? toPriceString(raw.old_price)
+      : raw?.previousPrice !== undefined && raw?.previousPrice !== null && raw?.previousPrice !== ""
+        ? toPriceString(raw.previousPrice)
+        : undefined;
+
+  if (!id || !productUrl || !productName || !imageUrl || !price) {
+    return null;
+  }
+
+  return {
+    _id: id,
+    product_url: productUrl,
+    source,
+    product_name: productName,
+    image_url: imageUrl,
+    price,
+    old_price: oldPrice,
+    discount:
+      raw?.discount !== undefined && raw?.discount !== null && raw?.discount !== ""
+        ? String(raw.discount)
+        : undefined,
+    reviews:
+      raw?.reviews !== undefined && raw?.reviews !== null && raw?.reviews !== ""
+        ? String(raw.reviews)
+        : undefined,
+    average_rating:
+      typeof raw?.average_rating === "number" ? raw.average_rating : null,
+    faiss_score:
+      typeof raw?.faiss_score === "number" ? raw.faiss_score : undefined,
   };
+}
+
+function dedupeProducts(products: Product[], limit: number): Product[] {
+  const seenIds = new Set<string>();
+  const selected: Product[] = [];
 
   for (const product of products) {
-    const source = normalizeSource(product.source);
-    buckets[source].push(product);
+    if (seenIds.has(product._id)) continue;
+
+    seenIds.add(product._id);
+    selected.push(product);
+
+    if (selected.length >= limit) break;
   }
 
-  const selected: Product[] = [];
-  const usedIds = new Set<string>();
-  const sourceOrder = ["noon", "sharafdg", "carrefour", "other"];
-
-  while (selected.length < limit) {
-    let addedInRound = false;
-
-    for (const source of sourceOrder) {
-      while (buckets[source].length > 0) {
-        const item = buckets[source].shift()!;
-        if (usedIds.has(item._id)) continue;
-
-        selected.push(item);
-        usedIds.add(item._id);
-        addedInRound = true;
-        break;
-      }
-
-      if (selected.length >= limit) break;
-    }
-
-    if (!addedInRound) break;
-  }
-
-  return selected.slice(0, limit);
+  return selected;
 }
 
 async function fetchFaissByVector(
@@ -93,6 +121,11 @@ async function fetchFaissByVector(
   limit: number,
   candidateLimit: number
 ): Promise<Product[]> {
+  if (!BASE_URL) {
+    console.error("SCRAPER_API_BASE_URL is not defined");
+    return [];
+  }
+
   const res = await fetch(`${BASE_URL}/faiss/search_by_vector`, {
     method: "POST",
     headers: {
@@ -111,28 +144,21 @@ async function fetchFaissByVector(
   }
 
   const data = await res.json();
+  const rawProducts: RawProduct[] = Array.isArray(data?.products) ? data.products : [];
 
-  const rawProducts = Array.isArray(data?.products) ? data.products : [];
+  const normalizedProducts = rawProducts
+    .map(normalizeProduct)
+    .filter((product): product is Product => product !== null);
 
-  const validProducts = rawProducts
-    .filter(isValidProduct)
-    .filter((p: Product) => normalizeSource(p.source) !== "sharafdg");
-
-  const sourceCounts = validProducts.reduce((acc: Record<string, number>, p: Product) => {
-    const key = normalizeSource(p.source);
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-
-  return diversifyProducts(validProducts, limit);
+  return dedupeProducts(normalizedProducts, limit);
 }
 
 export async function GET() {
   try {
     const [iphoneDeals, dairyProducts, fashionProducts] = await Promise.all([
-      fetchFaissByVector(LANDING_EMBEDDINGS.iphoneDeals, 12, 250),
-      fetchFaissByVector(LANDING_EMBEDDINGS.dairyProducts, 12, 250),
-      fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, 18, 300),
+      fetchFaissByVector(LANDING_EMBEDDINGS.iphoneDeals, 12, 60),
+      fetchFaissByVector(LANDING_EMBEDDINGS.dairyProducts, 12, 60),
+      fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, 18, 80),
     ]);
 
     return NextResponse.json({

@@ -4,28 +4,32 @@ import OpenAI from "openai";
 export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-if (!BASE_URL) throw new Error("SCRAPER_API_BASE_URL is not defined");
-if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not defined");
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-
-type CatalogProduct = {
-    _id: string;
-    source: string;
-    product_url: string;
-    product_name: string;
-    image_url: string;
-    price: string;
-    old_price?: string;
-    discount?: string | null;
-    reviews?: string;
-    average_rating?: number | string | null;
-    category_path_text?: string;
+type RawProduct = {
+    _id?: string;
+    source?: string;
+    product_url?: string;
+    title?: string;
+    product_name?: string;
+    currentPrice?: string | number;
+    previousPrice?: string | number;
+    price?: string | number;
+    old_price?: string | number;
+    discount?: string | number;
+    reviews?: string | number;
+    average_rating?: number | null;
+    images?: { src?: string; alt?: string }[];
+    image_url?: string;
     category?: string;
     main_category?: string;
-    scraped_at?: unknown;
+    category_path_text?: string;
+    scraped_at?: string;
+    created_at?: string;
+    inserted_at?: string;
     faiss_score?: number;
 };
 
@@ -44,88 +48,92 @@ type CategoryProduct = {
     main_category?: string;
     source?: string;
     source_record_id?: string;
-    scraped_at?: unknown;
+    numericPrice?: number;
+    numericOldPrice?: number;
+    scraped_at?: string;
     offerCount?: number;
 };
 
-function normalizeSource(source?: string): string {
-    const s = String(source || "").trim().toLowerCase();
-
-    if (s === "noon") return "noon";
-    if (s === "carrefour" || s === "carrefouruae") return "carrefour";
-    if (s === "sharafdg") return "sharafdg";
-
-    return "other";
+function toText(value: unknown): string {
+    if (value === null || value === undefined) return "";
+    return String(value).trim();
 }
 
-function isValidCatalogProduct(p: unknown): p is CatalogProduct {
-    if (!p || typeof p !== "object") return false;
+function normalizeImage(raw: RawProduct): { src: string; alt?: string }[] {
+    const title = toText(raw.title || raw.product_name);
 
-    const item = p as Record<string, unknown>;
+    if (Array.isArray(raw.images) && raw.images.length > 0) {
+        const validImages = raw.images
+            .map((img) => ({
+                src: toText(img?.src),
+                alt: toText(img?.alt) || title,
+            }))
+            .filter((img) => img.src);
 
-    return (
-        typeof item._id === "string" &&
-        typeof item.product_url === "string" &&
-        item.product_url.startsWith("http") &&
-        typeof item.source === "string" &&
-        typeof item.product_name === "string" &&
-        item.product_name.trim() !== "" &&
-        typeof item.image_url === "string" &&
-        item.image_url.startsWith("http") &&
-        typeof item.price === "string" &&
-        item.price.trim() !== ""
+        if (validImages.length > 0) return validImages;
+    }
+
+    const fallback = toText(raw.image_url);
+    return fallback ? [{ src: fallback, alt: title }] : [];
+}
+
+function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
+    const id = toText(raw._id);
+    const productUrl = toText(raw.product_url);
+    const title = toText(raw.title || raw.product_name);
+    const images = normalizeImage(raw);
+
+    const currentPrice = toText(
+        raw.currentPrice !== undefined && raw.currentPrice !== null && raw.currentPrice !== ""
+            ? raw.currentPrice
+            : raw.price
     );
-}
 
-function diversifyProducts(products: CatalogProduct[]): CatalogProduct[] {
-    const noon: CatalogProduct[] = [];
-    const carrefour: CatalogProduct[] = [];
-    const other: CatalogProduct[] = [];
+    const previousPrice = toText(
+        raw.previousPrice !== undefined && raw.previousPrice !== null && raw.previousPrice !== ""
+            ? raw.previousPrice
+            : raw.old_price
+    );
 
-    for (const product of products) {
-        const source = normalizeSource(product.source);
-
-        if (source === "sharafdg") continue;
-        if (source === "noon") noon.push(product);
-        else if (source === "carrefour") carrefour.push(product);
-        else other.push(product);
+    if (!id || !productUrl || !title || images.length === 0 || !currentPrice) {
+        return null;
     }
 
-    const selected: CatalogProduct[] = [];
-    let i = 0;
-
-    while (i < noon.length || i < carrefour.length || i < other.length) {
-        if (i < noon.length) selected.push(noon[i]);
-        if (i < carrefour.length) selected.push(carrefour[i]);
-        if (i < other.length) selected.push(other[i]);
-        i += 1;
-    }
-
-    return selected;
-}
-
-function mapCatalogToCategoryProduct(p: CatalogProduct): CategoryProduct {
     return {
-        _id: p._id,
-        product_url: p.product_url,
-        title: p.product_name,
-        currentPrice: p.price,
-        previousPrice: p.old_price || "",
-        discountPercentage: p.discount || "",
+        _id: id,
+        product_url: productUrl,
+        title,
+        currentPrice,
+        previousPrice: previousPrice || "",
+        discountPercentage: toText(raw.discount),
         rating:
-            p.average_rating !== null && p.average_rating !== undefined
-                ? String(p.average_rating)
+            raw.average_rating !== null && raw.average_rating !== undefined
+                ? String(raw.average_rating)
                 : "",
-        ratingCount: p.reviews || "",
-        images: [{ src: p.image_url, alt: p.product_name }],
-        category_path_text: p.category_path_text,
-        category: p.category,
-        main_category: p.main_category,
-        source: p.source,
-        source_record_id: p._id,
-        scraped_at: p.scraped_at,
+        ratingCount: toText(raw.reviews),
+        images,
+        category_path_text: toText(raw.category_path_text),
+        category: toText(raw.category),
+        main_category: toText(raw.main_category),
+        source: toText(raw.source),
+        source_record_id: id,
+        scraped_at: toText(raw.scraped_at || raw.created_at || raw.inserted_at),
         offerCount: 0,
     };
+}
+
+function dedupeProducts(products: CategoryProduct[]): CategoryProduct[] {
+    const seen = new Set<string>();
+    const result: CategoryProduct[] = [];
+
+    for (const product of products) {
+        const key = product._id || product.product_url;
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        result.push(product);
+    }
+
+    return result;
 }
 
 async function fetchOfferCountForProduct(
@@ -148,7 +156,7 @@ async function fetchOfferCountForProduct(
 
         if (!res.ok) {
             const errorText = await res.text();
-            console.error("Offer count backend error:", errorText);
+            console.error("Offer count backend error:", product.product_url, errorText);
             return 0;
         }
 
@@ -156,12 +164,9 @@ async function fetchOfferCountForProduct(
 
         if (!json?.success) return 0;
 
-        // Includes the selected product itself.
-        // If later you want ONLY other offers, use:
-        // return Math.max(0, Number(json.offer_count || 0) - 1);
         return Number(json.offer_count || 0);
     } catch (err) {
-        console.error("Offer count fetch failed:", product?.product_url, err);
+        console.error("Offer count fetch failed:", product.product_url, err);
         return 0;
     }
 }
@@ -185,6 +190,20 @@ export async function GET(req: Request) {
                 totalPages: 0,
                 products: [],
             });
+        }
+
+        if (!BASE_URL) {
+            console.error("SCRAPER_API_BASE_URL is not defined");
+            return NextResponse.json(
+                {
+                    total: 0,
+                    page,
+                    limit,
+                    totalPages: 0,
+                    products: [],
+                },
+                { status: 500 }
+            );
         }
 
         const embeddingResponse = await openai.embeddings.create({
@@ -226,24 +245,24 @@ export async function GET(req: Request) {
 
         const faissJson = await faissRes.json();
 
-        const catalogProducts: CatalogProduct[] = Array.isArray(faissJson.products)
+        const normalizedProducts = Array.isArray(faissJson?.products)
             ? faissJson.products
-                .filter(isValidCatalogProduct)
-                .filter((p: any) => normalizeSource(p.source) !== "sharafdg")
+                .map((item: RawProduct) => normalizeFaissProduct(item))
+                .filter((item: CategoryProduct | null): item is CategoryProduct => item !== null)
             : [];
 
-        const diversified = diversifyProducts(catalogProducts);
-        const total = diversified.length;
+        const dedupedProducts = dedupeProducts(normalizedProducts);
+
+        const total = dedupedProducts.length;
         const totalPages = total > 0 ? Math.ceil(total / limit) : 0;
 
         const start = (page - 1) * limit;
         const end = start + limit;
 
-        const paginatedProducts = diversified.slice(start, end);
-        const mappedProducts = paginatedProducts.map(mapCatalogToCategoryProduct);
+        const paginatedProducts = dedupedProducts.slice(start, end);
 
         const enrichedProducts = await Promise.all(
-            mappedProducts.map(async (product) => {
+            paginatedProducts.map(async (product) => {
                 const offerCount = await fetchOfferCountForProduct(product, BASE_URL);
                 return {
                     ...product,
