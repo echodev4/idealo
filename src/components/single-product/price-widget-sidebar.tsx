@@ -136,7 +136,9 @@ const PriceWidgetSidebar = () => {
             ...p,
             numericPrice: parseAEDPrice(p.price),
         }))
-        .filter((p) => p.numericPrice !== null);
+        .filter(
+            (p): p is typeof p & { numericPrice: number } => p.numericPrice !== null
+        );
 
     if (!pricedProducts.length) return null;
 
@@ -146,6 +148,7 @@ const PriceWidgetSidebar = () => {
 
     const minPrice = Math.min(...pricedProducts.map((p) => p.numericPrice));
     const maxPrice = Math.max(...pricedProducts.map((p) => p.numericPrice));
+
     const savings = maxPrice - minPrice;
     const discountPercent =
         maxPrice > 0 ? Math.round((savings / maxPrice) * 100) : 0;
