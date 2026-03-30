@@ -27,6 +27,10 @@ import {
   Shirt,
   PawPrint,
   ChevronRight,
+  Book,
+  ShoppingCart,
+  Cake,
+  Pencil,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -134,15 +138,25 @@ export default function Header() {
   const categories = useMemo(
     () => [
       { label: t("header.categories.deals", "Deals"), query: "Deals", icon: Percent, active: true },
+
       { label: t("header.categories.electricalGoods", "Electrical goods"), query: "Electrical goods", icon: Plug },
-      { label: t("header.categories.sportsOutdoors", "Sports & Outdoors"), query: "Sports & Outdoors", icon: Dumbbell },
-      { label: t("header.categories.babyChild", "Baby & Child"), query: "Baby & Child", icon: Baby },
-      { label: t("header.categories.homeGarden", "Home & Garden"), query: "Home & Garden", icon: Home },
-      { label: t("header.categories.foodDrink", "Food & Drink"), query: "Food & Drink", icon: Utensils },
+
+      { label: t("header.categories.grocery", "Grocery"), query: "Grocery", icon: Leaf },
+
+      { label: t("header.categories.bakery", "Bakery"), query: "Bakery", icon: Utensils },
+
+      { label: t("header.categories.stationery", "Stationery"), query: "Stationery", icon: CreditCard },
+
+      { label: t("header.categories.foodDrink", "Drink"), query: "Drink", icon: Utensils },
+
       { label: t("header.categories.gamingPlay", "Gaming & Play"), query: "Gaming & Play", icon: Gamepad2 },
-      { label: t("header.categories.drugstoreHealth", "Drugstore & Health"), query: "Drugstore & Health", icon: HeartPulse },
-      { label: t("header.categories.carsMotorcycles", "Cars & Motorcycles"), query: "Cars & Motorcycles", icon: Car },
-      { label: t("header.categories.fashionAccessories", "Fashion & Accessories"), query: "Fashion & Accessories", icon: Shirt },
+
+      { label: t("header.categories.drugstoreHealth", "Drugstore"), query: "Drugstore", icon: HeartPulse },
+
+      { label: t("header.categories.beautyAndFragrance", "Beauty & Fragrance"), query: "Beauty & Fragrance", icon: Heart },
+
+      { label: t("header.categories.booksAndMedia", "Books & Media"), query: "Books & Media", icon: Home },
+
       { label: t("header.categories.petSupplies", "Pet supplies"), query: "Pet supplies", icon: PawPrint },
     ],
     [t]
@@ -150,15 +164,15 @@ export default function Header() {
 
   const popularSearches = useMemo(
     () => [
-      { label: t("header.popularSearches.electronics", "Electronics"), query: "Electronics" },
-      { label: t("header.popularSearches.sportsOutdoor", "Sports & Outdoor"), query: "Sports & Outdoor" },
-      { label: t("header.popularSearches.babyKids", "Baby & Kids"), query: "Baby & Kids" },
-      { label: t("header.popularSearches.homeGarden", "Home & Garden"), query: "Home & Garden" },
-      { label: t("header.popularSearches.foodDrink", "Food & Drink"), query: "Food & Drink" },
-      { label: t("header.popularSearches.gamingToys", "Gaming & Toys"), query: "Gaming & Toys" },
-      { label: t("header.popularSearches.healthBeauty", "Health & Beauty"), query: "Health & Beauty" },
-      { label: t("header.popularSearches.automotive", "Automotive"), query: "Automotive" },
-      { label: t("header.popularSearches.fashionAccessories", "Fashion & Accessories"), query: "Fashion & Accessories" },
+      { label: t("header.popularSearches.deals", "Deals"), query: "Deals" },
+      { label: t("header.popularSearches.electricalGoods", "Electrical goods"), query: "Electrical goods" },
+      { label: t("header.popularSearches.grocery", "Grocery"), query: "Grocery" },
+      { label: t("header.popularSearches.stationery", "Stationery"), query: "Stationery" },
+      { label: t("header.popularSearches.foodDrink", "Drink"), query: "Drink" },
+      { label: t("header.popularSearches.gamingPlay", "Gaming & Play"), query: "Gaming & Play" },
+      { label: t("header.popularSearches.drugstoreHealth", "Drugstore"), query: "Drugstore" },
+      { label: t("header.popularSearches.beautyAndFragrance", "Beauty & Fragrance"), query: "Beauty & Fragrance" },
+      { label: t("header.popularSearches.booksAndMedia", "Books & Media"), query: "Books & Media" },
       { label: t("header.popularSearches.petSupplies", "Pet Supplies"), query: "Pet Supplies" },
     ],
     [t]
@@ -185,18 +199,18 @@ export default function Header() {
       try {
         setLoading(true);
 
-        const [aiRes, realRes] = await Promise.all([
-          fetch(`/api/search-products?q=${encodeURIComponent(q)}`, { cache: "no-store" }),
-          fetch(`/api/search-products-real?q=${encodeURIComponent(q)}`, { cache: "no-store" }),
+        const [aiRes] = await Promise.all([
+          fetch(`/api/search-products?q=${encodeURIComponent(q)}`, { cache: "no-store" })
+          // fetch(`/api/search-products-real?q=${encodeURIComponent(q)}`, { cache: "no-store" }),
         ]);
 
         const aiJson = await aiRes.json();
-        const realJson = await realRes.json();
+        // const realJson = await realRes.json();
 
         if (!alive) return;
 
         setAiTags(Array.isArray(aiJson?.data) ? aiJson.data : []);
-        setRealProducts(Array.isArray(realJson?.data) ? realJson.data : []);
+        // setRealProducts(Array.isArray(realJson?.data) ? realJson.data : []);
       } catch (e) {
         console.error("search dropdown error:", e);
         if (!alive) return;
@@ -460,7 +474,7 @@ export default function Header() {
                       <span className="text-[14px] font-bold text-[#666]">{t("header.search.products", "Products")}</span>
                     </div>
 
-                    <div className="px-2 pb-2">
+                    {/* <div className="px-2 pb-2">
                       {realProducts.length === 0 ? (
                         <div className="px-2 py-2 text-[13px] text-[#666]">{t("header.search.noProductsFound", "No products found")}</div>
                       ) : (
@@ -488,7 +502,7 @@ export default function Header() {
                           ))}
                         </ul>
                       )}
-                    </div>
+                    </div> */}
                   </>
                 )}
               </div>

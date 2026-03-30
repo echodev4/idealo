@@ -28,9 +28,9 @@ export async function GET(req: Request) {
         const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
         const items = await db
-            .collection("products_catalog")
+            .collection("products")
             .find(
-                { product_name: { $regex: regex } },
+                { title: { $regex: regex } },
                 {
                     projection: {
                         product_url: 1,
