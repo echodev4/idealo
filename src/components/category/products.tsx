@@ -93,7 +93,7 @@ function ProductCellGrid({ product }: { product: Product }) {
             </Link>
 
             <div className="mt-5">
-                <div className="text-[12px] text-gray-500">{source}</div>
+                {/* <div className="text-[12px] text-gray-500">{source}</div> */}
 
                 <Link href={href} className="mt-1 block">
                     <div className="line-clamp-3 min-h-[54px] text-[13px] font-semibold leading-[18px] text-gray-900 hover:underline">
@@ -163,7 +163,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                 </div>
 
                 <div className="hidden sm:flex w-[180px] flex-col items-end justify-center gap-2 pr-1">
-                    <div className="text-[12px] text-gray-500">{source}</div>
+                    {/* <div className="text-[12px] text-gray-500">{source}</div> */}
                     <div className="text-right">
                         <div className="text-[12px] text-gray-700">{t("category.products.from", "from")}</div>
                         <div className="text-[18px] font-semibold text-[#ff6a00]">
@@ -174,7 +174,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
             </div>
 
             <div className="mt-3 flex items-center justify-between sm:hidden">
-                <div className="text-[12px] text-gray-500">{source}</div>
+                {/* <div className="text-[12px] text-gray-500">{source}</div> */}
                 <div className="text-right">
                     <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
                     <span className="text-[16px] font-semibold text-[#ff6a00]">
