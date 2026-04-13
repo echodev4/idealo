@@ -1,142 +1,11 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { searchProducts } from "@/lib/category/searchProducts";
+import { paginateProducts } from "@/lib/category/paginateProducts";
+import { enrichCategoryProducts } from "@/lib/category/enrichCategoryProducts";
 
 export const runtime = "nodejs";
 
-const BASE_URL = process.env.SCRAPER_API_BASE_URL;
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-type RawProduct = {
-  _id?: string;
-  source?: string;
-  product_url?: string;
-  title?: string;
-  product_name?: string;
-  currentPrice?: string | number;
-  previousPrice?: string | number;
-  price?: string | number;
-  old_price?: string | number;
-  discount?: string | number;
-  reviews?: string | number;
-  average_rating?: number | null;
-  images?: { src?: string; alt?: string }[];
-  image_url?: string;
-  category?: string;
-  main_category?: string;
-  category_path_text?: string;
-  scraped_at?: string;
-  created_at?: string;
-  inserted_at?: string;
-  faiss_score?: number;
-  offer_count?: number;
-  variant_count?: number;
-};
-
-type CategoryProduct = {
-  _id?: string;
-  product_url: string;
-  title: string;
-  currentPrice: string;
-  previousPrice?: string;
-  discountPercentage?: string;
-  rating?: string;
-  ratingCount?: string;
-  images: { src: string; alt?: string }[];
-  category_path_text?: string;
-  category?: string;
-  main_category?: string;
-  source?: string;
-  source_record_id?: string;
-  numericPrice?: number;
-  numericOldPrice?: number;
-  scraped_at?: string;
-  offerCount?: number;
-};
-
-function toText(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  return String(value).trim();
-}
-
-function normalizeImage(raw: RawProduct): { src: string; alt?: string }[] {
-  const title = toText(raw.title || raw.product_name);
-
-  if (Array.isArray(raw.images) && raw.images.length > 0) {
-    const validImages = raw.images
-      .map((img) => ({
-        src: toText(img?.src),
-        alt: toText(img?.alt) || title,
-      }))
-      .filter((img) => img.src);
-
-    if (validImages.length > 0) return validImages;
-  }
-
-  const fallback = toText(raw.image_url);
-  return fallback ? [{ src: fallback, alt: title }] : [];
-}
-
-function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
-  const id = toText(raw._id);
-  const productUrl = toText(raw.product_url);
-  const title = toText(raw.title || raw.product_name);
-  const images = normalizeImage(raw);
-
-  const currentPrice = toText(
-    raw.currentPrice !== undefined && raw.currentPrice !== null && raw.currentPrice !== ""
-      ? raw.currentPrice
-      : raw.price
-  );
-
-  const previousPrice = toText(
-    raw.previousPrice !== undefined && raw.previousPrice !== null && raw.previousPrice !== ""
-      ? raw.previousPrice
-      : raw.old_price
-  );
-
-  if (!id || !productUrl || !title || images.length === 0 || !currentPrice) {
-    return null;
-  }
-
-  return {
-    _id: id,
-    product_url: productUrl,
-    title,
-    currentPrice,
-    previousPrice: previousPrice || "",
-    discountPercentage: toText(raw.discount),
-    rating:
-      raw.average_rating !== null && raw.average_rating !== undefined
-        ? String(raw.average_rating)
-        : "",
-    ratingCount: toText(raw.reviews),
-    images,
-    category_path_text: toText(raw.category_path_text),
-    category: toText(raw.category),
-    main_category: toText(raw.main_category),
-    source: toText(raw.source),
-    source_record_id: id,
-    scraped_at: toText(raw.scraped_at || raw.created_at || raw.inserted_at),
-    offerCount: Number(raw.offer_count || 0),
-  };
-}
-
-function dedupeProducts(products: CategoryProduct[]): CategoryProduct[] {
-  const seen = new Set<string>();
-  const result: CategoryProduct[] = [];
-
-  for (const product of products) {
-    const key = product._id || product.product_url;
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    result.push(product);
-  }
-
-  return result;
-}
+const CANDIDATE_LIMIT = 160;
 
 export async function GET(req: Request) {
   try {
@@ -159,80 +28,21 @@ export async function GET(req: Request) {
       });
     }
 
-    if (!BASE_URL) {
-      console.error("SCRAPER_API_BASE_URL is not defined");
-      return NextResponse.json(
-        {
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-          products: [],
-        },
-        { status: 500 }
-      );
-    }
+    const searchResult = await searchProducts(q, CANDIDATE_LIMIT);
 
-    const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: q,
+    const paginated = paginateProducts(searchResult.products, page, limit);
+
+    const enrichedProducts = enrichCategoryProducts({
+      visibleProducts: paginated.products,
+      candidateProducts: searchResult.products,
     });
-
-    const vector = embeddingResponse.data[0].embedding;
-    const candidateLimit = 160;
-
-    const faissRes = await fetch(`${BASE_URL}/faiss/search_by_vector`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        vector,
-        limit: candidateLimit,
-      }),
-      cache: "no-store",
-    });
-
-    if (!faissRes.ok) {
-      const errorText = await faissRes.text();
-      console.error("FAISS backend error:", errorText);
-
-      return NextResponse.json(
-        {
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-          products: [],
-        },
-        { status: 500 }
-      );
-    }
-
-    const faissJson = await faissRes.json();
-
-    const normalizedProducts = Array.isArray(faissJson?.products)
-      ? faissJson.products
-          .map((item: RawProduct) => normalizeFaissProduct(item))
-          .filter((item: CategoryProduct | null): item is CategoryProduct => item !== null)
-      : [];
-
-    const dedupedProducts = dedupeProducts(normalizedProducts);
-
-    const total = dedupedProducts.length;
-    const totalPages = total > 0 ? Math.ceil(total / limit) : 0;
-
-    const start = (page - 1) * limit;
-    const end = start + limit;
-
-    const paginatedProducts = dedupedProducts.slice(start, end);
 
     return NextResponse.json({
-      total,
-      page,
-      limit,
-      totalPages,
-      products: paginatedProducts,
+      total: paginated.total,
+      page: paginated.page,
+      limit: paginated.limit,
+      totalPages: paginated.totalPages,
+      products: enrichedProducts,
     });
   } catch (error) {
     console.error("API /category-products error:", error);
