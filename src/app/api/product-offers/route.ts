@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
+const OFFER_LIMIT = 160;
+const CANDIDATE_LIMIT = 160;
 
 export async function POST(req: Request) {
   try {
@@ -13,15 +15,16 @@ export async function POST(req: Request) {
     const source =
       typeof body?.source === "string" ? body.source.trim() : "";
 
-    const rawLimit = Number(body?.limit);
-    const limit =
-      Number.isFinite(rawLimit) && rawLimit > 0
-        ? Math.min(Math.max(Math.floor(rawLimit), 1), 10)
-        : 10;
-
     if (!product_url) {
       return NextResponse.json(
-        { success: false, error: "product_url is required", offer_count: 0, offers: [] },
+        {
+          success: false,
+          error: "product_url is required",
+          offer_count: 0,
+          offers: [],
+          is_mobile_product: false,
+          product_case: "unknown",
+        },
         { status: 400 }
       );
     }
@@ -29,7 +32,14 @@ export async function POST(req: Request) {
     if (!BASE_URL) {
       console.error("SCRAPER_API_BASE_URL is not defined");
       return NextResponse.json(
-        { success: false, error: "Backend base URL is missing", offer_count: 0, offers: [] },
+        {
+          success: false,
+          error: "Backend base URL is missing",
+          offer_count: 0,
+          offers: [],
+          is_mobile_product: false,
+          product_case: "unknown",
+        },
         { status: 500 }
       );
     }
@@ -42,7 +52,8 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         product_url,
         source,
-        limit,
+        limit: OFFER_LIMIT,
+        candidate_limit: CANDIDATE_LIMIT,
       }),
       cache: "no-store",
     });
@@ -52,7 +63,14 @@ export async function POST(req: Request) {
       console.error("product-offers backend error:", errorText);
 
       return NextResponse.json(
-        { success: false, error: "Backend error", offer_count: 0, offers: [] },
+        {
+          success: false,
+          error: "Backend error",
+          offer_count: 0,
+          offers: [],
+          is_mobile_product: false,
+          product_case: "unknown",
+        },
         { status: res.status }
       );
     }
@@ -61,6 +79,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: Boolean(data?.success),
+      product_case: typeof data?.product_case === "string" ? data.product_case : "unknown",
+      is_mobile_product: Boolean(data?.is_mobile_product),
       offer_count: Number(data?.offer_count || 0),
       offers: Array.isArray(data?.offers) ? data.offers : [],
     });
@@ -68,7 +88,14 @@ export async function POST(req: Request) {
     console.error("product-offers route error:", err);
 
     return NextResponse.json(
-      { success: false, error: "Internal server error", offer_count: 0, offers: [] },
+      {
+        success: false,
+        error: "Internal server error",
+        offer_count: 0,
+        offers: [],
+        is_mobile_product: false,
+        product_case: "unknown",
+      },
       { status: 500 }
     );
   }

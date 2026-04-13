@@ -1,29 +1,20 @@
-import { getProductCase } from "@/lib/matching/getProductCase";
-import { getMobileOfferCount } from "@/lib/matching/mobile/getMobileOfferCount";
 import type { CategoryProduct } from "@/lib/products/types";
 
 type EnrichCategoryProductsParams = {
     visibleProducts: CategoryProduct[];
-    candidateProducts: CategoryProduct[];
+    offerCountMap: Map<string, number>;
 };
+
+function getProductKey(product: CategoryProduct): string {
+    return `${product.product_url}::${product.source || ""}`;
+}
 
 export function enrichCategoryProducts({
     visibleProducts,
-    candidateProducts,
+    offerCountMap,
 }: EnrichCategoryProductsParams): CategoryProduct[] {
-    return visibleProducts.map((product) => {
-        const productCase = getProductCase(product);
-
-        if (productCase !== "mobile") {
-            return {
-                ...product,
-                offerCount: 0,
-            };
-        }
-
-        return {
-            ...product,
-            offerCount: getMobileOfferCount(product, candidateProducts),
-        };
-    });
+    return visibleProducts.map((product) => ({
+        ...product,
+        offerCount: offerCountMap.get(getProductKey(product)) || 0,
+    }));
 }

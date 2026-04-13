@@ -37,7 +37,7 @@ const ProductVariantsSelectorSkeleton = () => {
 
 export default function ProductVariantsSelector() {
     const router = useRouter();
-    const { relatedProducts, relatedLoading } = useProduct();
+    const { relatedProducts, relatedLoading, variantCount } = useProduct();
     const { t } = useLanguage();
     const [selectedIdx, setSelectedIdx] = React.useState(0);
 
@@ -140,7 +140,9 @@ export default function ProductVariantsSelector() {
         <section className="mt-2">
             <div className="flex items-center justify-between gap-4">
                 <div className="text-[13px] text-[#111827]">
-                    <span className="font-semibold">{items.length} {t("singleProduct.variantsSelector.variants", "variants")}</span>{" "}
+                    <span className="font-semibold">
+                        {variantCount || items.length} {t("singleProduct.variantsSelector.variants", "variants")}
+                    </span>{" "}
                     <span className="text-[#6b7280]">{t("singleProduct.variantsSelector.from", "from")}</span>{" "}
                     <span className="font-semibold">AED {minPrice.toLocaleString()}</span>
                 </div>

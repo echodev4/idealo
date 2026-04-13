@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
+const VARIANT_LIMIT = 10;
+const CANDIDATE_LIMIT = 160;
 
 export async function POST(req: Request) {
     try {
@@ -15,15 +17,16 @@ export async function POST(req: Request) {
         const product_name =
             typeof body?.product_name === "string" ? body.product_name.trim() : "";
 
-        const rawLimit = Number(body?.limit);
-        const limit =
-            Number.isFinite(rawLimit) && rawLimit > 0
-                ? Math.min(Math.max(Math.floor(rawLimit), 1), 10)
-                : 10;
-
         if (!product_url) {
             return NextResponse.json(
-                { success: false, error: "product_url is required", products: [] },
+                {
+                    success: false,
+                    error: "product_url is required",
+                    products: [],
+                    variant_count: 0,
+                    is_mobile_product: false,
+                    product_case: "unknown",
+                },
                 { status: 400 }
             );
         }
@@ -31,7 +34,14 @@ export async function POST(req: Request) {
         if (!BASE_URL) {
             console.error("SCRAPER_API_BASE_URL is not defined");
             return NextResponse.json(
-                { success: false, error: "Backend base URL is missing", products: [] },
+                {
+                    success: false,
+                    error: "Backend base URL is missing",
+                    products: [],
+                    variant_count: 0,
+                    is_mobile_product: false,
+                    product_case: "unknown",
+                },
                 { status: 500 }
             );
         }
@@ -45,7 +55,8 @@ export async function POST(req: Request) {
                 product_url,
                 source,
                 product_name,
-                limit,
+                limit: VARIANT_LIMIT,
+                candidate_limit: CANDIDATE_LIMIT,
             }),
             cache: "no-store",
         });
@@ -55,7 +66,14 @@ export async function POST(req: Request) {
             console.error("product-variants backend error:", errorText);
 
             return NextResponse.json(
-                { success: false, error: "Backend error", products: [] },
+                {
+                    success: false,
+                    error: "Backend error",
+                    products: [],
+                    variant_count: 0,
+                    is_mobile_product: false,
+                    product_case: "unknown",
+                },
                 { status: res.status }
             );
         }
@@ -64,13 +82,23 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             success: Boolean(data?.success),
+            product_case: typeof data?.product_case === "string" ? data.product_case : "unknown",
+            is_mobile_product: Boolean(data?.is_mobile_product),
+            variant_count: Number(data?.variant_count || 0),
             products: Array.isArray(data?.products) ? data.products : [],
         });
     } catch (err) {
         console.error("product-variants route error:", err);
 
         return NextResponse.json(
-            { success: false, error: "Internal server error", products: [] },
+            {
+                success: false,
+                error: "Internal server error",
+                products: [],
+                variant_count: 0,
+                is_mobile_product: false,
+                product_case: "unknown",
+            },
             { status: 500 }
         );
     }

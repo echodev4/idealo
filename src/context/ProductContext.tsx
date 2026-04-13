@@ -55,19 +55,9 @@ function normalizeListProduct(item: any): OfferProduct {
         _id: String(item?._id || ""),
         product_url: String(item?.product_url || ""),
         source: String(item?.source || ""),
-        product_name: String(
-            item?.product_name || item?.title || ""
-        ),
-        image_url: String(
-            item?.image_url ||
-            item?.images?.[0]?.src ||
-            ""
-        ),
-        price: String(
-            item?.price ??
-            item?.currentPrice ??
-            ""
-        ),
+        product_name: String(item?.product_name || item?.title || ""),
+        image_url: String(item?.image_url || item?.images?.[0]?.src || ""),
+        price: String(item?.price ?? item?.currentPrice ?? ""),
         old_price:
             item?.old_price !== undefined && item?.old_price !== null
                 ? String(item.old_price)
@@ -79,19 +69,15 @@ function normalizeListProduct(item: any): OfferProduct {
                 ? String(item.discount)
                 : "",
         reviews:
-            item?.reviews !== undefined && item?.reviews !== null
-                ? item.reviews
-                : "",
+            item?.reviews !== undefined && item?.reviews !== null ? item.reviews : "",
         average_rating:
             typeof item?.average_rating === "number"
                 ? item.average_rating
                 : typeof item?.rating === "number"
                     ? item.rating
                     : null,
-        created_at:
-            typeof item?.created_at === "string" ? item.created_at : "",
-        updated_at:
-            typeof item?.updated_at === "string" ? item.updated_at : "",
+        created_at: typeof item?.created_at === "string" ? item.created_at : "",
+        updated_at: typeof item?.updated_at === "string" ? item.updated_at : "",
         match_score:
             typeof item?.match_score === "number" ? item.match_score : undefined,
         faiss_score:
@@ -107,9 +93,14 @@ interface ProductContextType {
 
     offers: OfferProduct[];
     offersLoading: boolean;
+    offerCount: number;
 
     relatedProducts: RelatedProduct[];
     relatedLoading: boolean;
+    variantCount: number;
+
+    isMobileProduct: boolean;
+    productCase: string;
 }
 
 const ProductContext = createContext<ProductContextType>({
@@ -118,9 +109,14 @@ const ProductContext = createContext<ProductContextType>({
 
     offers: [],
     offersLoading: true,
+    offerCount: 0,
 
     relatedProducts: [],
     relatedLoading: true,
+    variantCount: 0,
+
+    isMobileProduct: false,
+    productCase: "unknown",
 });
 
 export function ProductProvider({
@@ -139,9 +135,14 @@ export function ProductProvider({
 
     const [offers, setOffers] = useState<OfferProduct[]>([]);
     const [offersLoading, setOffersLoading] = useState(true);
+    const [offerCount, setOfferCount] = useState(0);
 
     const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
     const [relatedLoading, setRelatedLoading] = useState(true);
+    const [variantCount, setVariantCount] = useState(0);
+
+    const [isMobileProduct, setIsMobileProduct] = useState(false);
+    const [productCase, setProductCase] = useState("unknown");
 
     useEffect(() => {
         let active = true;
@@ -186,7 +187,10 @@ export function ProductProvider({
         async function fetchOffers() {
             if (!productUrl) {
                 setOffers([]);
+                setOfferCount(0);
                 setOffersLoading(false);
+                setIsMobileProduct(false);
+                setProductCase("unknown");
                 return;
             }
 
@@ -202,7 +206,6 @@ export function ProductProvider({
                     body: JSON.stringify({
                         product_url: productUrl,
                         source: sourceName || "",
-                        limit: 10,
                     }),
                 });
 
@@ -212,6 +215,9 @@ export function ProductProvider({
 
                 if (!res.ok || json?.success === false) {
                     setOffers([]);
+                    setOfferCount(0);
+                    setIsMobileProduct(false);
+                    setProductCase("unknown");
                     return;
                 }
 
@@ -219,14 +225,22 @@ export function ProductProvider({
 
                 const mapped = apiOffers
                     .map(normalizeListProduct)
-                    .filter(
-                        (p:any) => p.product_name && p.image_url && p.product_url
-                    );
+                    .filter((p: any) => p.product_name && p.image_url && p.product_url);
 
                 setOffers(mapped);
+                setOfferCount(Number(json?.offer_count || 0));
+                setIsMobileProduct(Boolean(json?.is_mobile_product));
+                setProductCase(
+                    typeof json?.product_case === "string" ? json.product_case : "unknown"
+                );
             } catch (err) {
                 console.error("Offers fetch error:", err);
-                if (active) setOffers([]);
+                if (active) {
+                    setOffers([]);
+                    setOfferCount(0);
+                    setIsMobileProduct(false);
+                    setProductCase("unknown");
+                }
             } finally {
                 if (active) setOffersLoading(false);
             }
@@ -235,6 +249,7 @@ export function ProductProvider({
         async function fetchRelatedProducts() {
             if (!productUrl) {
                 setRelatedProducts([]);
+                setVariantCount(0);
                 setRelatedLoading(false);
                 return;
             }
@@ -252,7 +267,6 @@ export function ProductProvider({
                         product_url: productUrl,
                         source: sourceName || "",
                         product_name: productName || "",
-                        limit: 10,
                     }),
                 });
 
@@ -262,6 +276,7 @@ export function ProductProvider({
 
                 if (!res.ok || json?.success === false) {
                     setRelatedProducts([]);
+                    setVariantCount(0);
                     return;
                 }
 
@@ -269,14 +284,24 @@ export function ProductProvider({
 
                 const mapped = apiRelated
                     .map(normalizeListProduct)
-                    .filter(
-                        (p:any) => p.product_name && p.image_url && p.product_url
-                    );
+                    .filter((p: any) => p.product_name && p.image_url && p.product_url);
 
                 setRelatedProducts(mapped);
+                setVariantCount(Number(json?.variant_count || 0));
+
+                if (typeof json?.product_case === "string") {
+                    setProductCase(json.product_case);
+                }
+
+                if (typeof json?.is_mobile_product === "boolean") {
+                    setIsMobileProduct(json.is_mobile_product);
+                }
             } catch (err) {
                 console.error("Related products fetch error:", err);
-                if (active) setRelatedProducts([]);
+                if (active) {
+                    setRelatedProducts([]);
+                    setVariantCount(0);
+                }
             } finally {
                 if (active) setRelatedLoading(false);
             }
@@ -298,8 +323,12 @@ export function ProductProvider({
                 loading,
                 offers,
                 offersLoading,
+                offerCount,
                 relatedProducts,
                 relatedLoading,
+                variantCount,
+                isMobileProduct,
+                productCase,
             }}
         >
             {children}

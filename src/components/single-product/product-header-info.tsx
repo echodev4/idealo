@@ -42,13 +42,21 @@ const ProductHeaderInfoSkeleton = () => {
 };
 
 export default function ProductHeaderInfo() {
-  const { product, loading, relatedProducts, relatedLoading } = useProduct();
+  const { product, loading, relatedProducts, relatedLoading, variantCount } = useProduct();
   const { t } = useLanguage();
 
   if (loading || relatedLoading) return <ProductHeaderInfoSkeleton />;
 
-  const ratingValue = parseRating(relatedProducts?.[0]?.average_rating);
-  const reviewsCount = relatedProducts?.[0]?.reviews ? String(relatedProducts[0].reviews) : null;
+  const ratingValue = parseRating(
+    product?.average_rating ?? relatedProducts?.[0]?.average_rating
+  );
+
+  const reviewsCount =
+    product?.reviews !== undefined && product?.reviews !== null && String(product.reviews).trim() !== ""
+      ? String(product.reviews)
+      : relatedProducts?.[0]?.reviews
+        ? String(relatedProducts[0].reviews)
+        : null;
 
   const specifications = (product?.specifications || {}) as Record<string, string>;
   const normalizedSpecs = Object.entries(specifications)
@@ -72,12 +80,16 @@ export default function ProductHeaderInfo() {
         <span className="text-[#374151]">{t("singleProduct.headerInfo.reviewsLabel", "10 product reviews:")}</span>
         <div className="flex items-center gap-2">
           <Stars value={ratingValue} />
-          <span className="text-[#111827]">{reviewsCount ? `(${reviewsCount})` : t("singleProduct.headerInfo.reviewsEmpty", "(—)")}</span>
+          <span className="text-[#111827]">
+            {reviewsCount ? `(${reviewsCount})` : t("singleProduct.headerInfo.reviewsEmpty", "(—)")}
+          </span>
         </div>
         <span className="text-[#6b7280]">{t("singleProduct.headerInfo.testReportsLabel", "2 test reports:")}</span>
       </div>
 
-      <div className="mt-1 text-[13px] font-semibold text-[#111827]">{t("singleProduct.headerInfo.averageGrade", "Average grade 2.0")}</div>
+      <div className="mt-1 text-[13px] font-semibold text-[#111827]">
+        {t("singleProduct.headerInfo.averageGrade", "Average grade 2.0")}
+      </div>
 
       {mobileSpecs.length ? (
         <div className="lg:hidden mt-3 grid grid-cols-3 gap-2">
@@ -140,8 +152,8 @@ export default function ProductHeaderInfo() {
           onClick={(e) => e.preventDefault()}
           className="text-[#1a73e8] hover:underline cursor-not-allowed"
         >
-          {relatedProducts?.length
-            ? `${relatedProducts.length} ${t("singleProduct.headerInfo.productsCount", "products")}`
+          {variantCount
+            ? `${variantCount} ${t("singleProduct.headerInfo.productsCount", "products")}`
             : t("singleProduct.headerInfo.productsCount", "products")}
         </a>
       </div>
