@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { searchProducts } from "@/lib/category/searchProducts";
 import { paginateProducts } from "@/lib/category/paginateProducts";
 import { enrichCategoryProducts } from "@/lib/category/enrichCategoryProducts";
-import type { CategoryProduct } from "@/lib/products/types";
 
 export const runtime = "nodejs";
 
 const CANDIDATE_LIMIT = 160;
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
-
-function getProductKey(product: Pick<CategoryProduct, "product_url" | "source">): string {
-  return `${product.product_url}::${product.source || ""}`;
-}
 
 export async function GET(req: Request) {
   try {
@@ -39,7 +34,6 @@ export async function GET(req: Request) {
     }
 
     const searchResult = await searchProducts(q, CANDIDATE_LIMIT);
-
     const paginated = paginateProducts(searchResult.products, page, limit);
 
     const countPayload = {
@@ -67,8 +61,8 @@ export async function GET(req: Request) {
     const countJson = await countRes.json();
 
     const offerCountMap = new Map<string, number>();
-
     const results = Array.isArray(countJson?.results) ? countJson.results : [];
+
     for (const item of results) {
       const key = `${item?.product_url || ""}::${item?.source || ""}`;
       offerCountMap.set(key, Number(item?.offer_count || 0));
