@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import ProductComparisonPage from "../ProductComparisonPage";
-import "./index.css";
 
 interface PageProps {
   params: Promise<{ id: string }>;

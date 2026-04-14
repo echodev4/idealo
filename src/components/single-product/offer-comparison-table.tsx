@@ -136,7 +136,7 @@ function ButtonPill({
 
 export default function OfferComparisonTable() {
     const router = useRouter();
-    const { offers, offersLoading, offerCount, isMobileProduct } = useProduct();
+    const { offers, offersLoading, offerCount } = useProduct();
     const { t } = useLanguage();
 
     const [availableImmediately, setAvailableImmediately] = React.useState(false);
@@ -146,7 +146,6 @@ export default function OfferComparisonTable() {
     const [expandedOffers, setExpandedOffers] = React.useState<Record<string, boolean>>({});
 
     if (offersLoading) return <OfferComparisonTableSkeleton />;
-    if (!isMobileProduct) return null;
 
     const offerRows: Offer[] = (offers || [])
         .map((p: any, idx: number) => {
