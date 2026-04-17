@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExternalLink, Heart } from "lucide-react";
@@ -21,6 +21,8 @@ export interface Product {
     product_url: string;
 
     numericPrice?: number;
+    liveNumericPrice?: number;
+    livePriceLoading?: boolean;
 
     overview?: string;
     highlights?: string[];
@@ -48,6 +50,31 @@ function getImg(p: Product) {
 
 function getSource(p: Product) {
     return (p.source || "noon").toLowerCase();
+}
+
+function getDisplayPrice(p: Product) {
+    return p.liveNumericPrice ?? p.numericPrice;
+}
+
+function PriceAmount({
+    product,
+    className,
+    size = "sm",
+}: {
+    product: Product;
+    className: string;
+    size?: "sm" | "lg";
+}) {
+    if (product.livePriceLoading) {
+        return (
+            <span
+                aria-label="Refreshing price"
+                className={`inline-block ${size === "lg" ? "h-6" : "h-5"} w-20 animate-pulse rounded bg-[#e5e7eb] align-middle`}
+            />
+        );
+    }
+
+    return <span className={className}>AED {formatPriceAED(getDisplayPrice(product))}</span>;
 }
 
 function getProductHref(p: Product) {
@@ -103,9 +130,7 @@ function ProductCellGrid({ product }: { product: Product }) {
 
                 <div className="mt-3">
                     <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
-                    <span className="text-[16px] font-semibold text-[#ff6a00]">
-                        AED {formatPriceAED(product.numericPrice)}
-                    </span>
+                    <PriceAmount product={product} className="text-[16px] font-semibold text-[#ff6a00]" />
                 </div>
 
 
@@ -166,9 +191,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                     {/* <div className="text-[12px] text-gray-500">{source}</div> */}
                     <div className="text-right">
                         <div className="text-[12px] text-gray-700">{t("category.products.from", "from")}</div>
-                        <div className="text-[18px] font-semibold text-[#ff6a00]">
-                            AED {formatPriceAED(product.numericPrice)}
-                        </div>
+                        <PriceAmount product={product} className="text-[18px] font-semibold text-[#ff6a00]" size="lg" />
                     </div>
                 </div>
             </div>
@@ -177,9 +200,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                 {/* <div className="text-[12px] text-gray-500">{source}</div> */}
                 <div className="text-right">
                     <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
-                    <span className="text-[16px] font-semibold text-[#ff6a00]">
-                        AED {formatPriceAED(product.numericPrice)}
-                    </span>
+                    <PriceAmount product={product} className="text-[16px] font-semibold text-[#ff6a00]" />
                 </div>
             </div>
         </div>

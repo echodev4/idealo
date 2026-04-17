@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -28,6 +28,8 @@ export interface Product {
 
   numericPrice?: number;
   numericOldPrice?: number;
+  liveNumericPrice?: number;
+  livePriceLoading?: boolean;
 
   scraped_at?: any;
   offerCount?: number;
@@ -48,6 +50,17 @@ function getScrapedAtMs(p: Product) {
 
 type SortKey = "popular" | "savings" | "cheap" | "high" | "new";
 type ViewMode = "grid" | "list";
+
+function getProductKey(product: Product) {
+  return `${product.product_url}::${product.source || ""}`;
+}
+
+function normalizeLivePriceSource(source?: string) {
+  const value = String(source || "").trim().toLowerCase();
+  if (value === "noon") return "noon";
+  if (value === "carrefour" || value === "carrefouruae") return "carrefour";
+  return "";
+}
 
 function GridIcon({ active }: { active: boolean }) {
   return (
@@ -88,6 +101,8 @@ export default function CategoryPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadedResultKey, setLoadedResultKey] = useState("");
+  const [refreshRunId, setRefreshRunId] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -126,12 +141,15 @@ export default function CategoryPage() {
           }));
 
         setProducts(mapped);
+        setLoadedResultKey(`${searchedName}::${currentPage}`);
+        setRefreshRunId((id) => id + 1);
         setTotalProducts(Number(json.total) || 0);
         setTotalPages(Number(json.totalPages) || 0);
       } catch (err) {
         console.error("Error fetching category products:", err);
         if (isActive) {
           setProducts([]);
+          setLoadedResultKey("");
           setTotalProducts(0);
           setTotalPages(0);
         }
@@ -146,6 +164,103 @@ export default function CategoryPage() {
       isActive = false;
     };
   }, [searchedName, currentPage]);
+
+  useEffect(() => {
+    const activeResultKey = `${searchedName}::${currentPage}`;
+
+    if (!refreshRunId || loadedResultKey !== activeResultKey || products.length === 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let stopped = false;
+    const batchProducts = products.filter(
+      (product) => product.product_url && normalizeLivePriceSource(product.source)
+    );
+
+    async function refreshVisiblePrices() {
+      for (const product of batchProducts) {
+        if (stopped || controller.signal.aborted) break;
+
+        const productKey = getProductKey(product);
+        const liveSource = normalizeLivePriceSource(product.source);
+
+        setProducts((current) =>
+          current.map((item) =>
+            getProductKey(item) === productKey
+              ? { ...item, livePriceLoading: true }
+              : item
+          )
+        );
+
+        try {
+          const res = await fetch("/api/live-price", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            signal: controller.signal,
+            body: JSON.stringify({
+              product_url: product.product_url,
+              source: liveSource,
+            }),
+          });
+
+          const json = await res.json();
+
+          if (!res.ok || json?.success === false || !json?.currentPrice) {
+            throw new Error(json?.error || "Live price could not be fetched");
+          }
+
+          if (stopped || controller.signal.aborted) break;
+
+          const nextPrice = String(json.currentPrice);
+          const nextPreviousPrice =
+            typeof json?.previousPrice === "string" && json.previousPrice.trim()
+              ? json.previousPrice
+              : product.previousPrice;
+          const nextDiscount =
+            typeof json?.discountPercentage === "string" && json.discountPercentage.trim()
+              ? json.discountPercentage
+              : product.discountPercentage;
+
+          setProducts((current) =>
+            current.map((item) =>
+              getProductKey(item) === productKey
+                ? {
+                    ...item,
+                    currentPrice: nextPrice,
+                    previousPrice: nextPreviousPrice,
+                    discountPercentage: nextDiscount,
+                    liveNumericPrice: cleanPrice(nextPrice),
+                    livePriceLoading: false,
+                  }
+                : item
+            )
+          );
+        } catch (err: any) {
+          if (err?.name === "AbortError" || stopped || controller.signal.aborted) {
+            break;
+          }
+
+          console.error("Live price refresh error:", product.product_url, err);
+          setProducts((current) =>
+            current.map((item) =>
+              getProductKey(item) === productKey
+                ? { ...item, livePriceLoading: false }
+                : item
+            )
+          );
+        }
+      }
+    }
+
+    refreshVisiblePrices();
+
+    return () => {
+      stopped = true;
+      controller.abort();
+    };
+  }, [refreshRunId, loadedResultKey, searchedName, currentPage]);
 
   useEffect(() => {
     if (!sortOpen) return;
@@ -443,7 +558,7 @@ export default function CategoryPage() {
               }`}
               disabled={currentPage === totalPages}
             >
-              →
+            →
             </button>
           </div>
         ) : null}
@@ -451,3 +566,4 @@ export default function CategoryPage() {
     </div>
   );
 }
+
