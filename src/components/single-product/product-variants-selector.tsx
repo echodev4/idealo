@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import Image from "next/image";
@@ -15,6 +15,18 @@ function parseAEDPrice(price: string): number | null {
     return isNaN(value) ? null : value;
 }
 
+function VariantPrice({ price, loading }: { price: number; loading?: boolean }) {
+    if (loading) {
+        return (
+            <span
+                aria-label="Refreshing price"
+                className="inline-block h-5 w-20 animate-pulse rounded bg-[#e5e7eb] align-middle"
+            />
+        );
+    }
+
+    return <>AED {price.toLocaleString()}</>;
+}
 function truncate(s: string, n: number) {
     if (!s) return "";
     if (s.length <= n) return s;
@@ -93,18 +105,19 @@ export default function ProductVariantsSelector() {
 
     const items = relatedProducts
         .map((p) => {
-            const price = parseAEDPrice(p.price);
-            if (price === null) return null;
+            const price = p.liveNumericPrice ?? parseAEDPrice(p.price);
+            if (price === null || price === undefined) return null;
             return {
                 key: p._id || p.product_url,
                 name: p.product_name,
                 imageUrl: p.image_url,
                 price,
                 router: p.product_url,
-                source: p.source
+                source: p.source,
+                loading: Boolean(p.livePriceLoading)
             };
         })
-        .filter(Boolean) as { key: string; name: string; imageUrl: string; price: number; router: string; source: string }[];
+        .filter(Boolean) as { key: string; name: string; imageUrl: string; price: number; router: string; source: string; loading: boolean }[];
 
     if (!items.length) return null;
 
@@ -144,7 +157,7 @@ export default function ProductVariantsSelector() {
                         {variantCount || items.length} {t("singleProduct.variantsSelector.variants", "variants")}
                     </span>{" "}
                     <span className="text-[#6b7280]">{t("singleProduct.variantsSelector.from", "from")}</span>{" "}
-                    <span className="font-semibold">AED {minPrice.toLocaleString()}</span>
+                    <span className="font-semibold"><VariantPrice price={minPrice} loading={items.some((item) => item.loading)} /></span>
                 </div>
 
                 <button
@@ -197,7 +210,7 @@ export default function ProductVariantsSelector() {
                                     {t("singleProduct.variantsSelector.away", "away")}
                                 </div>
                                 <div className="text-[18px] font-semibold text-[#f97316] leading-[1.1] break-words">
-                                    AED {minPrice.toLocaleString()}
+                                    <VariantPrice price={minPrice} loading={items.some((item) => item.loading)} />
                                 </div>
                             </div>
                         </div>
@@ -237,7 +250,7 @@ export default function ProductVariantsSelector() {
                                             {t("singleProduct.variantsSelector.away", "away")}
                                         </div>
                                         <div className="text-[18px] font-semibold text-[#f97316] leading-[1.1] break-words">
-                                            AED {item.price.toLocaleString()}
+                                            <VariantPrice price={item.price} loading={item.loading} />
                                         </div>
                                     </div>
                                 </div>
@@ -280,3 +293,4 @@ export default function ProductVariantsSelector() {
         </section>
     );
 }
+

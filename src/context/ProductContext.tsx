@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, {
     createContext,
@@ -25,6 +25,8 @@ export interface OfferProduct {
     faiss_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
+    liveNumericPrice?: number;
+    livePriceLoading?: boolean;
 }
 
 export interface RelatedProduct {
@@ -44,10 +46,38 @@ export interface RelatedProduct {
     faiss_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
+    liveNumericPrice?: number;
+    livePriceLoading?: boolean;
 }
+
+type LivePriceResult = {
+    currentPrice: string;
+    previousPrice?: string;
+    discountPercentage?: string;
+};
 
 function cleanPrice(p?: string | number | null): number {
     return Number(String(p || "").replace(/[^\d.]/g, "")) || 0;
+}
+
+function normalizeSource(source: any): string {
+    return String(source || "").trim().toLowerCase();
+}
+
+function normalizeLivePriceSource(source?: string) {
+    const value = normalizeSource(source);
+    if (value === "noon") return "noon";
+    if (value === "carrefour" || value === "carrefouruae") return "carrefour";
+    return "";
+}
+
+function getProductKey(product: { product_url?: string; source?: string }) {
+    return `${product.product_url || ""}::${normalizeSource(product.source)}`;
+}
+
+function toText(value: any): string {
+    if (value === null || value === undefined) return "";
+    return String(value);
 }
 
 function normalizeListProduct(item: any): OfferProduct {
@@ -85,6 +115,67 @@ function normalizeListProduct(item: any): OfferProduct {
         numericPrice: cleanPrice(item?.price ?? item?.currentPrice),
         numericOldPrice: cleanPrice(item?.old_price ?? item?.previousPrice),
     };
+}
+
+async function fetchLivePrice(
+    productUrl: string,
+    source: string,
+    signal: AbortSignal
+): Promise<LivePriceResult | null> {
+    const liveSource = normalizeLivePriceSource(source);
+    if (!productUrl || !liveSource) return null;
+
+    const res = await fetch("/api/live-price", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        cache: "no-store",
+        signal,
+        body: JSON.stringify({
+            product_url: productUrl,
+            source: liveSource,
+        }),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok || json?.success === false || !json?.currentPrice) {
+        throw new Error(json?.error || "Live price could not be fetched");
+    }
+
+    return {
+        currentPrice: String(json.currentPrice),
+        previousPrice: toText(json.previousPrice),
+        discountPercentage: toText(json.discountPercentage),
+    };
+}
+
+function applyLivePriceToListItem<T extends OfferProduct | RelatedProduct>(
+    item: T,
+    live: LivePriceResult
+): T {
+    const nextPreviousPrice = live.previousPrice?.trim() ? live.previousPrice : item.old_price;
+    const nextDiscount = live.discountPercentage?.trim() ? live.discountPercentage : item.discount;
+
+    return {
+        ...item,
+        price: live.currentPrice,
+        old_price: nextPreviousPrice,
+        discount: nextDiscount,
+        liveNumericPrice: cleanPrice(live.currentPrice),
+        livePriceLoading: false,
+    };
+}
+
+function setLiveLoadingOnList<T extends OfferProduct | RelatedProduct>(
+    items: T[],
+    productKey: string,
+    loading: boolean
+): T[] {
+    return items.map((item) =>
+        getProductKey(item) === productKey ? { ...item, livePriceLoading: loading } : item
+    );
 }
 
 interface ProductContextType {
@@ -146,12 +237,13 @@ export function ProductProvider({
 
     useEffect(() => {
         let active = true;
+        const liveController = new AbortController();
 
         async function fetchProduct() {
             if (!productUrl) {
                 setProduct(null);
                 setLoading(false);
-                return;
+                return null;
             }
 
             try {
@@ -164,21 +256,23 @@ export function ProductProvider({
                 const res = await fetch(url, { cache: "no-store" });
                 const json = await res.json();
 
-                if (!active) return;
+                if (!active) return null;
 
                 if (!res.ok || json?.success === false || !json?.data) {
                     setProduct(null);
                     toast.error("Product details could not be loaded.");
-                    return;
+                    return null;
                 }
 
                 setProduct(json.data);
+                return json.data;
             } catch (err) {
                 console.error("Product fetch error:", err);
                 if (active) {
                     setProduct(null);
                     toast.error("Product details could not be loaded.");
                 }
+                return null;
             } finally {
                 if (active) setLoading(false);
             }
@@ -191,7 +285,7 @@ export function ProductProvider({
                 setOffersLoading(false);
                 setIsMobileProduct(false);
                 setProductCase("unknown");
-                return;
+                return [];
             }
 
             try {
@@ -211,14 +305,14 @@ export function ProductProvider({
 
                 const json = await res.json();
 
-                if (!active) return;
+                if (!active) return [];
 
                 if (!res.ok || json?.success === false) {
                     setOffers([]);
                     setOfferCount(0);
                     setIsMobileProduct(false);
                     setProductCase("unknown");
-                    return;
+                    return [];
                 }
 
                 const apiOffers = Array.isArray(json?.offers) ? json.offers : [];
@@ -233,6 +327,7 @@ export function ProductProvider({
                 setProductCase(
                     typeof json?.product_case === "string" ? json.product_case : "unknown"
                 );
+                return mapped;
             } catch (err) {
                 console.error("Offers fetch error:", err);
                 if (active) {
@@ -241,6 +336,7 @@ export function ProductProvider({
                     setIsMobileProduct(false);
                     setProductCase("unknown");
                 }
+                return [];
             } finally {
                 if (active) setOffersLoading(false);
             }
@@ -251,7 +347,7 @@ export function ProductProvider({
                 setRelatedProducts([]);
                 setVariantCount(0);
                 setRelatedLoading(false);
-                return;
+                return [];
             }
 
             try {
@@ -272,12 +368,12 @@ export function ProductProvider({
 
                 const json = await res.json();
 
-                if (!active) return;
+                if (!active) return [];
 
                 if (!res.ok || json?.success === false) {
                     setRelatedProducts([]);
                     setVariantCount(0);
-                    return;
+                    return [];
                 }
 
                 const apiRelated = Array.isArray(json?.products) ? json.products : [];
@@ -296,23 +392,147 @@ export function ProductProvider({
                 if (typeof json?.is_mobile_product === "boolean") {
                     setIsMobileProduct(json.is_mobile_product);
                 }
+
+                return mapped;
             } catch (err) {
                 console.error("Related products fetch error:", err);
                 if (active) {
                     setRelatedProducts([]);
                     setVariantCount(0);
                 }
+                return [];
             } finally {
                 if (active) setRelatedLoading(false);
             }
         }
 
-        fetchProduct();
-        fetchOffers();
-        fetchRelatedProducts();
+        async function refreshOneProduct(selectedProduct: any | null) {
+            if (!selectedProduct || !selectedProduct.product_url) return;
+
+            const source = selectedProduct.source || sourceName || "";
+            if (!normalizeLivePriceSource(source)) return;
+
+            setProduct((current: any) => current ? { ...current, livePriceLoading: true } : current);
+
+            try {
+                const live = await fetchLivePrice(
+                    selectedProduct.product_url,
+                    source,
+                    liveController.signal
+                );
+
+                if (!active || liveController.signal.aborted || !live) return;
+
+                setProduct((current: any) => {
+                    if (!current) return current;
+
+                    return {
+                        ...current,
+                        currentPrice: live.currentPrice,
+                        price: live.currentPrice,
+                        previousPrice: live.previousPrice?.trim() ? live.previousPrice : current.previousPrice,
+                        old_price: live.previousPrice?.trim() ? live.previousPrice : current.old_price,
+                        discount: live.discountPercentage?.trim() ? live.discountPercentage : current.discount,
+                        discountPercentage: live.discountPercentage?.trim()
+                            ? live.discountPercentage
+                            : current.discountPercentage,
+                        liveNumericPrice: cleanPrice(live.currentPrice),
+                        livePriceLoading: false,
+                    };
+                });
+            } catch (err: any) {
+                if (err?.name !== "AbortError" && active && !liveController.signal.aborted) {
+                    console.error("Selected product live price refresh error:", selectedProduct.product_url, err);
+                    setProduct((current: any) => current ? { ...current, livePriceLoading: false } : current);
+                }
+            }
+        }
+
+        async function refreshRelatedProducts(items: RelatedProduct[]) {
+            const seen = new Set<string>();
+
+            for (const item of items) {
+                if (!active || liveController.signal.aborted) break;
+                if (!normalizeLivePriceSource(item.source)) continue;
+
+                const productKey = getProductKey(item);
+                if (!productKey || seen.has(productKey)) continue;
+                seen.add(productKey);
+
+                setRelatedProducts((current) => setLiveLoadingOnList(current, productKey, true));
+
+                try {
+                    const live = await fetchLivePrice(item.product_url, item.source, liveController.signal);
+                    if (!active || liveController.signal.aborted || !live) break;
+
+                    setRelatedProducts((current) =>
+                        current.map((product) =>
+                            getProductKey(product) === productKey
+                                ? applyLivePriceToListItem(product, live)
+                                : product
+                        )
+                    );
+                } catch (err: any) {
+                    if (err?.name === "AbortError" || !active || liveController.signal.aborted) break;
+
+                    console.error("Variant live price refresh error:", item.product_url, err);
+                    setRelatedProducts((current) => setLiveLoadingOnList(current, productKey, false));
+                }
+            }
+        }
+
+        async function refreshOffers(items: OfferProduct[]) {
+            const seen = new Set<string>();
+
+            for (const item of items) {
+                if (!active || liveController.signal.aborted) break;
+                if (!normalizeLivePriceSource(item.source)) continue;
+
+                const productKey = getProductKey(item);
+                if (!productKey || seen.has(productKey)) continue;
+                seen.add(productKey);
+
+                setOffers((current) => setLiveLoadingOnList(current, productKey, true));
+
+                try {
+                    const live = await fetchLivePrice(item.product_url, item.source, liveController.signal);
+                    if (!active || liveController.signal.aborted || !live) break;
+
+                    setOffers((current) =>
+                        current.map((product) =>
+                            getProductKey(product) === productKey
+                                ? applyLivePriceToListItem(product, live)
+                                : product
+                        )
+                    );
+                } catch (err: any) {
+                    if (err?.name === "AbortError" || !active || liveController.signal.aborted) break;
+
+                    console.error("Offer live price refresh error:", item.product_url, err);
+                    setOffers((current) => setLiveLoadingOnList(current, productKey, false));
+                }
+            }
+        }
+
+        async function run() {
+            const [selectedProduct, related, offerItems] = await Promise.all([
+                fetchProduct(),
+                fetchRelatedProducts(),
+                fetchOffers(),
+            ]);
+
+            if (!active || liveController.signal.aborted) return;
+
+            await refreshOneProduct(selectedProduct);
+            await refreshRelatedProducts(related as RelatedProduct[]);
+            await refreshOffers(offerItems as OfferProduct[]);
+        }
+
+        run();
 
         return () => {
             active = false;
+            liveController.abort();
         };
     }, [productUrl, productName, sourceName]);
 

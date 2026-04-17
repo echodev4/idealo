@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import Image from "next/image";
@@ -43,6 +43,27 @@ function formatAED(n: number) {
     return `AED ${n.toLocaleString()}`;
 }
 
+
+function PriceText({
+    price,
+    loading,
+    className = "",
+}: {
+    price: number;
+    loading?: boolean;
+    className?: string;
+}) {
+    if (loading) {
+        return (
+            <span
+                aria-label="Refreshing price"
+                className="inline-block h-6 w-24 animate-pulse rounded bg-[#e5e7eb] align-middle"
+            />
+        );
+    }
+
+    return <span className={className}>{formatAED(price)}</span>;
+}
 function parseAED(price: string | number | null | undefined): number | null {
     if (price === null || price === undefined || price === "") return null;
     const num = Number(String(price).replace(/[^\d.]/g, ""));
@@ -58,7 +79,9 @@ type Offer = {
     id: string;
     title: string;
     price: number;
+    sortPrice: number;
     oldPrice?: number | null;
+    loading?: boolean;
     url: string;
     imageUrl: string;
     available: boolean;
@@ -149,9 +172,12 @@ export default function OfferComparisonTable() {
 
     const offerRows: Offer[] = (offers || [])
         .map((p: any, idx: number) => {
-            const price = parseAED(p?.price);
+            const parsedPrice = parseAED(p?.price);
+            const livePrice = typeof p?.liveNumericPrice === "number" ? p.liveNumericPrice : null;
+            const price = livePrice ?? parsedPrice;
             if (!price) return null;
 
+            const sortPrice = typeof p?.numericPrice === "number" && p.numericPrice > 0 ? p.numericPrice : price;
             const oldP = parseAED(p?.old_price);
 
             return {
@@ -161,7 +187,9 @@ export default function OfferComparisonTable() {
                     t("singleProduct.offerComparisonTable.offerFallback", "Offer")
                 ),
                 price,
+                sortPrice,
                 oldPrice: oldP,
+                loading: Boolean(p?.livePriceLoading),
                 url: String(p?.product_url || "#"),
                 imageUrl: String(p?.image_url || ""),
                 available: true,
@@ -181,20 +209,15 @@ export default function OfferComparisonTable() {
     if (!offerRows.length) return null;
 
     const sorted = [...offerRows].sort((a, b) => {
-        const aKey = sortKey === "total" ? a.price : a.price;
-        const bKey = sortKey === "total" ? b.price : b.price;
+        const aKey = sortKey === "total" ? a.sortPrice : a.sortPrice;
+        const bKey = sortKey === "total" ? b.sortPrice : b.sortPrice;
         return aKey - bKey;
     });
 
     const filtered = availableImmediately ? sorted.filter((o) => o.available) : sorted;
     const cheapest = filtered.length ? Math.min(...filtered.map((o) => o.price)) : 0;
 
-    const ordered = [...filtered].sort((a, b) => {
-        const aCheapest = a.price === cheapest ? 0 : 1;
-        const bCheapest = b.price === cheapest ? 0 : 1;
-        if (aCheapest !== bCheapest) return aCheapest - bCheapest;
-        return a.price - b.price;
-    });
+    const ordered = filtered;
 
     const top10 = sorted.slice(0, 10);
 
@@ -253,7 +276,7 @@ export default function OfferComparisonTable() {
                                                 <span className="text-[#6b7280]">
                                                     {t("singleProduct.offerComparisonTable.from", "from")}{" "}
                                                 </span>
-                                                <span className="font-semibold">{formatAED(p.price)}</span>
+                                                <PriceText price={p.price} loading={p.loading} className="font-semibold" />
                                             </div>
                                         </div>
                                     </div>
@@ -343,14 +366,14 @@ export default function OfferComparisonTable() {
 
                                                 <div>
                                                     <div className="text-[24px] font-semibold text-[#111827] leading-none">
-                                                        {formatAED(o.price)}
+                                                        <PriceText price={o.price} loading={o.loading} />
                                                     </div>
 
                                                     {isCheapest && (
                                                         <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
                                                             {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
                                                             <div className="text-[#111827]">
-                                                                {formatAED(o.price)}{" "}
+                                                                <PriceText price={o.price} loading={o.loading} />{" "}
                                                                 {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
                                                             </div>
                                                         </div>
@@ -358,7 +381,7 @@ export default function OfferComparisonTable() {
 
                                                     {!isCheapest && (
                                                         <div className="mt-2 text-[12px] text-[#111827]">
-                                                            {formatAED(o.price)}{" "}
+                                                            <PriceText price={o.price} loading={o.loading} />{" "}
                                                             {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
                                                         </div>
                                                     )}
@@ -440,10 +463,10 @@ export default function OfferComparisonTable() {
 
                                                 <div className="mt-3">
                                                     <div className="text-[24px] font-semibold text-[#111827] leading-none">
-                                                        {formatAED(o.price)}
+                                                        <PriceText price={o.price} loading={o.loading} />
                                                     </div>
                                                     <div className="mt-1 text-[14px] text-[#374151]">
-                                                        {formatAED(o.price)}{" "}
+                                                        <PriceText price={o.price} loading={o.loading} />{" "}
                                                         {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
                                                     </div>
                                                 </div>
@@ -547,3 +570,4 @@ export default function OfferComparisonTable() {
         </section>
     );
 }
+
