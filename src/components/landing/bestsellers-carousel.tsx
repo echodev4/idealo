@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -13,6 +13,9 @@ type Product = {
     product_name: string;
     image_url: string;
     price: string;
+    numericPrice?: number;
+    liveNumericPrice?: number;
+    livePriceLoading?: boolean;
 };
 
 function parsePriceToNumber(price?: string) {
@@ -22,6 +25,29 @@ function parsePriceToNumber(price?: string) {
     return Number.isFinite(num) ? num : null;
 }
 
+function LandingPrice({ product }: { product: Product }) {
+    if (product.livePriceLoading) {
+        return (
+            <span
+                aria-label="Refreshing price"
+                className="inline-block h-6 w-20 animate-pulse rounded bg-[#E9ECEF] align-middle"
+            />
+        );
+    }
+
+    const price =
+        typeof product.liveNumericPrice === "number"
+            ? product.liveNumericPrice
+            : typeof product.numericPrice === "number"
+                ? product.numericPrice
+                : parsePriceToNumber(product.price);
+
+    return (
+        <span className="text-[18px] font-bold text-[#212121]">
+            {price !== null && price !== undefined ? `AED ${price}` : `AED ${product.price}`}
+        </span>
+    );
+}
 function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
 }
@@ -220,7 +246,6 @@ export default function BestsellersCarousel({
                         >
                             {items.map((p, idx) => {
                                 const name = p.product_name;
-                                const price = parsePriceToNumber(p.price);
                                 const encodedUrl = encodeURIComponent(p.product_url);
 
                                 const starsFilled = 4;
@@ -288,9 +313,7 @@ export default function BestsellersCarousel({
 
                                                 <div className="flex items-baseline gap-2">
                                                     <span className="text-[14px] text-[#666666]">{t("landing.bestsellersCarousel.from", "from")}</span>
-                                                    <span className="text-[18px] font-bold text-[#212121]">
-                                                        {price !== null ? `AED ${price}` : `AED ${p.price}`}
-                                                    </span>
+                                                    <LandingPrice product={p} />
                                                 </div>
                                             </div>
                                         </div>
@@ -328,3 +351,4 @@ export default function BestsellersCarousel({
         </section>
     );
 }
+

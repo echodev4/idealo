@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -13,8 +13,38 @@ type Product = {
     product_name: string;
     image_url: string;
     price: string;
+    numericPrice?: number;
+    liveNumericPrice?: number;
+    livePriceLoading?: boolean;
 };
 
+function LandingPrice({ product }: { product: Product }) {
+    if (product.livePriceLoading) {
+        return (
+            <span
+                aria-label="Refreshing price"
+                className="inline-block h-6 w-24 animate-pulse rounded bg-[#E9ECEF] align-middle"
+            />
+        );
+    }
+
+    const parsedPrice =
+        typeof product.liveNumericPrice === "number"
+            ? product.liveNumericPrice
+            : typeof product.numericPrice === "number"
+                ? product.numericPrice
+                : Number(String(product.price || "").replace(/[^\d.]/g, ""));
+
+    const formattedPrice =
+        Number.isFinite(parsedPrice) && parsedPrice > 0
+            ? `AED ${parsedPrice.toLocaleString("en-AE", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })}`
+            : "AED 0.00";
+
+    return <span className="text-[20px] font-bold text-[#FF6600] break-words">{formattedPrice}</span>;
+}
 function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
 }
@@ -301,19 +331,6 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                         ? "Noon"
                                                         : p.source || "";
 
-                                        const parsedPrice =
-                                            typeof p.numericPrice === "number"
-                                                ? p.numericPrice
-                                                : Number(String(p.price || "").replace(/[^\d.]/g, ""));
-
-                                        const formattedPrice =
-                                            Number.isFinite(parsedPrice) && parsedPrice > 0
-                                                ? `AED ${parsedPrice.toLocaleString("en-AE", {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}`
-                                                : "AED 0.00";
-
                                         return (
                                             <Link
                                                 key={p._id ?? p.product_url}
@@ -367,9 +384,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                         <span className="text-[14px] text-[#666666]">
                                                             {t("landing.heroTeaser.from", "from")}
                                                         </span>
-                                                        <span className="text-[20px] font-bold text-[#FF6600] break-words">
-                                                            {formattedPrice}
-                                                        </span>
+                                                        <LandingPrice product={p} />
                                                     </div>
                                                 </div>
                                             </Link>
@@ -428,3 +443,4 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
         </section>
     );
 }
+

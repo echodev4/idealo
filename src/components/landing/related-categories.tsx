@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -14,6 +14,8 @@ type Product = {
   image_url: string;
   price: string;
   numericPrice?: number;
+  liveNumericPrice?: number;
+  livePriceLoading?: boolean;
 };
 
 const categories = [
@@ -192,6 +194,22 @@ const SCROLLER_HIDE_NATIVE =
   "overflow-x-auto scroll-smooth overscroll-x-contain select-none " +
   "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
+function ProductPrice({ product }: { product: Product }) {
+  if (product.livePriceLoading) {
+    return (
+      <span
+        aria-label="Refreshing price"
+        className="inline-block h-6 w-20 animate-pulse rounded bg-[#E9ECEF] align-middle"
+      />
+    );
+  }
+
+  return (
+    <span className="text-[18px] font-bold text-[#FF6600]">
+      AED {product.liveNumericPrice ?? product.numericPrice}
+    </span>
+  );
+}
 function ProductCard({
   p,
   badge = "bestseller",
@@ -248,7 +266,7 @@ function ProductCard({
 
         <div className="mt-3 flex items-baseline gap-2">
           <span className="text-[13px] text-[#666666]">{fromLabel}</span>
-          <span className="text-[18px] font-bold text-[#FF6600]">AED {p.numericPrice}</span>
+          <ProductPrice product={p} />
         </div>
       </div>
     </Link>
@@ -571,3 +589,4 @@ export default function RelatedCategories({ products, loading }: { products: Pro
     </section>
   );
 }
+
