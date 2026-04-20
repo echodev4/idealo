@@ -19,6 +19,8 @@ export interface OfferProduct {
     discount?: string;
     reviews?: string | number;
     average_rating?: number | null;
+    rating?: string;
+    ratingCount?: string;
     created_at?: string;
     updated_at?: string;
     match_score?: number;
@@ -40,6 +42,8 @@ export interface RelatedProduct {
     discount?: string;
     reviews?: string | number;
     average_rating?: number | null;
+    rating?: string;
+    ratingCount?: string;
     created_at?: string;
     updated_at?: string;
     match_score?: number;
@@ -54,6 +58,8 @@ type LivePriceResult = {
     currentPrice: string;
     previousPrice?: string;
     discountPercentage?: string;
+    rating?: string;
+    ratingCount?: string;
 };
 
 function cleanPrice(p?: string | number | null): number {
@@ -80,7 +86,21 @@ function toText(value: any): string {
     return String(value);
 }
 
+function parseRatingValue(value: any): number | null {
+    if (value === null || value === undefined || value === "") return null;
+    const n = Number(String(value).replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return Math.max(0, Math.min(5, n));
+}
+
+function normalizeRatingCount(item: any): string {
+    return toText(item?.ratingCount || item?.reviews);
+}
+
 function normalizeListProduct(item: any): OfferProduct {
+    const ratingValue =
+        parseRatingValue(item?.average_rating) ?? parseRatingValue(item?.rating);
+
     return {
         _id: String(item?._id || ""),
         product_url: String(item?.product_url || ""),
@@ -100,12 +120,9 @@ function normalizeListProduct(item: any): OfferProduct {
                 : "",
         reviews:
             item?.reviews !== undefined && item?.reviews !== null ? item.reviews : "",
-        average_rating:
-            typeof item?.average_rating === "number"
-                ? item.average_rating
-                : typeof item?.rating === "number"
-                    ? item.rating
-                    : null,
+        average_rating: ratingValue,
+        rating: toText(item?.rating),
+        ratingCount: normalizeRatingCount(item),
         created_at: typeof item?.created_at === "string" ? item.created_at : "",
         updated_at: typeof item?.updated_at === "string" ? item.updated_at : "",
         match_score:
@@ -148,6 +165,8 @@ async function fetchLivePrice(
         currentPrice: String(json.currentPrice),
         previousPrice: toText(json.previousPrice),
         discountPercentage: toText(json.discountPercentage),
+        rating: toText(json.rating),
+        ratingCount: toText(json.ratingCount),
     };
 }
 
@@ -157,12 +176,18 @@ function applyLivePriceToListItem<T extends OfferProduct | RelatedProduct>(
 ): T {
     const nextPreviousPrice = live.previousPrice?.trim() ? live.previousPrice : item.old_price;
     const nextDiscount = live.discountPercentage?.trim() ? live.discountPercentage : item.discount;
+    const nextRating = parseRatingValue(live.rating);
+    const nextRatingCount = live.ratingCount?.trim() ? live.ratingCount : item.ratingCount;
 
     return {
         ...item,
         price: live.currentPrice,
         old_price: nextPreviousPrice,
         discount: nextDiscount,
+        average_rating: nextRating ?? item.average_rating,
+        rating: live.rating?.trim() ? live.rating : item.rating,
+        ratingCount: nextRatingCount,
+        reviews: nextRatingCount || item.reviews,
         liveNumericPrice: cleanPrice(live.currentPrice),
         livePriceLoading: false,
     };
@@ -426,6 +451,11 @@ export function ProductProvider({
                 setProduct((current: any) => {
                     if (!current) return current;
 
+                    const nextRating = parseRatingValue(live.rating);
+                    const nextRatingCount = live.ratingCount?.trim()
+                        ? live.ratingCount
+                        : current.ratingCount || current.reviews;
+
                     return {
                         ...current,
                         currentPrice: live.currentPrice,
@@ -436,6 +466,10 @@ export function ProductProvider({
                         discountPercentage: live.discountPercentage?.trim()
                             ? live.discountPercentage
                             : current.discountPercentage,
+                        average_rating: nextRating ?? current.average_rating,
+                        rating: live.rating?.trim() ? live.rating : current.rating,
+                        ratingCount: nextRatingCount,
+                        reviews: nextRatingCount || current.reviews,
                         liveNumericPrice: cleanPrice(live.currentPrice),
                         livePriceLoading: false,
                     };

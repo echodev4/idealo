@@ -87,6 +87,7 @@ type Offer = {
     available: boolean;
     source: string;
     averageRating?: number | null;
+    ratingCount?: string;
     reviews?: string | number;
     matchScore?: number;
 };
@@ -114,16 +115,25 @@ function Star({ filled }: { filled: boolean }) {
     );
 }
 
-function Rating({ value }: { value: number }) {
-    const full = Math.max(0, Math.min(5, Math.floor(value)));
+function Rating({ value, count }: { value: number | null; count?: string | number | null }) {
+    const full = value === null ? 0 : Math.max(0, Math.min(5, Math.floor(value)));
+    const countText = count !== null && count !== undefined && String(count).trim() ? String(count) : "---";
+
     return (
-        <div className="flex items-center gap-2">
-            <div className="flex items-center gap-[1px]">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} filled={i < full} />
-                ))}
+        <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+                <div className="flex items-center gap-[1px]">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} filled={i < full} />
+                    ))}
+                </div>
+                <span className="text-[12px] text-[#111827] font-semibold">
+                    {value === null ? "---" : value.toFixed(1)}
+                </span>
             </div>
-            <span className="text-[12px] text-[#111827] font-semibold">{value.toFixed(1)}</span>
+            <div className="text-[12px] text-[#6b7280] leading-none">
+                {countText === "---" ? "---" : `${countText} ratings`}
+            </div>
         </div>
     );
 }
@@ -196,6 +206,12 @@ export default function OfferComparisonTable() {
                 source: String(p?.source || "unknown"),
                 averageRating:
                     typeof p?.average_rating === "number" ? p.average_rating : null,
+                ratingCount:
+                    p?.ratingCount !== undefined && p?.ratingCount !== null
+                        ? String(p.ratingCount)
+                        : p?.reviews !== undefined && p?.reviews !== null
+                            ? String(p.reviews)
+                            : "",
                 reviews: p?.reviews,
                 matchScore:
                     typeof p?.match_score === "number" ? p.match_score : undefined,
@@ -342,9 +358,7 @@ export default function OfferComparisonTable() {
                                     const ratingValue =
                                         typeof o.averageRating === "number" && o.averageRating > 0
                                             ? o.averageRating
-                                            : idx % 2 === 0
-                                                ? 5.0
-                                                : 3.7;
+                                            : null;
                                     const isExpanded = !!expandedOffers[o.id];
 
                                     return (
@@ -418,9 +432,9 @@ export default function OfferComparisonTable() {
                                                             <div className="text-[12px] text-[#111827] font-semibold">
                                                                 {shop.label ? t("singleProduct.offerComparisonTable.marketplace", "Marketplace") : ""}
                                                             </div>
-                                                            <div className="mt-1">
-                                                                <Rating value={ratingValue} />
-                                                            </div>
+                                                             <div className="mt-1">
+                                                                 <Rating value={ratingValue} count={o.ratingCount} />
+                                                             </div>
                                                             <div className="mt-2 text-[12px] text-[#111827]">
                                                                 <span className="text-[#6b7280]">
                                                                     {t("singleProduct.offerComparisonTable.soldBy", "Sold by:")}{" "}
@@ -521,7 +535,7 @@ export default function OfferComparisonTable() {
                                                 {isExpanded ? (
                                                     <div className="mt-3 pt-3 border-t border-[#e5e7eb]">
                                                         <div className="flex items-center justify-between gap-2">
-                                                            <Rating value={ratingValue} />
+                                                            <Rating value={ratingValue} count={o.ratingCount} />
                                                             <div className="shrink-0 flex items-center gap-2">
                                                                 {PAYMENT_ICONS.map((p) => (
                                                                     <div

@@ -25,6 +25,8 @@ function normalizePricePayload(data: any) {
     currentPrice: toPriceText(scraped?.currentPrice),
     previousPrice: toPriceText(scraped?.previousPrice),
     discountPercentage: toPriceText(scraped?.discountPercentage),
+    rating: toPriceText(scraped?.rating),
+    ratingCount: toPriceText(scraped?.ratingCount),
   };
 }
 

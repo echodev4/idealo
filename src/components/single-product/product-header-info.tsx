@@ -7,9 +7,23 @@ import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
 function parseRating(v: any): number {
-  const n = Number(v);
+  const n = Number(String(v ?? "").replace(/[^\d.]/g, ""));
   if (Number.isNaN(n)) return 0;
   return Math.max(0, Math.min(5, n));
+}
+
+function parsePrice(v: any): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(String(v).replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function formatAED(value: number) {
+  const hasDecimals = value % 1 !== 0;
+  return `AED ${value.toLocaleString("en-US", {
+    maximumFractionDigits: hasDecimals ? 2 : 0,
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+  })}`;
 }
 
 function Stars({ value }: { value: number }) {
@@ -48,15 +62,20 @@ export default function ProductHeaderInfo() {
   if (loading || relatedLoading) return <ProductHeaderInfoSkeleton />;
 
   const ratingValue = parseRating(
-    product?.average_rating ?? relatedProducts?.[0]?.average_rating
+    product?.rating ?? product?.average_rating ?? relatedProducts?.[0]?.average_rating
   );
 
   const reviewsCount =
-    product?.reviews !== undefined && product?.reviews !== null && String(product.reviews).trim() !== ""
+    product?.ratingCount !== undefined && product?.ratingCount !== null && String(product.ratingCount).trim() !== ""
+      ? String(product.ratingCount)
+      : product?.reviews !== undefined && product?.reviews !== null && String(product.reviews).trim() !== ""
       ? String(product.reviews)
       : relatedProducts?.[0]?.reviews
         ? String(relatedProducts[0].reviews)
         : null;
+  const currentPrice = parsePrice(product?.currentPrice ?? product?.price);
+  const previousPrice = parsePrice(product?.previousPrice ?? product?.old_price);
+  const showPreviousPrice = previousPrice !== null && currentPrice !== null && previousPrice > currentPrice;
 
   const specifications = (product?.specifications || {}) as Record<string, string>;
   const normalizedSpecs = Object.entries(specifications)
@@ -75,6 +94,33 @@ export default function ProductHeaderInfo() {
       <h1 className="mt-3 text-[#111827] text-[28px] font-semibold leading-[1.1]">
         {product?.title}
       </h1>
+
+      {(currentPrice || ratingValue > 0) ? (
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[#111827]">
+          {currentPrice ? (
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-[20px] font-semibold leading-none">
+                {formatAED(currentPrice)}
+              </span>
+              {showPreviousPrice ? (
+                <span className="text-[14px] text-[#6b7280] line-through">
+                  {formatAED(previousPrice)}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          {ratingValue > 0 ? (
+            <div className="flex items-center gap-2 text-[13px]">
+              <Stars value={ratingValue} />
+              <span className="font-semibold">{ratingValue.toFixed(1)}</span>
+              {reviewsCount ? (
+                <span className="text-[#6b7280]">({reviewsCount} ratings)</span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#111827] lg:justify-start">
         <span className="text-[#374151]">{t("singleProduct.headerInfo.reviewsLabel", "10 product reviews:")}</span>
