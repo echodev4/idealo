@@ -62,6 +62,23 @@ function normalizeLivePriceSource(source?: string) {
   return "";
 }
 
+function getUniqueLiveProducts(products: Product[]) {
+  const seen = new Set<string>();
+  const unique: Product[] = [];
+
+  for (const product of products) {
+    if (!product.product_url || !normalizeLivePriceSource(product.source)) continue;
+
+    const productKey = getProductKey(product);
+    if (!productKey || seen.has(productKey)) continue;
+
+    seen.add(productKey);
+    unique.push(product);
+  }
+
+  return unique;
+}
+
 function GridIcon({ active }: { active: boolean }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" className={active ? "fill-current" : "fill-current"}>
@@ -174,84 +191,81 @@ export default function CategoryPage() {
 
     const controller = new AbortController();
     let stopped = false;
-    const batchProducts = products.filter(
-      (product) => product.product_url && normalizeLivePriceSource(product.source)
-    );
+    const batchProducts = getUniqueLiveProducts(products);
 
     async function refreshVisiblePrices() {
-      for (const product of batchProducts) {
-        if (stopped || controller.signal.aborted) break;
+      if (!batchProducts.length) return;
 
-        const productKey = getProductKey(product);
-        const liveSource = normalizeLivePriceSource(product.source);
-
-        setProducts((current) =>
-          current.map((item) =>
-            getProductKey(item) === productKey
-              ? { ...item, livePriceLoading: true }
-              : item
-          )
+      setProducts((current) => {
+        const refreshKeys = new Set(batchProducts.map(getProductKey));
+        return current.map((item) =>
+          refreshKeys.has(getProductKey(item)) ? { ...item, livePriceLoading: true } : item
         );
+      });
 
-        try {
-          const res = await fetch("/api/live-price", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            cache: "no-store",
-            signal: controller.signal,
-            body: JSON.stringify({
-              product_url: product.product_url,
-              source: liveSource,
-            }),
-          });
+      await Promise.allSettled(
+        batchProducts.map(async (product) => {
+          const productKey = getProductKey(product);
+          const liveSource = normalizeLivePriceSource(product.source);
 
-          const json = await res.json();
+          try {
+            const res = await fetch("/api/live-price", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              cache: "no-store",
+              signal: controller.signal,
+              body: JSON.stringify({
+                product_url: product.product_url,
+                source: liveSource,
+              }),
+            });
 
-          if (!res.ok || json?.success === false || !json?.currentPrice) {
-            throw new Error(json?.error || "Live price could not be fetched");
+            const json = await res.json();
+
+            if (!res.ok || json?.success === false || !json?.currentPrice) {
+              throw new Error(json?.error || "Live price could not be fetched");
+            }
+
+            if (stopped || controller.signal.aborted) return;
+
+            const nextPrice = String(json.currentPrice);
+            const nextPreviousPrice =
+              typeof json?.previousPrice === "string" && json.previousPrice.trim()
+                ? json.previousPrice
+                : product.previousPrice;
+            const nextDiscount =
+              typeof json?.discountPercentage === "string" && json.discountPercentage.trim()
+                ? json.discountPercentage
+                : product.discountPercentage;
+
+            setProducts((current) =>
+              current.map((item) =>
+                getProductKey(item) === productKey
+                  ? {
+                      ...item,
+                      currentPrice: nextPrice,
+                      previousPrice: nextPreviousPrice,
+                      discountPercentage: nextDiscount,
+                      liveNumericPrice: cleanPrice(nextPrice),
+                      livePriceLoading: false,
+                    }
+                  : item
+              )
+            );
+          } catch (err: any) {
+            if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
+
+            console.error("Live price refresh error:", product.product_url, err);
+            setProducts((current) =>
+              current.map((item) =>
+                getProductKey(item) === productKey
+                  ? { ...item, livePriceLoading: false }
+                  : item
+              )
+            );
           }
-
-          if (stopped || controller.signal.aborted) break;
-
-          const nextPrice = String(json.currentPrice);
-          const nextPreviousPrice =
-            typeof json?.previousPrice === "string" && json.previousPrice.trim()
-              ? json.previousPrice
-              : product.previousPrice;
-          const nextDiscount =
-            typeof json?.discountPercentage === "string" && json.discountPercentage.trim()
-              ? json.discountPercentage
-              : product.discountPercentage;
-
-          setProducts((current) =>
-            current.map((item) =>
-              getProductKey(item) === productKey
-                ? {
-                    ...item,
-                    currentPrice: nextPrice,
-                    previousPrice: nextPreviousPrice,
-                    discountPercentage: nextDiscount,
-                    liveNumericPrice: cleanPrice(nextPrice),
-                    livePriceLoading: false,
-                  }
-                : item
-            )
-          );
-        } catch (err: any) {
-          if (err?.name === "AbortError" || stopped || controller.signal.aborted) {
-            break;
-          }
-
-          console.error("Live price refresh error:", product.product_url, err);
-          setProducts((current) =>
-            current.map((item) =>
-              getProductKey(item) === productKey
-                ? { ...item, livePriceLoading: false }
-                : item
-            )
-          );
-        }
-      }
+        })
+      );
     }
 
     refreshVisiblePrices();

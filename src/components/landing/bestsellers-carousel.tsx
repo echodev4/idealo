@@ -26,15 +26,6 @@ function parsePriceToNumber(price?: string) {
 }
 
 function LandingPrice({ product }: { product: Product }) {
-    if (product.livePriceLoading) {
-        return (
-            <span
-                aria-label="Refreshing price"
-                className="inline-block h-6 w-20 animate-pulse rounded bg-[#E9ECEF] align-middle"
-            />
-        );
-    }
-
     const price =
         typeof product.liveNumericPrice === "number"
             ? product.liveNumericPrice
@@ -43,8 +34,14 @@ function LandingPrice({ product }: { product: Product }) {
                 : parsePriceToNumber(product.price);
 
     return (
-        <span className="text-[18px] font-bold text-[#212121]">
-            {price !== null && price !== undefined ? `AED ${price}` : `AED ${product.price}`}
+        <span className="inline-flex items-center gap-2 text-[18px] font-bold text-[#212121]">
+            <span>{price !== null && price !== undefined ? `AED ${price}` : `AED ${product.price}`}</span>
+            {product.livePriceLoading ? (
+                <span
+                    aria-label="Refreshing price"
+                    className="inline-block h-3 w-8 animate-pulse rounded bg-[#E9ECEF] align-middle"
+                />
+            ) : null}
         </span>
     );
 }

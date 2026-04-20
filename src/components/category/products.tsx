@@ -65,16 +65,17 @@ function PriceAmount({
     className: string;
     size?: "sm" | "lg";
 }) {
-    if (product.livePriceLoading) {
-        return (
-            <span
-                aria-label="Refreshing price"
-                className={`inline-block ${size === "lg" ? "h-6" : "h-5"} w-20 animate-pulse rounded bg-[#e5e7eb] align-middle`}
-            />
-        );
-    }
-
-    return <span className={className}>AED {formatPriceAED(getDisplayPrice(product))}</span>;
+    return (
+        <span className={`${className} inline-flex items-center gap-2`}>
+            <span>AED {formatPriceAED(getDisplayPrice(product))}</span>
+            {product.livePriceLoading ? (
+                <span
+                    aria-label="Refreshing price"
+                    className={`inline-block ${size === "lg" ? "h-3.5" : "h-3"} w-8 animate-pulse rounded bg-[#e5e7eb] align-middle`}
+                />
+            ) : null}
+        </span>
+    );
 }
 
 function getProductHref(p: Product) {

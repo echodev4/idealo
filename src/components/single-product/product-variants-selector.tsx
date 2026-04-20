@@ -16,16 +16,17 @@ function parseAEDPrice(price: string): number | null {
 }
 
 function VariantPrice({ price, loading }: { price: number; loading?: boolean }) {
-    if (loading) {
-        return (
-            <span
-                aria-label="Refreshing price"
-                className="inline-block h-5 w-20 animate-pulse rounded bg-[#e5e7eb] align-middle"
-            />
-        );
-    }
-
-    return <>AED {price.toLocaleString()}</>;
+    return (
+        <span className="inline-flex items-center gap-1">
+            <span>AED {price.toLocaleString()}</span>
+            {loading ? (
+                <span
+                    aria-label="Refreshing price"
+                    className="inline-block h-3 w-8 animate-pulse rounded bg-[#e5e7eb] align-middle"
+                />
+            ) : null}
+        </span>
+    );
 }
 function truncate(s: string, n: number) {
     if (!s) return "";

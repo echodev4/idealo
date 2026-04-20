@@ -53,16 +53,17 @@ function PriceText({
     loading?: boolean;
     className?: string;
 }) {
-    if (loading) {
-        return (
-            <span
-                aria-label="Refreshing price"
-                className="inline-block h-6 w-24 animate-pulse rounded bg-[#e5e7eb] align-middle"
-            />
-        );
-    }
-
-    return <span className={className}>{formatAED(price)}</span>;
+    return (
+        <span className={cn("inline-flex items-center gap-2", className)}>
+            <span>{formatAED(price)}</span>
+            {loading ? (
+                <span
+                    aria-label="Refreshing price"
+                    className="inline-block h-3 w-8 animate-pulse rounded bg-[#e5e7eb] align-middle"
+                />
+            ) : null}
+        </span>
+    );
 }
 function parseAED(price: string | number | null | undefined): number | null {
     if (price === null || price === undefined || price === "") return null;

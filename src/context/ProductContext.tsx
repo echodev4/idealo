@@ -203,6 +203,23 @@ function setLiveLoadingOnList<T extends OfferProduct | RelatedProduct>(
     );
 }
 
+function getUniqueLiveItems<T extends OfferProduct | RelatedProduct>(items: T[]): T[] {
+    const seen = new Set<string>();
+    const unique: T[] = [];
+
+    for (const item of items) {
+        if (!normalizeLivePriceSource(item.source)) continue;
+
+        const productKey = getProductKey(item);
+        if (!item.product_url || !productKey || seen.has(productKey)) continue;
+
+        seen.add(productKey);
+        unique.push(item);
+    }
+
+    return unique;
+}
+
 interface ProductContextType {
     product: any | null;
     loading: boolean;
@@ -483,69 +500,79 @@ export function ProductProvider({
         }
 
         async function refreshRelatedProducts(items: RelatedProduct[]) {
-            const seen = new Set<string>();
+            const refreshItems = getUniqueLiveItems(items);
+            if (!refreshItems.length) return;
 
-            for (const item of items) {
-                if (!active || liveController.signal.aborted) break;
-                if (!normalizeLivePriceSource(item.source)) continue;
+            setRelatedProducts((current) => {
+                const refreshKeys = new Set(refreshItems.map(getProductKey));
+                return current.map((item) =>
+                    refreshKeys.has(getProductKey(item))
+                        ? { ...item, livePriceLoading: true }
+                        : item
+                );
+            });
 
-                const productKey = getProductKey(item);
-                if (!productKey || seen.has(productKey)) continue;
-                seen.add(productKey);
+            await Promise.allSettled(
+                refreshItems.map(async (item) => {
+                    const productKey = getProductKey(item);
 
-                setRelatedProducts((current) => setLiveLoadingOnList(current, productKey, true));
+                    try {
+                        const live = await fetchLivePrice(item.product_url, item.source, liveController.signal);
+                        if (!active || liveController.signal.aborted || !live) return;
 
-                try {
-                    const live = await fetchLivePrice(item.product_url, item.source, liveController.signal);
-                    if (!active || liveController.signal.aborted || !live) break;
+                        setRelatedProducts((current) =>
+                            current.map((product) =>
+                                getProductKey(product) === productKey
+                                    ? applyLivePriceToListItem(product, live)
+                                    : product
+                            )
+                        );
+                    } catch (err: any) {
+                        if (err?.name === "AbortError" || !active || liveController.signal.aborted) return;
 
-                    setRelatedProducts((current) =>
-                        current.map((product) =>
-                            getProductKey(product) === productKey
-                                ? applyLivePriceToListItem(product, live)
-                                : product
-                        )
-                    );
-                } catch (err: any) {
-                    if (err?.name === "AbortError" || !active || liveController.signal.aborted) break;
-
-                    console.error("Variant live price refresh error:", item.product_url, err);
-                    setRelatedProducts((current) => setLiveLoadingOnList(current, productKey, false));
-                }
-            }
+                        console.error("Variant live price refresh error:", item.product_url, err);
+                        setRelatedProducts((current) => setLiveLoadingOnList(current, productKey, false));
+                    }
+                })
+            );
         }
 
         async function refreshOffers(items: OfferProduct[]) {
-            const seen = new Set<string>();
+            const refreshItems = getUniqueLiveItems(items);
+            if (!refreshItems.length) return;
 
-            for (const item of items) {
-                if (!active || liveController.signal.aborted) break;
-                if (!normalizeLivePriceSource(item.source)) continue;
+            setOffers((current) => {
+                const refreshKeys = new Set(refreshItems.map(getProductKey));
+                return current.map((item) =>
+                    refreshKeys.has(getProductKey(item))
+                        ? { ...item, livePriceLoading: true }
+                        : item
+                );
+            });
 
-                const productKey = getProductKey(item);
-                if (!productKey || seen.has(productKey)) continue;
-                seen.add(productKey);
+            await Promise.allSettled(
+                refreshItems.map(async (item) => {
+                    const productKey = getProductKey(item);
 
-                setOffers((current) => setLiveLoadingOnList(current, productKey, true));
+                    try {
+                        const live = await fetchLivePrice(item.product_url, item.source, liveController.signal);
+                        if (!active || liveController.signal.aborted || !live) return;
 
-                try {
-                    const live = await fetchLivePrice(item.product_url, item.source, liveController.signal);
-                    if (!active || liveController.signal.aborted || !live) break;
+                        setOffers((current) =>
+                            current.map((product) =>
+                                getProductKey(product) === productKey
+                                    ? applyLivePriceToListItem(product, live)
+                                    : product
+                            )
+                        );
+                    } catch (err: any) {
+                        if (err?.name === "AbortError" || !active || liveController.signal.aborted) return;
 
-                    setOffers((current) =>
-                        current.map((product) =>
-                            getProductKey(product) === productKey
-                                ? applyLivePriceToListItem(product, live)
-                                : product
-                        )
-                    );
-                } catch (err: any) {
-                    if (err?.name === "AbortError" || !active || liveController.signal.aborted) break;
-
-                    console.error("Offer live price refresh error:", item.product_url, err);
-                    setOffers((current) => setLiveLoadingOnList(current, productKey, false));
-                }
-            }
+                        console.error("Offer live price refresh error:", item.product_url, err);
+                        setOffers((current) => setLiveLoadingOnList(current, productKey, false));
+                    }
+                })
+            );
         }
 
         async function run() {
@@ -557,9 +584,11 @@ export function ProductProvider({
 
             if (!active || liveController.signal.aborted) return;
 
-            await refreshOneProduct(selectedProduct);
-            await refreshRelatedProducts(related as RelatedProduct[]);
-            await refreshOffers(offerItems as OfferProduct[]);
+            await Promise.allSettled([
+                refreshOneProduct(selectedProduct),
+                refreshRelatedProducts(related as RelatedProduct[]),
+                refreshOffers(offerItems as OfferProduct[]),
+            ]);
         }
 
         run();

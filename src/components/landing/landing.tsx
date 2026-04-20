@@ -54,23 +54,25 @@ function normalizeProducts(items: LandingProduct[]) {
     });
 }
 
-function getUniqueRefreshProducts(data: LandingData) {
+function getUniqueRefreshGroups(data: LandingData) {
     const seen = new Set<string>();
-    const all = [
-        ...data.iphoneDeals.slice(0, 12),
-        ...data.dairyProducts.slice(0, 12),
-        ...data.fashionProducts.slice(0, 18),
-    ];
 
-    return all.filter((product) => {
-        if (!product.product_url || !normalizeLivePriceSource(product.source)) return false;
+    const unique = (items: LandingProduct[], limit: number) =>
+        items.slice(0, limit).filter((product) => {
+            if (!product.product_url || !normalizeLivePriceSource(product.source)) return false;
 
-        const key = getProductKey(product);
-        if (seen.has(key)) return false;
+            const key = getProductKey(product);
+            if (seen.has(key)) return false;
 
-        seen.add(key);
-        return true;
-    });
+            seen.add(key);
+            return true;
+        });
+
+    return [
+        unique(data.iphoneDeals, 12),
+        unique(data.dairyProducts, 12),
+        unique(data.fashionProducts, 18),
+    ].filter((group) => group.length > 0);
 }
 
 function updateLandingProduct(
@@ -135,77 +137,91 @@ export default function Landing() {
 
         const controller = new AbortController();
         let stopped = false;
-        const refreshProducts = getUniqueRefreshProducts(data);
+        const refreshGroups = getUniqueRefreshGroups(data);
 
         async function refreshLandingPrices() {
-            for (const product of refreshProducts) {
-                if (stopped || controller.signal.aborted) break;
+            for (const group of refreshGroups) {
+                if (stopped || controller.signal.aborted) return;
 
-                const productKey = getProductKey(product);
-                const liveSource = normalizeLivePriceSource(product.source);
-
+                const refreshKeys = new Set(group.map(getProductKey));
                 setData((current) =>
-                    updateLandingProduct(current, productKey, (item) => ({
-                        ...item,
-                        livePriceLoading: true,
-                    }))
+                    refreshKeys.size
+                        ? {
+                            iphoneDeals: current.iphoneDeals.map((item) =>
+                                refreshKeys.has(getProductKey(item)) ? { ...item, livePriceLoading: true } : item
+                            ),
+                            dairyProducts: current.dairyProducts.map((item) =>
+                                refreshKeys.has(getProductKey(item)) ? { ...item, livePriceLoading: true } : item
+                            ),
+                            fashionProducts: current.fashionProducts.map((item) =>
+                                refreshKeys.has(getProductKey(item)) ? { ...item, livePriceLoading: true } : item
+                            ),
+                        }
+                        : current
                 );
 
-                try {
-                    const res = await fetch("/api/live-price", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        cache: "no-store",
-                        signal: controller.signal,
-                        body: JSON.stringify({
-                            product_url: product.product_url,
-                            source: liveSource,
-                        }),
-                    });
+                await Promise.allSettled(
+                    group.map(async (product) => {
+                        const productKey = getProductKey(product);
+                        const liveSource = normalizeLivePriceSource(product.source);
 
-                    const json = await res.json();
+                        try {
+                            const res = await fetch("/api/live-price", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                cache: "no-store",
+                                signal: controller.signal,
+                                body: JSON.stringify({
+                                    product_url: product.product_url,
+                                    source: liveSource,
+                                }),
+                            });
 
-                    if (!res.ok || json?.success === false || !json?.currentPrice) {
-                        throw new Error(json?.error || "Live price could not be fetched");
-                    }
+                            const json = await res.json();
 
-                    if (stopped || controller.signal.aborted) break;
+                            if (!res.ok || json?.success === false || !json?.currentPrice) {
+                                throw new Error(json?.error || "Live price could not be fetched");
+                            }
 
-                    const nextPrice = String(json.currentPrice);
-                    const nextOldPrice =
-                        typeof json?.previousPrice === "string" && json.previousPrice.trim()
-                            ? json.previousPrice
-                            : product.old_price;
-                    const nextDiscount =
-                        typeof json?.discountPercentage === "string" && json.discountPercentage.trim()
-                            ? json.discountPercentage
-                            : product.discount;
-                    const nextNumericPrice = parsePrice(nextPrice);
-                    const nextNumericOldPrice = parsePrice(nextOldPrice);
+                            if (stopped || controller.signal.aborted) return;
 
-                    setData((current) =>
-                        updateLandingProduct(current, productKey, (item) => ({
-                            ...item,
-                            price: nextPrice,
-                            old_price: nextOldPrice,
-                            discount: nextDiscount,
-                            numericPrice: nextNumericPrice || item.numericPrice,
-                            numericOldPrice: nextNumericOldPrice || item.numericOldPrice,
-                            liveNumericPrice: nextNumericPrice || item.liveNumericPrice,
-                            livePriceLoading: false,
-                        }))
-                    );
-                } catch (err: any) {
-                    if (err?.name === "AbortError" || stopped || controller.signal.aborted) break;
+                            const nextPrice = String(json.currentPrice);
+                            const nextOldPrice =
+                                typeof json?.previousPrice === "string" && json.previousPrice.trim()
+                                    ? json.previousPrice
+                                    : product.old_price;
+                            const nextDiscount =
+                                typeof json?.discountPercentage === "string" && json.discountPercentage.trim()
+                                    ? json.discountPercentage
+                                    : product.discount;
+                            const nextNumericPrice = parsePrice(nextPrice);
+                            const nextNumericOldPrice = parsePrice(nextOldPrice);
 
-                    console.error("Landing live price refresh error:", product.product_url, err);
-                    setData((current) =>
-                        updateLandingProduct(current, productKey, (item) => ({
-                            ...item,
-                            livePriceLoading: false,
-                        }))
-                    );
-                }
+                            setData((current) =>
+                                updateLandingProduct(current, productKey, (item) => ({
+                                    ...item,
+                                    price: nextPrice,
+                                    old_price: nextOldPrice,
+                                    discount: nextDiscount,
+                                    numericPrice: nextNumericPrice || item.numericPrice,
+                                    numericOldPrice: nextNumericOldPrice || item.numericOldPrice,
+                                    liveNumericPrice: nextNumericPrice || item.liveNumericPrice,
+                                    livePriceLoading: false,
+                                }))
+                            );
+                        } catch (err: any) {
+                            if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
+
+                            console.error("Landing live price refresh error:", product.product_url, err);
+                            setData((current) =>
+                                updateLandingProduct(current, productKey, (item) => ({
+                                    ...item,
+                                    livePriceLoading: false,
+                                }))
+                            );
+                        }
+                    })
+                );
             }
         }
 

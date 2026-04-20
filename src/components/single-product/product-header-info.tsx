@@ -107,6 +107,12 @@ export default function ProductHeaderInfo() {
                   {formatAED(previousPrice)}
                 </span>
               ) : null}
+              {product?.livePriceLoading ? (
+                <span
+                  aria-label="Refreshing product data"
+                  className="inline-block h-3 w-10 animate-pulse rounded bg-[#e5e7eb] align-middle"
+                />
+              ) : null}
             </div>
           ) : null}
 

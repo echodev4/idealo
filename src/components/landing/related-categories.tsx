@@ -195,18 +195,15 @@ const SCROLLER_HIDE_NATIVE =
   "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 function ProductPrice({ product }: { product: Product }) {
-  if (product.livePriceLoading) {
-    return (
-      <span
-        aria-label="Refreshing price"
-        className="inline-block h-6 w-20 animate-pulse rounded bg-[#E9ECEF] align-middle"
-      />
-    );
-  }
-
   return (
-    <span className="text-[18px] font-bold text-[#FF6600]">
-      AED {product.liveNumericPrice ?? product.numericPrice}
+    <span className="inline-flex items-center gap-2 text-[18px] font-bold text-[#FF6600]">
+      <span>AED {product.liveNumericPrice ?? product.numericPrice}</span>
+      {product.livePriceLoading ? (
+        <span
+          aria-label="Refreshing price"
+          className="inline-block h-3 w-8 animate-pulse rounded bg-[#E9ECEF] align-middle"
+        />
+      ) : null}
     </span>
   );
 }

@@ -19,15 +19,6 @@ type Product = {
 };
 
 function LandingPrice({ product }: { product: Product }) {
-    if (product.livePriceLoading) {
-        return (
-            <span
-                aria-label="Refreshing price"
-                className="inline-block h-6 w-24 animate-pulse rounded bg-[#E9ECEF] align-middle"
-            />
-        );
-    }
-
     const parsedPrice =
         typeof product.liveNumericPrice === "number"
             ? product.liveNumericPrice
@@ -43,7 +34,17 @@ function LandingPrice({ product }: { product: Product }) {
             })}`
             : "AED 0.00";
 
-    return <span className="text-[20px] font-bold text-[#FF6600] break-words">{formattedPrice}</span>;
+    return (
+        <span className="inline-flex items-center gap-2 text-[20px] font-bold text-[#FF6600] break-words">
+            <span>{formattedPrice}</span>
+            {product.livePriceLoading ? (
+                <span
+                    aria-label="Refreshing price"
+                    className="inline-block h-3 w-8 animate-pulse rounded bg-[#E9ECEF] align-middle"
+                />
+            ) : null}
+        </span>
+    );
 }
 function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
