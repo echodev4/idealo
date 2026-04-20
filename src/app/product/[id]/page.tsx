@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import "./index.css"
 
 import ProductComparisonPage from "../ProductComparisonPage";
 

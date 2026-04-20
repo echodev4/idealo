@@ -76,7 +76,7 @@ export default function ProductHeaderInfo() {
         {product?.title}
       </h1>
 
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#111827] lg:justify-start">
+      {/* <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#111827] lg:justify-start">
         <span className="text-[#374151]">{t("singleProduct.headerInfo.reviewsLabel", "10 product reviews:")}</span>
         <div className="flex items-center gap-2">
           <Stars value={ratingValue} />
@@ -89,7 +89,7 @@ export default function ProductHeaderInfo() {
 
       <div className="mt-1 text-[13px] font-semibold text-[#111827]">
         {t("singleProduct.headerInfo.averageGrade", "Average grade 2.0")}
-      </div>
+      </div> */}
 
       {mobileSpecs.length ? (
         <div className="lg:hidden mt-3 grid grid-cols-3 gap-2">

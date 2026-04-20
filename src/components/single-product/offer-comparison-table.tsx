@@ -330,7 +330,7 @@ export default function OfferComparisonTable() {
                             <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
                                 <div>{t("singleProduct.offerComparisonTable.columns.offerTitle", "Offer title")}</div>
                                 <div>{t("singleProduct.offerComparisonTable.columns.priceShipping", "Price & Shipping")}</div>
-                                <div>{t("singleProduct.offerComparisonTable.columns.paymentMethods", "Payment methods*")}</div>
+                                {/* <div>{t("singleProduct.offerComparisonTable.columns.paymentMethods", "Payment methods*")}</div> */}
                                 <div>{t("singleProduct.offerComparisonTable.columns.shopReview", "Shop & Shop Review")}</div>
                                 <div className="text-right"></div>
                             </div>
@@ -398,7 +398,7 @@ export default function OfferComparisonTable() {
                                                     ) : null}
                                                 </div>
 
-                                                <div className="flex items-start gap-2 pt-1">
+                                                {/* <div className="flex items-start gap-2 pt-1">
                                                     {PAYMENT_ICONS.map((p, i) => (
                                                         <div
                                                             key={p.key}
@@ -407,13 +407,13 @@ export default function OfferComparisonTable() {
                                                             <Image src={p.src} alt={p.alt} fill sizes="46px" className="object-contain p-1" />
                                                         </div>
                                                     ))}
-                                                </div>
+                                                </div> */}
 
                                                 <div className="pt-1">
                                                     <div className="flex items-start gap-3">
-                                                        <div className="relative w-[110px] h-[36px]">
+                                                        {/* <div className="relative w-[110px] h-[36px]">
                                                             <Image src={shop.src} alt={shop.alt} fill sizes="110px" className="object-contain" />
-                                                        </div>
+                                                        </div> */}
                                                         <div className="min-w-0">
                                                             <div className="text-[12px] text-[#111827] font-semibold">
                                                                 {shop.label ? t("singleProduct.offerComparisonTable.marketplace", "Marketplace") : ""}
@@ -432,9 +432,9 @@ export default function OfferComparisonTable() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">
+                                                    {/* <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">
                                                         {t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}
-                                                    </div>
+                                                    </div> */}
                                                 </div>
 
                                                 <div className="flex justify-end">
