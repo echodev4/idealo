@@ -306,8 +306,14 @@ export function ProductProvider({
                     return null;
                 }
 
-                setProduct(json.data);
-                return json.data;
+                const selectedProduct = {
+                    ...json.data,
+                    product_url: json.data.product_url || productUrl,
+                    source: json.data.source || sourceName || "",
+                };
+
+                setProduct(selectedProduct);
+                return selectedProduct;
             } catch (err) {
                 console.error("Product fetch error:", err);
                 if (active) {
@@ -360,7 +366,13 @@ export function ProductProvider({
                 const apiOffers = Array.isArray(json?.offers) ? json.offers : [];
 
                 const mapped = apiOffers
-                    .map(normalizeListProduct)
+                    .map((item: any) => {
+                        const normalized = normalizeListProduct(item);
+                        return {
+                            ...normalized,
+                            source: normalized.source || sourceName || "",
+                        };
+                    })
                     .filter((p: any) => p.product_name && p.image_url && p.product_url);
 
                 setOffers(mapped);

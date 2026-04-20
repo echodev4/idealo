@@ -56,6 +56,10 @@ function getDisplayPrice(p: Product) {
     return p.liveNumericPrice ?? p.numericPrice;
 }
 
+function getVisibleOfferCount(p: Product) {
+    return Math.max(1, typeof p.offerCount === "number" ? p.offerCount : 0);
+}
+
 function PriceAmount({
     product,
     className,
@@ -90,6 +94,7 @@ function ProductCellGrid({ product }: { product: Product }) {
     const name = getName(product);
     const img = getImg(product);
     const source = getSource(product);
+    const visibleOfferCount = getVisibleOfferCount(product);
 
     if (!product?.product_url || !name || !img) return null;
 
@@ -135,11 +140,9 @@ function ProductCellGrid({ product }: { product: Product }) {
                 </div>
 
 
-                {typeof product.offerCount === "number" && product.offerCount > 0 ? (
-                    <div className="mt-1 text-[12px] text-[#1a73e8] font-medium">
-                        {product.offerCount} {product.offerCount === 1 ? "offer available" : "offers available"}
-                    </div>
-                ) : null}
+                <div className="mt-1 text-[12px] text-[#1a73e8] font-medium">
+                    {visibleOfferCount} {visibleOfferCount === 1 ? "offer available" : "offers available"}
+                </div>
             </div>
         </div>
     );
@@ -150,6 +153,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
     const name = getName(product);
     const img = getImg(product);
     const source = getSource(product);
+    const visibleOfferCount = getVisibleOfferCount(product);
 
     if (!product?.product_url || !name || !img) return null;
 
@@ -172,6 +176,9 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                     </Link>
                     <div className="mt-1 text-[12px] text-gray-600 line-clamp-2 cursor-not-allowed">
                         {t("category.products.placeholderDescription", "Ski helmet, all-round, in-mold, with side impact protection (MIPS)")}
+                    </div>
+                    <div className="mt-1 text-[12px] text-[#1a73e8] font-medium">
+                        {visibleOfferCount} {visibleOfferCount === 1 ? "offer available" : "offers available"}
                     </div>
 
                     <button

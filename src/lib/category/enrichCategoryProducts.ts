@@ -15,6 +15,6 @@ export function enrichCategoryProducts({
 }: EnrichCategoryProductsParams): CategoryProduct[] {
     return visibleProducts.map((product) => ({
         ...product,
-        offerCount: offerCountMap.get(getProductKey(product)) || 0,
+        offerCount: Math.max(1, offerCountMap.get(getProductKey(product)) || 0),
     }));
 }

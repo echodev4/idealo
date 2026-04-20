@@ -154,7 +154,7 @@ export default function CategoryPage() {
             ...p,
             numericPrice: cleanPrice(p.currentPrice),
             numericOldPrice: cleanPrice(p.previousPrice),
-            offerCount: typeof p.offerCount === "number" ? p.offerCount : 0,
+            offerCount: Math.max(1, typeof p.offerCount === "number" ? p.offerCount : 0),
           }));
 
         setProducts(mapped);
