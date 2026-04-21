@@ -36,7 +36,7 @@ export interface Product {
 }
 
 const ITEMS_PER_PAGE = 20;
-const LIVE_BATCH_SIZE = 10;
+const LIVE_BATCH_SIZE = 2;
 
 function cleanPrice(p?: string): number {
   return Number((p || "").replace(/[^\d.]/g, "")) || 0;
