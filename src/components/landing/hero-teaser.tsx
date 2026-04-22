@@ -14,17 +14,13 @@ type Product = {
     image_url: string;
     price: string;
     numericPrice?: number;
-    liveNumericPrice?: number;
-    livePriceLoading?: boolean;
 };
 
 function LandingPrice({ product }: { product: Product }) {
     const parsedPrice =
-        typeof product.liveNumericPrice === "number"
-            ? product.liveNumericPrice
-            : typeof product.numericPrice === "number"
-                ? product.numericPrice
-                : Number(String(product.price || "").replace(/[^\d.]/g, ""));
+        typeof product.numericPrice === "number"
+            ? product.numericPrice
+            : Number(String(product.price || "").replace(/[^\d.]/g, ""));
 
     const formattedPrice =
         Number.isFinite(parsedPrice) && parsedPrice > 0
@@ -35,15 +31,7 @@ function LandingPrice({ product }: { product: Product }) {
             : "AED 0.00";
 
     return (
-        <span className="inline-flex items-center gap-2 text-[20px] font-bold text-[#FF6600] break-words">
-            <span>{formattedPrice}</span>
-            {product.livePriceLoading ? (
-                <span
-                    aria-label="Refreshing price"
-                    className="inline-block h-3 w-8 animate-pulse rounded bg-[#E9ECEF] align-middle"
-                />
-            ) : null}
-        </span>
+        <span className="inline-flex items-center gap-2 text-[20px] font-bold text-[#FF6600] break-words">{formattedPrice}</span>
     );
 }
 function clamp(n: number, min: number, max: number) {

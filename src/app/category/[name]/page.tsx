@@ -36,7 +36,6 @@ export interface Product {
 }
 
 const ITEMS_PER_PAGE = 20;
-const LIVE_BATCH_SIZE = 2;
 
 function cleanPrice(p?: string): number {
   return Number((p || "").replace(/[^\d.]/g, "")) || 0;
@@ -78,16 +77,6 @@ function getUniqueLiveProducts(products: Product[]) {
   }
 
   return unique;
-}
-
-function chunkProducts(products: Product[], size: number) {
-  const chunks: Product[][] = [];
-
-  for (let i = 0; i < products.length; i += size) {
-    chunks.push(products.slice(i, i + size));
-  }
-
-  return chunks;
 }
 
 function GridIcon({ active }: { active: boolean }) {
@@ -202,76 +191,70 @@ export default function CategoryPage() {
 
     const controller = new AbortController();
     let stopped = false;
-    const batchProducts = getUniqueLiveProducts(products);
+    const liveProducts = getUniqueLiveProducts(products);
 
     async function refreshVisiblePrices() {
-      if (!batchProducts.length) return;
-      const productBatches = chunkProducts(batchProducts, LIVE_BATCH_SIZE);
+      if (!liveProducts.length) return;
 
-      for (const batch of productBatches) {
+      for (const product of liveProducts) {
         if (stopped || controller.signal.aborted) return;
 
-        setProducts((current) => {
-          const refreshKeys = new Set(batch.map(getProductKey));
-          return current.map((item) =>
-            refreshKeys.has(getProductKey(item)) ? { ...item, livePriceLoading: true } : item
-          );
-        });
+        const productKey = getProductKey(product);
+        const liveSource = normalizeLivePriceSource(product.source);
 
-        await Promise.allSettled(
-          batch.map(async (product) => {
-            const productKey = getProductKey(product);
-            const liveSource = normalizeLivePriceSource(product.source);
-
-            try {
-              const res = await fetch("/api/live-current-price", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                cache: "no-store",
-                signal: controller.signal,
-                body: JSON.stringify({
-                  product_url: product.product_url,
-                  source: liveSource,
-                }),
-              });
-
-              const json = await res.json();
-
-              if (!res.ok || json?.success === false || !json?.currentPrice) {
-                throw new Error(json?.error || "Live current price could not be fetched");
-              }
-
-              if (stopped || controller.signal.aborted) return;
-
-              const nextPrice = String(json.currentPrice);
-
-              setProducts((current) =>
-                current.map((item) =>
-                  getProductKey(item) === productKey
-                    ? {
-                        ...item,
-                        currentPrice: nextPrice,
-                        numericPrice: cleanPrice(nextPrice),
-                        liveNumericPrice: cleanPrice(nextPrice),
-                        livePriceLoading: false,
-                      }
-                    : item
-                )
-              );
-            } catch (err: any) {
-              if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
-
-              console.error("Live current price refresh error:", product.product_url, err);
-              setProducts((current) =>
-                current.map((item) =>
-                  getProductKey(item) === productKey
-                    ? { ...item, livePriceLoading: false }
-                    : item
-                )
-              );
-            }
-          })
+        setProducts((current) =>
+          current.map((item) =>
+            getProductKey(item) === productKey ? { ...item, livePriceLoading: true } : item
+          )
         );
+
+        try {
+          const res = await fetch("/api/live-current-price", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            signal: controller.signal,
+            body: JSON.stringify({
+              product_url: product.product_url,
+              source: liveSource,
+            }),
+          });
+
+          const json = await res.json();
+
+          if (!res.ok || json?.success === false || !json?.currentPrice) {
+            throw new Error(json?.error || "Live current price could not be fetched");
+          }
+
+          if (stopped || controller.signal.aborted) return;
+
+          const nextPrice = String(json.currentPrice);
+
+          setProducts((current) =>
+            current.map((item) =>
+              getProductKey(item) === productKey
+                ? {
+                    ...item,
+                    currentPrice: nextPrice,
+                    numericPrice: cleanPrice(nextPrice),
+                    liveNumericPrice: cleanPrice(nextPrice),
+                    livePriceLoading: false,
+                  }
+                : item
+            )
+          );
+        } catch (err: any) {
+          if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
+
+          console.error("Live current price refresh error:", product.product_url, err);
+          setProducts((current) =>
+            current.map((item) =>
+              getProductKey(item) === productKey
+                ? { ...item, livePriceLoading: false }
+                : item
+            )
+          );
+        }
       }
     }
 

@@ -14,8 +14,6 @@ type Product = {
   image_url: string;
   price: string;
   numericPrice?: number;
-  liveNumericPrice?: number;
-  livePriceLoading?: boolean;
 };
 
 const categories = [
@@ -197,13 +195,7 @@ const SCROLLER_HIDE_NATIVE =
 function ProductPrice({ product }: { product: Product }) {
   return (
     <span className="inline-flex items-center gap-2 text-[18px] font-bold text-[#FF6600]">
-      <span>AED {product.liveNumericPrice ?? product.numericPrice}</span>
-      {product.livePriceLoading ? (
-        <span
-          aria-label="Refreshing price"
-          className="inline-block h-3 w-8 animate-pulse rounded bg-[#E9ECEF] align-middle"
-        />
-      ) : null}
+      <span>AED {product.numericPrice}</span>
     </span>
   );
 }
