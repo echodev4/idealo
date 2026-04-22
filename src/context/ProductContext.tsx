@@ -254,6 +254,7 @@ export function ProductProvider({
     useEffect(() => {
         let active = true;
         const liveController = new AbortController();
+        const refreshedProductKeys = new Set<string>();
 
         function updateProductEverywhere(
             productKey: string,
@@ -284,6 +285,7 @@ export function ProductProvider({
         async function refreshLiveItem(item: any, label: string) {
             const productKey = getProductKey(item);
             if (!productKey || !shouldRefreshLiveItem(item)) return;
+            if (refreshedProductKeys.has(productKey)) return;
 
             setProductLoadingEverywhere(productKey, true);
 
@@ -331,6 +333,7 @@ export function ProductProvider({
                         reviews: nextRatingCount || current.reviews,
                     };
                 });
+                refreshedProductKeys.add(productKey);
             } catch (err: any) {
                 if (err?.name === "AbortError" || !active || liveController.signal.aborted) return;
                 console.error(`${label} live price refresh error:`, item.product_url, err);
