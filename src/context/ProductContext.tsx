@@ -27,6 +27,7 @@ export interface OfferProduct {
     faiss_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
+    initialNumericPrice?: number;
     liveNumericPrice?: number;
     livePriceLoading?: boolean;
 }
@@ -50,6 +51,7 @@ export interface RelatedProduct {
     faiss_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
+    initialNumericPrice?: number;
     liveNumericPrice?: number;
     livePriceLoading?: boolean;
 }
@@ -131,6 +133,7 @@ function normalizeListProduct(item: any): OfferProduct {
             typeof item?.faiss_score === "number" ? item.faiss_score : undefined,
         numericPrice: cleanPrice(item?.price ?? item?.currentPrice),
         numericOldPrice: cleanPrice(item?.old_price ?? item?.previousPrice),
+        initialNumericPrice: cleanPrice(item?.price ?? item?.currentPrice),
     };
 }
 

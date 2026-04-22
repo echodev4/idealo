@@ -123,6 +123,38 @@ function Star({ filled }: { filled: boolean }) {
     );
 }
 
+function Rating({ value, count }: { value: number | null; count?: string | number | null }) {
+    const hasRatingValue = typeof value === "number" && value > 0;
+    const hasRatingCount = hasText(count);
+
+    if (!hasRatingValue && !hasRatingCount) return null;
+
+    const full = hasRatingValue ? Math.max(0, Math.min(5, Math.floor(value))) : 0;
+    const countText = hasRatingCount ? String(count).trim() : "";
+
+    return (
+        <div className="flex flex-col gap-1">
+            {hasRatingValue ? (
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-[1px]">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} filled={i < full} />
+                        ))}
+                    </div>
+                    <span className="text-[12px] text-[#111827] font-semibold">
+                        {value.toFixed(1)}
+                    </span>
+                </div>
+            ) : null}
+            {countText ? (
+                <div className="text-[12px] text-[#6b7280] leading-none">
+                    {countText} ratings
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
 function ButtonPill({
     active,
     children,
@@ -174,7 +206,12 @@ export default function OfferComparisonTable() {
             const price = livePrice ?? parsedPrice;
             if (!price) return null;
 
-            const sortPrice = typeof p?.numericPrice === "number" && p.numericPrice > 0 ? p.numericPrice : price;
+            const sortPrice =
+                typeof p?.initialNumericPrice === "number" && p.initialNumericPrice > 0
+                    ? p.initialNumericPrice
+                    : typeof p?.numericPrice === "number" && p.numericPrice > 0
+                        ? p.numericPrice
+                        : price;
             const oldP = parseAED(p?.old_price ?? p?.previousPrice);
             const source = normalizeSourceName(p?.source || product?.source || "");
 
@@ -343,6 +380,10 @@ export default function OfferComparisonTable() {
                             <div className="divide-y divide-[#e5e7eb]">
                                 {ordered.slice(0, visible).map((o, idx) => {
                                     const isCheapest = o.price === cheapest;
+                                    const ratingValue =
+                                        typeof o.averageRating === "number" && o.averageRating > 0
+                                            ? o.averageRating
+                                            : null;
                                     const sourceLogo = getSourceLogo(o.source);
                                     const isExpanded = !!expandedOffers[o.id];
 
@@ -423,6 +464,9 @@ export default function OfferComparisonTable() {
                                                                 <span className="cursor-not-allowed">
                                                                     {sourceLogo?.label || o.source}
                                                                 </span>
+                                                            </div>
+                                                            <div className="mt-2">
+                                                                <Rating value={ratingValue} count={o.ratingCount} />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -522,6 +566,9 @@ export default function OfferComparisonTable() {
                                                 {isExpanded ? (
                                                     <div className="mt-3 pt-3 border-t border-[#e5e7eb]">
                                                         <div className="flex items-center justify-between gap-2">
+                                                            <div>
+                                                                <Rating value={ratingValue} count={o.ratingCount} />
+                                                            </div>
                                                             <div className="shrink-0 flex items-center gap-2">
                                                                 {PAYMENT_ICONS.map((p) => (
                                                                     <div
