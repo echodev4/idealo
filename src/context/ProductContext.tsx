@@ -475,6 +475,15 @@ export function ProductProvider({
         }
 
         async function fetchRelatedProducts() {
+            if (active) {
+                setRelatedProducts([]);
+                setVariantCount(0);
+                setRelatedLoading(false);
+            }
+
+            // Variants are intentionally hidden for now.
+            // Keep the original fetch logic commented instead of removing it.
+            /*
             if (!productUrl) {
                 setRelatedProducts([]);
                 setVariantCount(0);
@@ -536,6 +545,9 @@ export function ProductProvider({
             } finally {
                 if (active) setRelatedLoading(false);
             }
+            */
+
+            return [];
         }
 
         async function refreshOneProduct(selectedProduct: any | null) {
@@ -552,7 +564,7 @@ export function ProductProvider({
         }
 
         async function run() {
-            const [selectedProduct, related, offerItems] = await Promise.all([
+            const [selectedProduct, , offerItems] = await Promise.all([
                 fetchProduct(),
                 fetchRelatedProducts(),
                 fetchOffers(),
@@ -561,17 +573,28 @@ export function ProductProvider({
             if (!active || liveController.signal.aborted) return;
 
             const liveOfferItems = getUniqueLiveItems(offerItems as OfferProduct[]);
+            const selectedProductKey = selectedProduct ? getProductKey(selectedProduct) : "";
+            const selectedExistsInOffers = Boolean(
+                selectedProductKey &&
+                liveOfferItems.some((item) => getProductKey(item) === selectedProductKey)
+            );
 
             if (liveOfferItems.length) {
                 await refreshOffers(liveOfferItems as OfferProduct[]);
                 if (!active || liveController.signal.aborted) return;
-                await refreshOneProduct(selectedProduct);
-            } else {
+
+                if (!selectedExistsInOffers) {
+                    await refreshOneProduct(selectedProduct);
+                }
+            } else if (!selectedExistsInOffers) {
                 await refreshOneProduct(selectedProduct);
             }
 
+            // Variant live refresh is intentionally disabled while the variants panel is hidden.
+            /*
             if (!active || liveController.signal.aborted) return;
             await refreshRelatedProducts(related as RelatedProduct[]);
+            */
         }
 
         run();

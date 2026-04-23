@@ -7,7 +7,7 @@ import { ProductProvider, useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import ProductGallery from "@/components/single-product/product-gallery";
 import ProductHeaderInfo from "@/components/single-product/product-header-info";
-import ProductVariantsSelector from "@/components/single-product/product-variants-selector";
+// import ProductVariantsSelector from "@/components/single-product/product-variants-selector";
 import OfferComparisonTable from "@/components/single-product/offer-comparison-table";
 import ProductDetailsSpecifications from "@/components/single-product/product-details-specifications";
 import PriceDevelopmentPanel from "@/components/single-product/price-development-panel";
@@ -102,9 +102,9 @@ function ProductComparisonContent() {
 
           <div className="min-w-0 lg:pt-4">
             <ProductHeaderInfo />
-            <div className="mt-4 lg:mt-5">
+            {/* <div className="mt-4 lg:mt-5">
               <ProductVariantsSelector />
-            </div>
+            </div> */}
 
             <MobileProductTabs activeTab={mobileTab} onChange={setMobileTab} />
 

@@ -74,8 +74,6 @@ export default function ProductHeaderInfo() {
         ? String(relatedProducts[0].reviews)
         : null;
   const currentPrice = parsePrice(product?.currentPrice ?? product?.price);
-  const previousPrice = parsePrice(product?.previousPrice ?? product?.old_price);
-  const showPreviousPrice = previousPrice !== null && currentPrice !== null && previousPrice > currentPrice;
 
   const specifications = (product?.specifications || {}) as Record<string, string>;
   const normalizedSpecs = Object.entries(specifications)
@@ -102,11 +100,6 @@ export default function ProductHeaderInfo() {
               <span className="text-[20px] font-semibold leading-none">
                 {formatAED(currentPrice)}
               </span>
-              {showPreviousPrice ? (
-                <span className="text-[14px] text-[#6b7280] line-through">
-                  {formatAED(previousPrice)}
-                </span>
-              ) : null}
               {product?.livePriceLoading ? (
                 <span
                   aria-label="Refreshing product data"
