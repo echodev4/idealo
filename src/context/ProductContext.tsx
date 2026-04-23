@@ -103,6 +103,38 @@ function normalizeRatingCount(item: any): string {
     return toText(item?.ratingCount || item?.reviews);
 }
 
+function getOfferSortPrice(item: {
+    initialNumericPrice?: number;
+    numericPrice?: number;
+    liveNumericPrice?: number;
+    price?: string;
+    currentPrice?: string;
+}) {
+    if (typeof item?.initialNumericPrice === "number" && item.initialNumericPrice > 0) {
+        return item.initialNumericPrice;
+    }
+
+    if (typeof item?.numericPrice === "number" && item.numericPrice > 0) {
+        return item.numericPrice;
+    }
+
+    if (typeof item?.liveNumericPrice === "number" && item.liveNumericPrice > 0) {
+        return item.liveNumericPrice;
+    }
+
+    return cleanPrice(item?.price ?? item?.currentPrice);
+}
+
+function orderOffersForDisplay<T extends {
+    initialNumericPrice?: number;
+    numericPrice?: number;
+    liveNumericPrice?: number;
+    price?: string;
+    currentPrice?: string;
+}>(items: T[]): T[] {
+    return [...items].sort((a, b) => getOfferSortPrice(a) - getOfferSortPrice(b));
+}
+
 function normalizeListProduct(item: any): OfferProduct {
     const ratingValue =
         parseRatingValue(item?.average_rating) ?? parseRatingValue(item?.rating);
@@ -453,13 +485,15 @@ export function ProductProvider({
                     })
                     .filter((p: any) => p.product_name && p.image_url && p.product_url);
 
-                setOffers(mapped);
+                const orderedMapped: OfferProduct[] = orderOffersForDisplay<OfferProduct>(mapped);
+
+                setOffers(orderedMapped);
                 setOfferCount(Number(json?.offer_count || 0));
                 setIsMobileProduct(Boolean(json?.is_mobile_product));
                 setProductCase(
                     typeof json?.product_case === "string" ? json.product_case : "unknown"
                 );
-                return mapped;
+                return orderedMapped;
             } catch (err) {
                 console.error("Offers fetch error:", err);
                 if (active) {
