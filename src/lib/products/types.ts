@@ -11,12 +11,15 @@ export type RawProduct = {
   discount?: string | number;
   reviews?: string | number;
   average_rating?: number | null;
+  rating?: string | number;
+  ratingCount?: string | number;
   images?: { src?: string; alt?: string }[];
   image_url?: string;
   category?: string;
   main_category?: string;
   category_path_text?: string;
   scraped_at?: string;
+  lastLiveScrapedAt?: string;
   created_at?: string;
   inserted_at?: string;
   faiss_score?: number;

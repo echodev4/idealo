@@ -1,4 +1,10 @@
 import { NextResponse } from "next/server";
+import {
+  buildCachedLivePricePayload,
+  findCachedProduct,
+  hasFreshLivePrice,
+  persistLiveScrapeResult,
+} from "@/lib/liveScrapeCache";
 
 export const runtime = "nodejs";
 
@@ -47,6 +53,21 @@ export async function POST(req: Request) {
       );
     }
 
+    const cachedProduct = await findCachedProduct(productUrl, source);
+
+    if (hasFreshLivePrice(cachedProduct)) {
+      const cached = buildCachedLivePricePayload(cachedProduct!);
+
+      return NextResponse.json({
+        success: true,
+        product_url: productUrl,
+        source,
+        currentPrice: cached.currentPrice,
+        lastLiveScrapedAt: cachedProduct?.lastLiveScrapedAt,
+        cached: true,
+      });
+    }
+
     const backendPath = getBackendPath(source);
     const scraperUrl = `${BASE_URL}${backendPath}?product_url=${encodeURIComponent(productUrl)}`;
 
@@ -82,11 +103,19 @@ export async function POST(req: Request) {
       );
     }
 
+    const persisted = await persistLiveScrapeResult({
+      productUrl,
+      source,
+      currentPrice: String(currentPrice),
+    });
+
     return NextResponse.json({
       success: true,
       product_url: productUrl,
       source,
-      currentPrice: String(currentPrice),
+      currentPrice: persisted.currentPrice,
+      lastLiveScrapedAt: persisted.lastLiveScrapedAt,
+      cached: false,
     });
   } catch (err: any) {
     if (err?.name === "AbortError") {

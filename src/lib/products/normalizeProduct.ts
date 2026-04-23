@@ -39,11 +39,12 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         currentPrice,
         previousPrice: previousPrice || "",
         discountPercentage: toText(raw.discount),
-        rating:
+        rating: toText(raw.rating) || (
             raw.average_rating !== null && raw.average_rating !== undefined
                 ? String(raw.average_rating)
-                : "",
-        ratingCount: toText(raw.reviews),
+                : ""
+        ),
+        ratingCount: toText(raw.ratingCount) || toText(raw.reviews),
         images,
         category_path_text: toText(raw.category_path_text),
         category: toText(raw.category),
