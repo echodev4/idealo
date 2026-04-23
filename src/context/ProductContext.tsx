@@ -7,6 +7,10 @@ import React, {
     useState,
 } from "react";
 import toast from "react-hot-toast";
+import {
+    resolvePrimaryProductImage,
+    resolveProductImages,
+} from "@/lib/products/imageFallback";
 
 export interface OfferProduct {
     product_url: string;
@@ -102,13 +106,14 @@ function normalizeRatingCount(item: any): string {
 function normalizeListProduct(item: any): OfferProduct {
     const ratingValue =
         parseRatingValue(item?.average_rating) ?? parseRatingValue(item?.rating);
+    const imageUrl = resolvePrimaryProductImage(item);
 
     return {
         _id: String(item?._id || ""),
         product_url: String(item?.product_url || ""),
         source: String(item?.source || ""),
         product_name: String(item?.product_name || item?.title || ""),
-        image_url: String(item?.image_url || item?.images?.[0]?.src || ""),
+        image_url: imageUrl,
         price: String(item?.price ?? item?.currentPrice ?? ""),
         old_price:
             item?.old_price !== undefined && item?.old_price !== null
@@ -381,6 +386,9 @@ export function ProductProvider({
                     product_url: json.data.product_url || productUrl,
                     source: json.data.source || sourceName || "",
                 };
+
+                selectedProduct.images = resolveProductImages(selectedProduct);
+                selectedProduct.image_url = resolvePrimaryProductImage(selectedProduct);
 
                 setProduct(selectedProduct);
                 return selectedProduct;

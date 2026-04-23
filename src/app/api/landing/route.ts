@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { LANDING_EMBEDDINGS } from "@/lib/landingEmbeddings";
+import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
 
 export const runtime = "nodejs";
 
@@ -55,11 +56,7 @@ function normalizeProduct(raw: RawProduct): Product | null {
         : "";
 
   const imageUrl =
-    typeof raw?.image_url === "string" && raw.image_url.trim() !== ""
-      ? raw.image_url
-      : typeof raw?.images?.[0]?.src === "string"
-        ? raw.images[0].src
-        : "";
+    resolvePrimaryProductImage(raw);
 
   const price =
     raw?.price !== undefined && raw?.price !== null && raw?.price !== ""

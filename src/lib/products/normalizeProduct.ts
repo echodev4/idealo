@@ -1,4 +1,5 @@
 import type { CategoryProduct, RawProduct } from "@/lib/products/types";
+import { resolveProductImages } from "@/lib/products/imageFallback";
 
 function toText(value: unknown): string {
     if (value === null || value === undefined) return "";
@@ -6,21 +7,7 @@ function toText(value: unknown): string {
 }
 
 function normalizeImage(raw: RawProduct): { src: string; alt?: string }[] {
-    const title = toText(raw.title || raw.product_name);
-
-    if (Array.isArray(raw.images) && raw.images.length > 0) {
-        const validImages = raw.images
-            .map((img) => ({
-                src: toText(img?.src),
-                alt: toText(img?.alt) || title,
-            }))
-            .filter((img) => img.src);
-
-        if (validImages.length > 0) return validImages;
-    }
-
-    const fallback = toText(raw.image_url);
-    return fallback ? [{ src: fallback, alt: title }] : [];
+    return resolveProductImages(raw);
 }
 
 export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExternalLink, Heart } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
 
 export interface Product {
     _id?: string;
@@ -45,7 +46,7 @@ function getName(p: Product) {
 }
 
 function getImg(p: Product) {
-    return p.images?.[0]?.src || p.image_url || "";
+    return resolvePrimaryProductImage(p);
 }
 
 function getSource(p: Product) {
