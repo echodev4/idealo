@@ -209,7 +209,7 @@ export default function CategoryPage() {
         );
 
         try {
-          const res = await fetch("/api/live-current-price", {
+          const res = await fetch("/api/live-price", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
@@ -229,6 +229,22 @@ export default function CategoryPage() {
           if (stopped || controller.signal.aborted) return;
 
           const nextPrice = String(json.currentPrice);
+          const nextPreviousPrice =
+            typeof json.previousPrice === "string" && json.previousPrice.trim()
+              ? json.previousPrice
+              : undefined;
+          const nextDiscountPercentage =
+            typeof json.discountPercentage === "string" && json.discountPercentage.trim()
+              ? json.discountPercentage
+              : undefined;
+          const nextRating =
+            typeof json.rating === "string" && json.rating.trim()
+              ? json.rating
+              : undefined;
+          const nextRatingCount =
+            typeof json.ratingCount === "string" && json.ratingCount.trim()
+              ? json.ratingCount
+              : undefined;
 
           setProducts((current) =>
             current.map((item) =>
@@ -236,7 +252,12 @@ export default function CategoryPage() {
                 ? {
                     ...item,
                     currentPrice: nextPrice,
+                    previousPrice: nextPreviousPrice ?? item.previousPrice,
+                    discountPercentage: nextDiscountPercentage ?? item.discountPercentage,
+                    rating: nextRating ?? item.rating,
+                    ratingCount: nextRatingCount ?? item.ratingCount,
                     numericPrice: cleanPrice(nextPrice),
+                    numericOldPrice: cleanPrice(nextPreviousPrice ?? item.previousPrice),
                     liveNumericPrice: cleanPrice(nextPrice),
                     livePriceLoading: false,
                   }
