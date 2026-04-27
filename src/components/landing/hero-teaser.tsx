@@ -14,7 +14,31 @@ type Product = {
     image_url: string;
     price: string;
     numericPrice?: number;
+    rating?: string;
+    ratingCount?: string;
 };
+
+function getRatingDisplay(product: Product) {
+    const ratingText = String(product.rating || "").trim();
+    const ratingCountText = String(product.ratingCount || "").trim();
+    const ratingValue = Number(ratingText.replace(/[^\d.]/g, ""));
+    const ratingCountValue = Number(ratingCountText.replace(/[^\d]/g, ""));
+
+    if (
+        !ratingText ||
+        !ratingCountText ||
+        !Number.isFinite(ratingValue) ||
+        !Number.isFinite(ratingCountValue) ||
+        ratingCountValue <= 0
+    ) {
+        return null;
+    }
+
+    return {
+        starsFilled: Math.max(0, Math.min(5, Math.round(ratingValue))),
+        count: ratingCountText,
+    };
+}
 
 function LandingPrice({ product }: { product: Product }) {
     const parsedPrice =
@@ -307,9 +331,7 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                     {items.map((p: any) => {
                                         const name = p.product_name;
                                         const encodedUrl = encodeURIComponent(p.product_url);
-
-                                        const starsFilled = 4;
-                                        const count = "10";
+                                        const ratingDisplay = getRatingDisplay(p);
 
                                         const sourceLabel =
                                             p.source?.toLowerCase() === "carrefouruae"
@@ -353,20 +375,24 @@ export default function HeroTeaser({ products, loading }: { products: Product[];
                                                 </div>
 
                                                 <div className="mt-auto">
-                                                    <div className="flex items-center gap-2 mb-3 cursor-not-allowed select-none flex-wrap">
-                                                        <div className="flex items-center gap-0.5 shrink-0">
-                                                            {Array.from({ length: 5 }).map((_, i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    size={13}
-                                                                    fill={i < starsFilled ? "#212121" : "none"}
-                                                                    color={i < starsFilled ? "#212121" : "#CFCFCF"}
-                                                                    strokeWidth={2}
-                                                                />
-                                                            ))}
-                                                        </div>
+                                                    <div className="mb-3 min-h-[16px]">
+                                                        {ratingDisplay ? (
+                                                            <div className="flex items-center gap-2 cursor-not-allowed select-none flex-wrap">
+                                                                <div className="flex items-center gap-0.5 shrink-0">
+                                                                    {Array.from({ length: 5 }).map((_, i) => (
+                                                                        <Star
+                                                                            key={i}
+                                                                            size={13}
+                                                                            fill={i < ratingDisplay.starsFilled ? "#212121" : "none"}
+                                                                            color={i < ratingDisplay.starsFilled ? "#212121" : "#CFCFCF"}
+                                                                            strokeWidth={2}
+                                                                        />
+                                                                    ))}
+                                                                </div>
 
-                                                        <span className="text-[12px] text-[#666666]">{count}</span>
+                                                                <span className="text-[12px] text-[#666666]">{ratingDisplay.count}</span>
+                                                            </div>
+                                                        ) : null}
                                                     </div>
 
                                                     <div className="flex items-baseline gap-2 flex-wrap">

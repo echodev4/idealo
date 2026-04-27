@@ -16,6 +16,8 @@ type Product = {
   price: string;
   old_price?: string;
   discount?: string;
+  rating?: string;
+  ratingCount?: string;
   reviews?: string;
   average_rating?: number | null;
   faiss_score?: number;
@@ -97,6 +99,14 @@ function normalizeProduct(raw: RawProduct): Product | null {
     discount:
       raw?.discount !== undefined && raw?.discount !== null && raw?.discount !== ""
         ? String(raw.discount)
+        : undefined,
+    rating:
+      raw?.average_rating !== undefined && raw?.average_rating !== null
+        ? String(raw.average_rating)
+        : undefined,
+    ratingCount:
+      raw?.reviews !== undefined && raw?.reviews !== null && raw?.reviews !== ""
+        ? String(raw.reviews)
         : undefined,
     reviews:
       raw?.reviews !== undefined && raw?.reviews !== null && raw?.reviews !== ""

@@ -1,7 +1,7 @@
 ﻿import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ExternalLink, Heart } from "lucide-react";
+import { ExternalLink, Heart, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
 
@@ -29,6 +29,7 @@ export interface Product {
     highlights?: string[];
     specifications?: Record<string, string>;
 
+    rating?: string;
     ratingCount?: string;
     numericOldPrice?: number;
 
@@ -59,6 +60,28 @@ function getDisplayPrice(p: Product) {
 
 function getVisibleOfferCount(p: Product) {
     return Math.max(1, typeof p.offerCount === "number" ? p.offerCount : 0);
+}
+
+function getRatingDisplay(product: Product) {
+    const ratingText = String(product.rating || "").trim();
+    const ratingCountText = String(product.ratingCount || "").trim();
+    const ratingValue = Number(ratingText.replace(/[^\d.]/g, ""));
+    const ratingCountValue = Number(ratingCountText.replace(/[^\d]/g, ""));
+
+    if (
+        !ratingText ||
+        !ratingCountText ||
+        !Number.isFinite(ratingValue) ||
+        !Number.isFinite(ratingCountValue) ||
+        ratingCountValue <= 0
+    ) {
+        return null;
+    }
+
+    return {
+        starsFilled: Math.max(0, Math.min(5, Math.round(ratingValue))),
+        count: ratingCountText,
+    };
 }
 
 function PriceAmount({
@@ -96,6 +119,7 @@ function ProductCellGrid({ product }: { product: Product }) {
     const img = getImg(product);
     const source = getSource(product);
     const visibleOfferCount = getVisibleOfferCount(product);
+    const ratingDisplay = getRatingDisplay(product);
 
     if (!product?.product_url || !name || !img) return null;
 
@@ -135,6 +159,25 @@ function ProductCellGrid({ product }: { product: Product }) {
                     </div>
                 </Link>
 
+                <div className="mt-3 min-h-[16px]">
+                    {ratingDisplay ? (
+                        <div className="flex items-center gap-2 cursor-not-allowed select-none flex-wrap">
+                            <div className="flex items-center gap-0.5 shrink-0">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                        key={i}
+                                        size={13}
+                                        fill={i < ratingDisplay.starsFilled ? "#212121" : "none"}
+                                        color={i < ratingDisplay.starsFilled ? "#212121" : "#CFCFCF"}
+                                        strokeWidth={2}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-[12px] text-[#666666]">{ratingDisplay.count}</span>
+                        </div>
+                    ) : null}
+                </div>
+
                 <div className="mt-3">
                     <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
                     <PriceAmount product={product} className="text-[16px] font-semibold text-[#ff6a00]" />
@@ -155,6 +198,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
     const img = getImg(product);
     const source = getSource(product);
     const visibleOfferCount = getVisibleOfferCount(product);
+    const ratingDisplay = getRatingDisplay(product);
 
     if (!product?.product_url || !name || !img) return null;
 
@@ -178,6 +222,22 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                     <div className="mt-1 text-[12px] text-gray-600 line-clamp-2 cursor-not-allowed">
                         {t("category.products.placeholderDescription", "Ski helmet, all-round, in-mold, with side impact protection (MIPS)")}
                     </div>
+                    {ratingDisplay ? (
+                        <div className="mt-2 flex items-center gap-2 cursor-not-allowed select-none flex-wrap">
+                            <div className="flex items-center gap-0.5 shrink-0">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                        key={i}
+                                        size={13}
+                                        fill={i < ratingDisplay.starsFilled ? "#212121" : "none"}
+                                        color={i < ratingDisplay.starsFilled ? "#212121" : "#CFCFCF"}
+                                        strokeWidth={2}
+                                    />
+                                ))}
+                            </div>
+                            <span className="text-[12px] text-[#666666]">{ratingDisplay.count}</span>
+                        </div>
+                    ) : null}
                     <div className="mt-1 text-[12px] text-[#1a73e8] font-medium">
                         {visibleOfferCount} {visibleOfferCount === 1 ? "offer available" : "offers available"}
                     </div>

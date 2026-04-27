@@ -16,6 +16,8 @@ type LandingProduct = {
     price: string;
     old_price?: string;
     discount?: string;
+    rating?: string;
+    ratingCount?: string;
     reviews?: string;
     average_rating?: number | null;
     numericPrice?: number;
