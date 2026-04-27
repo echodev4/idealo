@@ -1,5 +1,6 @@
 import type { CategoryProduct, RawProduct } from "@/lib/products/types";
 import { resolveProductImages } from "@/lib/products/imageFallback";
+import { formatProductDisplayName } from "@/lib/products/displayName";
 
 function toText(value: unknown): string {
     if (value === null || value === undefined) return "";
@@ -13,7 +14,12 @@ function normalizeImage(raw: RawProduct): { src: string; alt?: string }[] {
 export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
     const id = toText(raw._id);
     const productUrl = toText(raw.product_url);
-    const title = toText(raw.title || raw.product_name);
+    const source = toText(raw.source);
+    const title = formatProductDisplayName(raw.title || raw.product_name, {
+        source,
+        category: raw.category,
+        specifications: raw.specifications,
+    });
     const images = normalizeImage(raw);
 
     const currentPrice = toText(
@@ -49,7 +55,7 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         category_path_text: toText(raw.category_path_text),
         category: toText(raw.category),
         main_category: toText(raw.main_category),
-        source: toText(raw.source),
+        source,
         source_record_id: id,
         scraped_at: toText(raw.scraped_at || raw.created_at || raw.inserted_at),
         offerCount: 0,

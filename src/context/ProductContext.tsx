@@ -11,6 +11,7 @@ import {
     resolvePrimaryProductImage,
     resolveProductImages,
 } from "@/lib/products/imageFallback";
+import { formatProductDisplayName } from "@/lib/products/displayName";
 
 export interface OfferProduct {
     product_url: string;
@@ -139,12 +140,17 @@ function normalizeListProduct(item: any): OfferProduct {
     const ratingValue =
         parseRatingValue(item?.average_rating) ?? parseRatingValue(item?.rating);
     const imageUrl = resolvePrimaryProductImage(item);
+    const source = String(item?.source || "");
 
     return {
         _id: String(item?._id || ""),
         product_url: String(item?.product_url || ""),
-        source: String(item?.source || ""),
-        product_name: String(item?.product_name || item?.title || ""),
+        source,
+        product_name: formatProductDisplayName(item?.product_name || item?.title || "", {
+            source,
+            category: item?.category,
+            specifications: item?.specifications,
+        }),
         image_url: imageUrl,
         price: String(item?.price ?? item?.currentPrice ?? ""),
         old_price:
@@ -418,6 +424,19 @@ export function ProductProvider({
                     product_url: json.data.product_url || productUrl,
                     source: json.data.source || sourceName || "",
                 };
+
+                const displayName = formatProductDisplayName(
+                    selectedProduct.title || selectedProduct.product_name || "",
+                    {
+                        source: selectedProduct.source,
+                        category: selectedProduct.category,
+                        specifications: selectedProduct.specifications,
+                    }
+                );
+                if (displayName) {
+                    selectedProduct.title = displayName;
+                    selectedProduct.product_name = displayName;
+                }
 
                 selectedProduct.images = resolveProductImages(selectedProduct);
                 selectedProduct.image_url = resolvePrimaryProductImage(selectedProduct);

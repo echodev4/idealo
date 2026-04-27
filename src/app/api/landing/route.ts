@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { LANDING_EMBEDDINGS } from "@/lib/landingEmbeddings";
 import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
+import { formatProductDisplayName } from "@/lib/products/displayName";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,7 @@ type RawProduct = {
   product_url?: string;
   title?: string;
   product_name?: string;
+  category?: string;
   image_url?: string;
   images?: { src?: string; alt?: string }[];
   price?: string | number;
@@ -36,6 +38,7 @@ type RawProduct = {
   reviews?: string | number;
   average_rating?: number | null;
   faiss_score?: number;
+  specifications?: Record<string, unknown>;
 };
 
 function toPriceString(value: unknown): string {
@@ -47,12 +50,21 @@ function normalizeProduct(raw: RawProduct): Product | null {
   const id = typeof raw?._id === "string" ? raw._id : "";
   const productUrl = typeof raw?.product_url === "string" ? raw.product_url : "";
   const source = typeof raw?.source === "string" ? raw.source : "";
+  const category = typeof raw?.category === "string" ? raw.category : "";
 
   const productName =
     typeof raw?.product_name === "string" && raw.product_name.trim() !== ""
-      ? raw.product_name.trim()
+      ? formatProductDisplayName(raw.product_name, {
+        source,
+        category,
+        specifications: raw?.specifications,
+      })
       : typeof raw?.title === "string" && raw.title.trim() !== ""
-        ? raw.title.trim()
+        ? formatProductDisplayName(raw.title, {
+          source,
+          category,
+          specifications: raw?.specifications,
+        })
         : "";
 
   const imageUrl =
