@@ -8,10 +8,17 @@ import React, {
 } from "react";
 import toast from "react-hot-toast";
 import {
+    normalizeProductSource,
+    PRODUCT_PLACEHOLDER_SRC,
     resolvePrimaryProductImage,
     resolveProductImages,
 } from "@/lib/products/imageFallback";
 import { formatProductDisplayName } from "@/lib/products/displayName";
+
+type ProductImage = {
+    src: string;
+    alt?: string;
+};
 
 export interface OfferProduct {
     product_url: string;
@@ -19,6 +26,7 @@ export interface OfferProduct {
     source: string;
     product_name: string;
     image_url: string;
+    images?: ProductImage[];
     price: string;
     old_price?: string;
     discount?: string;
@@ -43,6 +51,7 @@ export interface RelatedProduct {
     source: string;
     product_name: string;
     image_url: string;
+    images?: ProductImage[];
     price: string;
     old_price?: string;
     discount?: string;
@@ -75,6 +84,10 @@ function cleanPrice(p?: string | number | null): number {
 
 function normalizeSource(source: any): string {
     return String(source || "").trim().toLowerCase();
+}
+
+function isSharafdgSource(source: any): boolean {
+    return normalizeProductSource(source) === "sharafdg";
 }
 
 function normalizeLivePriceSource(source?: string) {
@@ -141,6 +154,7 @@ function normalizeListProduct(item: any): OfferProduct {
         parseRatingValue(item?.average_rating) ?? parseRatingValue(item?.rating);
     const imageUrl = resolvePrimaryProductImage(item);
     const source = String(item?.source || "");
+    const images = resolveProductImages(item);
 
     return {
         _id: String(item?._id || ""),
@@ -152,6 +166,7 @@ function normalizeListProduct(item: any): OfferProduct {
             specifications: item?.specifications,
         }),
         image_url: imageUrl,
+        images,
         price: String(item?.price ?? item?.currentPrice ?? ""),
         old_price:
             item?.old_price !== undefined && item?.old_price !== null
@@ -178,6 +193,45 @@ function normalizeListProduct(item: any): OfferProduct {
         numericOldPrice: cleanPrice(item?.old_price ?? item?.previousPrice),
         initialNumericPrice: cleanPrice(item?.price ?? item?.currentPrice),
     };
+}
+
+function getDisplayTitle(item: any): string {
+    return String(item?.title || item?.product_name || "").trim() || "Product image";
+}
+
+function getUsableImages(item: any): ProductImage[] {
+    if (isSharafdgSource(item?.source)) return [];
+
+    const fallbackAlt = getDisplayTitle(item);
+    const candidates = Array.isArray(item?.images)
+        ? item.images
+        : resolveProductImages(item);
+
+    return candidates
+        .map((image: any): ProductImage => ({
+            src: String(image?.src || "").trim(),
+            alt: String(image?.alt || "").trim() || fallbackAlt,
+        }))
+        .filter((image: ProductImage) => image.src && image.src !== PRODUCT_PLACEHOLDER_SRC);
+}
+
+function collectFallbackGalleryImages(items: any[], limit = 4): ProductImage[] {
+    const selected: ProductImage[] = [];
+    const seen = new Set<string>();
+
+    for (const item of items) {
+        for (const image of getUsableImages(item)) {
+            if (seen.has(image.src)) continue;
+            seen.add(image.src);
+            selected.push(image);
+
+            if (selected.length >= limit) {
+                return selected;
+            }
+        }
+    }
+
+    return selected;
 }
 
 async function fetchLivePrice(
@@ -603,6 +657,82 @@ export function ProductProvider({
             return [];
         }
 
+        async function fetchVariantImageCandidates() {
+            if (!productUrl) return [];
+
+            try {
+                const res = await fetch("/api/product-variants", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    cache: "no-store",
+                    body: JSON.stringify({
+                        product_url: productUrl,
+                        source: sourceName || "",
+                        product_name: productName || "",
+                    }),
+                });
+
+                const json = await res.json();
+
+                if (!active || !res.ok || json?.success === false) {
+                    return [];
+                }
+
+                const apiProducts = Array.isArray(json?.products) ? json.products : [];
+
+                return apiProducts
+                    .map((item: any) => {
+                        const normalized = normalizeListProduct(item);
+                        return {
+                            ...normalized,
+                            source: normalized.source || sourceName || "",
+                        };
+                    })
+                    .filter((item: OfferProduct) => getUsableImages(item).length > 0);
+            } catch (err) {
+                console.error("Variant image candidates fetch error:", err);
+                return [];
+            }
+        }
+
+        async function applySharafGalleryFallback(
+            selectedProduct: any | null,
+            offerItems: OfferProduct[]
+        ) {
+            if (!selectedProduct || !isSharafdgSource(selectedProduct.source)) {
+                return selectedProduct;
+            }
+
+            const offerGalleryImages = collectFallbackGalleryImages(offerItems, 4);
+
+            if (offerGalleryImages.length > 0) {
+                const nextProduct = {
+                    ...selectedProduct,
+                    images: offerGalleryImages,
+                    image_url: offerGalleryImages[0]?.src || selectedProduct.image_url,
+                };
+                setProduct(nextProduct);
+                return nextProduct;
+            }
+
+            const variantCandidates = await fetchVariantImageCandidates();
+            const variantGalleryImages = collectFallbackGalleryImages(variantCandidates, 4);
+
+            if (variantGalleryImages.length > 0) {
+                const nextProduct = {
+                    ...selectedProduct,
+                    images: variantGalleryImages,
+                    image_url: variantGalleryImages[0]?.src || selectedProduct.image_url,
+                };
+                setProduct(nextProduct);
+                return nextProduct;
+            }
+
+            return selectedProduct;
+        }
+
         async function refreshOneProduct(selectedProduct: any | null) {
             if (!selectedProduct || !selectedProduct.product_url) return;
             await refreshLiveItem(selectedProduct, "Selected product");
@@ -625,8 +755,15 @@ export function ProductProvider({
 
             if (!active || liveController.signal.aborted) return;
 
+            const displayProduct = await applySharafGalleryFallback(
+                selectedProduct,
+                offerItems as OfferProduct[]
+            );
+
+            if (!active || liveController.signal.aborted) return;
+
             const liveOfferItems = getUniqueLiveItems(offerItems as OfferProduct[]);
-            const selectedProductKey = selectedProduct ? getProductKey(selectedProduct) : "";
+            const selectedProductKey = displayProduct ? getProductKey(displayProduct) : "";
             const selectedExistsInOffers = Boolean(
                 selectedProductKey &&
                 liveOfferItems.some((item) => getProductKey(item) === selectedProductKey)
@@ -637,10 +774,10 @@ export function ProductProvider({
                 if (!active || liveController.signal.aborted) return;
 
                 if (!selectedExistsInOffers) {
-                    await refreshOneProduct(selectedProduct);
+                    await refreshOneProduct(displayProduct);
                 }
             } else if (!selectedExistsInOffers) {
-                await refreshOneProduct(selectedProduct);
+                await refreshOneProduct(displayProduct);
             }
 
             // Variant live refresh is intentionally disabled while the variants panel is hidden.
