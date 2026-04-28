@@ -3,7 +3,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExternalLink, Heart, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
-import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
+import {
+    normalizeProductSource,
+    PRODUCT_PLACEHOLDER_SRC,
+    resolvePrimaryProductImage,
+} from "@/lib/products/imageFallback";
 
 export interface Product {
     _id?: string;
@@ -47,6 +51,13 @@ function getName(p: Product) {
 }
 
 function getImg(p: Product) {
+    const source = normalizeProductSource(p.source);
+    const categoryAssignedImage = String(p.images?.[0]?.src || "").trim();
+
+    if (source === "sharafdg" && categoryAssignedImage && categoryAssignedImage !== PRODUCT_PLACEHOLDER_SRC) {
+        return categoryAssignedImage;
+    }
+
     return resolvePrimaryProductImage(p);
 }
 
