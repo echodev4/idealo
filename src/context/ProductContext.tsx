@@ -234,6 +234,39 @@ function collectFallbackGalleryImages(items: any[], limit = 4): ProductImage[] {
     return selected;
 }
 
+function needsBorrowedImage(item: any): boolean {
+    if (!isSharafdgSource(item?.source)) return false;
+
+    const currentImage = String(item?.image_url || item?.images?.[0]?.src || "").trim();
+    return !currentImage || currentImage === PRODUCT_PLACEHOLDER_SRC;
+}
+
+function applyBorrowedImagesToSharafOffers(
+    offerItems: OfferProduct[],
+    fallbackImages: ProductImage[]
+): OfferProduct[] {
+    if (!fallbackImages.length) return offerItems;
+
+    let fallbackIndex = 0;
+    let changed = false;
+
+    const updatedOffers = offerItems.map((item) => {
+        if (!needsBorrowedImage(item)) return item;
+
+        const fallbackImage = fallbackImages[fallbackIndex % fallbackImages.length];
+        fallbackIndex += 1;
+        changed = true;
+
+        return {
+            ...item,
+            image_url: fallbackImage.src,
+            images: [fallbackImage],
+        };
+    });
+
+    return changed ? updatedOffers : offerItems;
+}
+
 async function fetchLivePrice(
     productUrl: string,
     source: string,
@@ -702,10 +735,29 @@ export function ProductProvider({
             offerItems: OfferProduct[]
         ) {
             if (!selectedProduct || !isSharafdgSource(selectedProduct.source)) {
-                return selectedProduct;
+                return {
+                    product: selectedProduct,
+                    offers: offerItems,
+                };
             }
 
             const offerGalleryImages = collectFallbackGalleryImages(offerItems, 4);
+            const needsOfferImages = offerItems.some(needsBorrowedImage);
+            let variantFallbackImages: ProductImage[] = [];
+            let nextOfferItems = offerItems;
+
+            if (offerGalleryImages.length === 0 || needsOfferImages) {
+                const variantCandidates = await fetchVariantImageCandidates();
+                variantFallbackImages = collectFallbackGalleryImages(variantCandidates, 10);
+
+                if (needsOfferImages && variantFallbackImages.length > 0) {
+                    nextOfferItems = applyBorrowedImagesToSharafOffers(
+                        offerItems,
+                        variantFallbackImages
+                    );
+                    setOffers(nextOfferItems);
+                }
+            }
 
             if (offerGalleryImages.length > 0) {
                 const nextProduct = {
@@ -714,23 +766,30 @@ export function ProductProvider({
                     image_url: offerGalleryImages[0]?.src || selectedProduct.image_url,
                 };
                 setProduct(nextProduct);
-                return nextProduct;
+                return {
+                    product: nextProduct,
+                    offers: nextOfferItems,
+                };
             }
 
-            const variantCandidates = await fetchVariantImageCandidates();
-            const variantGalleryImages = collectFallbackGalleryImages(variantCandidates, 4);
-
-            if (variantGalleryImages.length > 0) {
+            if (variantFallbackImages.length > 0) {
+                const galleryImages = variantFallbackImages.slice(0, 4);
                 const nextProduct = {
                     ...selectedProduct,
-                    images: variantGalleryImages,
-                    image_url: variantGalleryImages[0]?.src || selectedProduct.image_url,
+                    images: galleryImages,
+                    image_url: galleryImages[0]?.src || selectedProduct.image_url,
                 };
                 setProduct(nextProduct);
-                return nextProduct;
+                return {
+                    product: nextProduct,
+                    offers: nextOfferItems,
+                };
             }
 
-            return selectedProduct;
+            return {
+                product: selectedProduct,
+                offers: nextOfferItems,
+            };
         }
 
         async function refreshOneProduct(selectedProduct: any | null) {
@@ -755,14 +814,16 @@ export function ProductProvider({
 
             if (!active || liveController.signal.aborted) return;
 
-            const displayProduct = await applySharafGalleryFallback(
+            const displayFallback = await applySharafGalleryFallback(
                 selectedProduct,
                 offerItems as OfferProduct[]
             );
+            const displayProduct = displayFallback.product;
+            const displayOfferItems = displayFallback.offers;
 
             if (!active || liveController.signal.aborted) return;
 
-            const liveOfferItems = getUniqueLiveItems(offerItems as OfferProduct[]);
+            const liveOfferItems = getUniqueLiveItems(displayOfferItems as OfferProduct[]);
             const selectedProductKey = displayProduct ? getProductKey(displayProduct) : "";
             const selectedExistsInOffers = Boolean(
                 selectedProductKey &&
