@@ -15,7 +15,13 @@ function toText(value: unknown): string {
 }
 
 export function normalizeProductSource(source: unknown): string {
-    return toText(source).toLowerCase();
+    const value = toText(source).toLowerCase();
+    const compact = value.replace(/[^a-z0-9]/g, "");
+
+    if (compact === "sharafdg") return SHARAFDG_SOURCE;
+    if (compact === "carrefouruae") return "carrefour";
+
+    return value;
 }
 
 export function shouldUseSharafdgPlaceholder(source: unknown): boolean {

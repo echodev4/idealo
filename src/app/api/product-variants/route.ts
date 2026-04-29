@@ -5,6 +5,35 @@ export const runtime = "nodejs";
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
 const VARIANT_LIMIT = 10;
 const CANDIDATE_LIMIT = 160;
+const SHARAFDG_SOURCE = "sharafdg";
+
+function normalizeSource(source: unknown): string {
+    const value = String(source || "").trim().toLowerCase();
+    const compact = value.replace(/[^a-z0-9]/g, "");
+
+    if (compact === SHARAFDG_SOURCE) return SHARAFDG_SOURCE;
+    if (compact === "carrefouruae") return "carrefour";
+
+    return value;
+}
+
+function hasImage(product: any): boolean {
+    if (Array.isArray(product?.images)) {
+        return product.images.some((image: any) => String(image?.src || "").trim());
+    }
+
+    return Boolean(String(product?.image_url || "").trim());
+}
+
+function getVariantProducts(products: any[], source: string): any[] {
+    if (normalizeSource(source) !== SHARAFDG_SOURCE) {
+        return products;
+    }
+
+    return products.filter(
+        (product) => normalizeSource(product?.source) !== SHARAFDG_SOURCE && hasImage(product)
+    );
+}
 
 export async function POST(req: Request) {
     try {
@@ -79,13 +108,17 @@ export async function POST(req: Request) {
         }
 
         const data = await res.json();
+        const products = getVariantProducts(
+            Array.isArray(data?.products) ? data.products : [],
+            source
+        );
 
         return NextResponse.json({
             success: Boolean(data?.success),
             product_case: typeof data?.product_case === "string" ? data.product_case : "unknown",
             is_mobile_product: Boolean(data?.is_mobile_product),
-            variant_count: Number(data?.variant_count || 0),
-            products: Array.isArray(data?.products) ? data.products : [],
+            variant_count: products.length,
+            products,
         });
     } catch (err) {
         console.error("product-variants route error:", err);
