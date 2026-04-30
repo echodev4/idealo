@@ -25,6 +25,7 @@ export interface OfferProduct {
     _id: string;
     source: string;
     product_name: string;
+    full_name?: string;
     image_url: string;
     images?: ProductImage[];
     price: string;
@@ -165,6 +166,7 @@ function normalizeListProduct(item: any): OfferProduct {
             category: item?.category,
             specifications: item?.specifications,
         }),
+        full_name: item?.product_name || item?.title,
         image_url: imageUrl,
         images,
         price: String(item?.price ?? item?.currentPrice ?? ""),

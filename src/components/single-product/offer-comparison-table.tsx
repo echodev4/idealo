@@ -91,6 +91,7 @@ type Offer = {
     id: string;
     title: string;
     price: number;
+    full_name?: string;
     sortPrice: number;
     oldPrice?: number | null;
     loading?: boolean;
@@ -226,6 +227,7 @@ export default function OfferComparisonTable() {
                     p?.title ||
                     t("singleProduct.offerComparisonTable.offerFallback", "Offer")
                 ),
+                full_name:p.full_name || "",
                 price,
                 sortPrice,
                 oldPrice: oldP,
@@ -397,7 +399,7 @@ export default function OfferComparisonTable() {
                                                 <div className="min-w-0">
                                                     <div className="text-[13px] font-semibold text-[#111827]">
                                                         <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
-                                                            {o.title}
+                                                            {o.full_name || o.title}
                                                         </a>
                                                     </div>
 
