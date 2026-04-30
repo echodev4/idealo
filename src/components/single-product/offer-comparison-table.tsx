@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import noonLogo from "../../../public/uploads/sources/noon.jpg";
 import carrefourLogo from "../../../public/uploads/sources/carrefouruae.png";
+import sharafDgLogo from "../../../public/uploads/sources/sharaf.jpg";
 
 const PAYMENT_ICONS = [
     {
@@ -76,6 +77,9 @@ function getSourceLogo(source: string) {
         return { src: carrefourLogo, alt: "Carrefour", label: "carrefour" };
     }
 
+    if (normalized === "sharafdg") {
+        return { src: sharafDgLogo, alt: "Sharaf", label: "sharaf" };
+    }
     return null;
 }
 
