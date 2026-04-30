@@ -16,6 +16,10 @@ function isNoonSource(source: unknown): boolean {
   return toText(source).toLowerCase() === "noon";
 }
 
+function isSharafDgSource(source: unknown): boolean {
+  return toText(source).toLowerCase() === "sharafdg";
+}
+
 function getModelName(specifications: unknown): string {
   if (!specifications || typeof specifications !== "object" || Array.isArray(specifications)) {
     return "";
@@ -49,6 +53,10 @@ export function formatProductDisplayName(
 
   if (isCarrefourSource(options.source) && normalizedName.includes(",")) {
     return normalizedName.split(",")[0].trim();
+  }
+
+  if (isSharafDgSource(options.source) && normalizedName.includes("–")) {
+    return normalizedName.split("–")[0].trim();
   }
 
   return normalizedName;
