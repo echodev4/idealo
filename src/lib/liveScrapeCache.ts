@@ -3,7 +3,7 @@ import type { Connection } from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 
 const PRODUCTS_COLLECTION = "products";
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 type CachedProductDoc = {
   product_url?: string;
@@ -84,7 +84,7 @@ export function hasFreshLivePrice(doc: CachedProductDoc | null | undefined): boo
   const lastLiveScrapedMs = parseDateMs(doc.lastLiveScrapedAt);
   if (!lastLiveScrapedMs) return false;
 
-  return Date.now() - lastLiveScrapedMs < THIRTY_DAYS_MS;
+  return Date.now() - lastLiveScrapedMs < SEVEN_DAYS_MS;
 }
 
 export function buildCachedLivePricePayload(doc: CachedProductDoc) {
