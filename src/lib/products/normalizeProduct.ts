@@ -64,5 +64,8 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
             raw.specifications && typeof raw.specifications === "object"
                 ? raw.specifications
                 : {},
+        productOffers: Array.isArray(raw.productOffers)
+            ? raw.productOffers.map((item) => String(item)).filter(Boolean)
+            : [],
     };
 }

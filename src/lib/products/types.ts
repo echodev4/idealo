@@ -24,6 +24,7 @@ export type RawProduct = {
   inserted_at?: string;
   faiss_score?: number;
   specifications?: Record<string, unknown>;
+  productOffers?: string[];
 };
 
 export type CategoryProduct = {
@@ -47,6 +48,7 @@ export type CategoryProduct = {
   offerCount?: number;
   faiss_score?: number;
   specifications?: Record<string, unknown>;
+  productOffers?: string[];
 };
 
 export type SearchProductsResult = {
