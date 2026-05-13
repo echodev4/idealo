@@ -514,7 +514,8 @@ export function ProductProvider({
                     source: json.data.source || sourceName || "",
                 };
 
-                const displayName = formatProductDisplayName(
+                const suggestedName = toText(selectedProduct.suggestedName).trim();
+                const displayName = suggestedName || formatProductDisplayName(
                     selectedProduct.title || selectedProduct.product_name || "",
                     {
                         source: selectedProduct.source,

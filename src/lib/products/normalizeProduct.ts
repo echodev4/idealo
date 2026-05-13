@@ -15,7 +15,8 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
     const id = toText(raw._id);
     const productUrl = toText(raw.product_url);
     const source = toText(raw.source);
-    const title = formatProductDisplayName(raw.title || raw.product_name, {
+    const suggestedName = toText(raw.suggestedName);
+    const title = suggestedName || formatProductDisplayName(raw.title || raw.product_name, {
         source,
         category: raw.category,
         specifications: raw.specifications,
@@ -42,6 +43,7 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         _id: id,
         product_url: productUrl,
         title,
+        suggestedName,
         currentPrice,
         previousPrice: previousPrice || "",
         discountPercentage: toText(raw.discount),

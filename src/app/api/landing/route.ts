@@ -29,6 +29,7 @@ type RawProduct = {
   product_url?: string;
   title?: string;
   product_name?: string;
+  suggestedName?: string;
   category?: string;
   image_url?: string;
   images?: { src?: string; alt?: string }[];
@@ -54,8 +55,13 @@ function normalizeProduct(raw: RawProduct): Product | null {
   const source = typeof raw?.source === "string" ? raw.source : "";
   const category = typeof raw?.category === "string" ? raw.category : "";
 
-  const productName =
-    typeof raw?.product_name === "string" && raw.product_name.trim() !== ""
+  const suggestedName =
+    typeof raw?.suggestedName === "string" && raw.suggestedName.trim() !== ""
+      ? raw.suggestedName.trim()
+      : "";
+
+  const productName = suggestedName ||
+    (typeof raw?.product_name === "string" && raw.product_name.trim() !== ""
       ? formatProductDisplayName(raw.product_name, {
         source,
         category,
@@ -67,7 +73,7 @@ function normalizeProduct(raw: RawProduct): Product | null {
           category,
           specifications: raw?.specifications,
         })
-        : "";
+        : "");
 
   const imageUrl =
     resolvePrimaryProductImage(raw);

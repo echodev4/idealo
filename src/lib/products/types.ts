@@ -4,6 +4,7 @@ export type RawProduct = {
   product_url?: string;
   title?: string;
   product_name?: string;
+  suggestedName?: string;
   currentPrice?: string | number;
   previousPrice?: string | number;
   price?: string | number;
@@ -31,6 +32,7 @@ export type CategoryProduct = {
   _id?: string;
   product_url: string;
   title: string;
+  suggestedName?: string;
   currentPrice: string;
   previousPrice?: string;
   discountPercentage?: string;
