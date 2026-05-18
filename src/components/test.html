@@ -1,0 +1,597 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Responsive Idealo Layout</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }body {
+  background: #f5f6fa;
+  color: #0d1b3d;
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  width: 100%;
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+/* HEADER */
+header {
+  background: #032b6b;
+  color: white;
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+}
+
+.logo span {
+  color: #ff6a00;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+  font-size: 15px;
+}
+
+.nav-icons {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.menu-btn {
+  display: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* HERO */
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: center;
+  gap: 40px;
+  background: linear-gradient(135deg, #f6f7fb, #edf1ff);
+  border-radius: 20px;
+  padding: 60px;
+  margin: 30px 0;
+}
+
+.hero h1 {
+  font-size: 58px;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.hero h1 span {
+  color: #ff6a00;
+}
+
+.hero p {
+  font-size: 18px;
+  max-width: 520px;
+  color: #4b5563;
+}
+
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-products {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.product-card-mock {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  min-width: 120px;
+  text-align: center;
+}
+
+.product-card-mock img {
+  height: 120px;
+  object-fit: contain;
+  margin: auto;
+}
+
+/* SEARCH BOX */
+.search-card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  margin-top: -20px;
+  position: relative;
+  z-index: 5;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.tabs {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding-bottom: 8px;
+  font-weight: 600;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: #ff6a00;
+  border-color: #ff6a00;
+}
+
+.search-row {
+  display: flex;
+  gap: 16px;
+}
+
+.search-row input {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 16px;
+}
+
+.search-row button {
+  background: #ff6a00;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0 28px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.popular-searches {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.tag {
+  background: #f3f4f6;
+  padding: 8px 14px;
+  border-radius: 30px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* CATEGORY SECTION */
+.section-title {
+  margin: 40px 0 20px;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.categories {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.category-card {
+  background: white;
+  border-radius: 18px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+}
+
+.category-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.category-card h3 {
+  margin-bottom: 8px;
+}
+
+.category-card p {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* PRODUCTS */
+.products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 50px 0 20px;
+}
+
+.view-all {
+  color: #0a58ca;
+  font-weight: bold;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.product-card {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.product-card img {
+  height: 160px;
+  object-fit: contain;
+  margin: auto;
+}
+
+.product-card h4 {
+  margin: 16px 0 6px;
+}
+
+.product-card p {
+  color: #111827;
+  font-weight: bold;
+}
+
+/* FOOTER FEATURES */
+.features {
+  margin: 50px 0;
+  background: #032b6b;
+  color: white;
+  border-radius: 18px;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.feature-item {
+  text-align: center;
+}
+
+.feature-item h4 {
+  margin: 10px 0 6px;
+}
+
+.feature-item p {
+  font-size: 14px;
+  color: #d1d5db;
+}
+
+/* TABLET */
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .hero p {
+    margin: auto;
+  }
+
+  .hero-products {
+    justify-content: center;
+  }
+
+  .categories {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .menu-btn {
+    display: block;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .container {
+    padding: 0 14px;
+  }
+
+  .navbar {
+    gap: 10px;
+  }
+
+  .logo {
+    font-size: 26px;
+  }
+
+  .nav-icons span {
+    display: none;
+  }
+
+  .hero {
+    padding: 30px 20px;
+    gap: 20px;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+  }
+
+  .hero p {
+    font-size: 15px;
+  }
+
+  .hero-products {
+    flex-wrap: wrap;
+  }
+
+  .product-card-mock {
+    min-width: 90px;
+    padding: 12px;
+  }
+
+  .search-card {
+    padding: 18px;
+  }
+
+  .tabs {
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .search-row {
+    flex-direction: column;
+  }
+
+  .search-row button {
+    padding: 16px;
+  }
+
+  .categories {
+    grid-template-columns: 1fr;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .product-card img {
+    height: 100px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+}
+
+  </style>
+</head>
+<body> <!-- HEADER --> <header>
+    <div class="container navbar">
+      <div class="menu-btn">☰</div><div class="logo">idea<span>lo</span></div>
+
+  <nav class="nav-links">
+    <a href="#">Categories</a>
+    <a href="#">Popular Products</a>
+    <a href="#">Deals</a>
+    <a href="#">Top 3 Quotes</a>
+    <a href="#">Credit Cards</a>
+    <a href="#">Tire Replacement</a>
+  </nav>
+
+  <div class="nav-icons">
+    <span>♡ Watchlist</span>
+    <span>👤 Sign in</span>
+  </div>
+</div>
+
+  </header> <main class="container"><!-- HERO -->
+<section class="hero">
+  <div>
+    <h1>
+      Compare. <span>Save.</span><br />
+      Make the best choice.
+    </h1>
+  </div>
+
+  <div class="hero-image">
+    <div class="hero-products">
+      <div class="product-card-mock">
+        <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=500&auto=format&fit=crop" alt="watch" />
+      </div>
+
+      <div class="product-card-mock">
+        <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=500&auto=format&fit=crop" alt="phone" />
+      </div>
+
+      <div class="product-card-mock">
+        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=500&auto=format&fit=crop" alt="car" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH -->
+<section class="search-card">
+  <div class="tabs">
+    <div class="tab active">Products</div>
+    <div class="tab">Services</div>
+    <div class="tab">Credit Cards</div>
+    <div class="tab">Tires</div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" placeholder="What are you looking to compare?" />
+    <button>Compare</button>
+  </div>
+
+  <div class="popular-searches">
+    <div class="tag">iPhone 15</div>
+    <div class="tag">Galaxy S24</div>
+    <div class="tag">Car Insurance</div>
+    <div class="tag">Credit Cards</div>
+    <div class="tag">AC Repair</div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<h2 class="section-title">What would you like to compare today?</h2>
+
+<section class="categories">
+  <div class="category-card">
+    <div class="category-icon">🛍️</div>
+    <h3>Products</h3>
+    <p>Compare prices on electronics, appliances and more.</p>
+  </div>
+
+  <div class="category-card">
+    <div class="category-icon">💳</div>
+    <h3>Credit Cards</h3>
+    <p>Compare features, rewards and benefits.</p>
+  </div>
+
+  <div class="category-card">
+    <div class="category-icon">🛠️</div>
+    <h3>Services</h3>
+    <p>Get quotes from verified providers.</p>
+  </div>
+
+  <div class="category-card">
+    <div class="category-icon">🛞</div>
+    <h3>Tire Replacement</h3>
+    <p>Compare installation and tire prices.</p>
+  </div>
+
+  <div class="category-card">
+    <div class="category-icon">🛡️</div>
+    <h3>Insurance</h3>
+    <p>Compare and buy the best insurance plans.</p>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<div class="products-header">
+  <h2 class="section-title">Popular Products</h2>
+  <a href="#" class="view-all">View all</a>
+</div>
+
+<section class="products-grid">
+  <div class="product-card">
+    <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=500&auto=format&fit=crop" alt="iPhone" />
+    <h4>Apple iPhone 15</h4>
+    <p>From €799</p>
+  </div>
+
+  <div class="product-card">
+    <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=500&auto=format&fit=crop" alt="Galaxy" />
+    <h4>Samsung Galaxy S24</h4>
+    <p>From €699</p>
+  </div>
+
+  <div class="product-card">
+    <img src="https://images.unsplash.com/photo-1517336714739-489689fd1ca8?q=80&w=500&auto=format&fit=crop" alt="MacBook" />
+    <h4>MacBook Air M3</h4>
+    <p>From €1,099</p>
+  </div>
+
+  <div class="product-card">
+    <img src="https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=500&auto=format&fit=crop" alt="Headphones" />
+    <h4>Sony WH-1000XM5</h4>
+    <p>From €349</p>
+  </div>
+
+  <div class="product-card">
+    <img src="https://images.unsplash.com/photo-1593784991095-a205069470b6?q=80&w=500&auto=format&fit=crop" alt="TV" />
+    <h4>LG 55" OLED TV</h4>
+    <p>From €399</p>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="feature-item">
+    <h4>100% Free to Use</h4>
+    <p>No hidden charges</p>
+  </div>
+
+  <div class="feature-item">
+    <h4>Top 3 Quotes</h4>
+    <p>Save time and money</p>
+  </div>
+
+  <div class="feature-item">
+    <h4>Trusted Providers</h4>
+    <p>Verified & reliable</p>
+  </div>
+
+  <div class="feature-item">
+    <h4>Secure & Safe</h4>
+    <p>Your data is protected</p>
+  </div>
+</section>
+
+  </main>
+</body>
+</html>

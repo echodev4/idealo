@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { VisualEditsMessenger } from "orchids-visual-edits";
 import { LanguageProvider } from "@/contexts/language-context";
-import Header from "@/components/common/header";
-import Footer from "@/components/common/footer";
+import SiteChrome from "@/components/common/site-chrome";
 import { Toaster } from "react-hot-toast";
 
 
@@ -24,10 +23,8 @@ export default function RootLayout({
       </head>
       <body className="antialiased font-sans">
         <LanguageProvider>
-          <Header />
-          {children}
+          <SiteChrome>{children}</SiteChrome>
           <Toaster position="top-right" />
-          <Footer />
         </LanguageProvider>
         <VisualEditsMessenger />
       </body>
