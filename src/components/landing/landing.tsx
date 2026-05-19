@@ -1,17 +1,17 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, RefObject, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Bell,
-  Car,
+  BriefcaseBusiness,
+  ChevronRight,
   CreditCard,
+  Heart,
   Search,
   ShieldCheck,
-  ShoppingBag,
-  Sparkles,
   Tag,
-  Wrench,
   X,
 } from "lucide-react";
 
@@ -43,6 +43,7 @@ type SearchSectionProps = {
   visibleSuggestions: string[];
   isSearching: boolean;
   isFocused: boolean;
+  inputRef: RefObject<HTMLInputElement | null>;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onQueryChange: (value: string) => void;
   onFocus: () => void;
@@ -52,63 +53,29 @@ type SearchSectionProps = {
 };
 
 const serviceTabs = [
-  { label: "Products", query: "Products", icon: ShoppingBag, active: true },
-  { label: "Services", query: "Services", icon: Wrench },
+  { label: "Products", query: "Products", icon: BriefcaseBusiness, active: true },
   { label: "Credit Cards", query: "Credit Cards", icon: CreditCard },
-  { label: "Tires", query: "Tire Replacement", icon: Car },
 ];
 
-const popularSearches = ["Iphone 17", "Refrigirator", "Sony TV", "Health and Medicine"];
+const popularSearches = ["iPhone 17", "Galaxy S26", "S26 Ultra", "Galaxy Watch 6"];
 
 const categories = [
   {
     title: "Products",
-    description: "Compare prices on electronics, appliances and daily essentials.",
-    icon: ShoppingBag,
+    description: "Compare product prices",
+    icon: BriefcaseBusiness,
+    query: "Products",
   },
   {
     title: "Credit Cards",
-    description: "Compare fees, rewards, salary rules and lifestyle benefits.",
+    description: "Compare fees, rewards and lifestyle benefits",
     icon: CreditCard,
-  },
-  {
-    title: "Services",
-    description: "Find verified providers and request practical quotes faster.",
-    icon: Wrench,
-  },
-  {
-    title: "Tire Replacement",
-    description: "Compare tire prices, fitting options and installation packages.",
-    icon: Car,
-  },
-  {
-    title: "Insurance",
-    description: "Review policy options before choosing the right protection.",
-    icon: ShieldCheck,
-  },
-];
-
-const featuredProducts = [
-  {
-    title: "Apple iPhone 15",
-    query: "Apple iPhone 15",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=500&auto=format&fit=crop",
-  },
-  {
-    title: "Samsung Galaxy S24",
-    query: "Samsung Galaxy S24",
-    image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=500&auto=format&fit=crop",
-  },
-  {
-    title: "MacBook Air M3",
-    query: "MacBook Air M3",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=500&auto=format&fit=crop",
+    query: "Credit Cards",
   },
 ];
 
 const trustItems = [
   { title: "100% Free to Use", description: "No hidden charges", icon: Tag },
-  { title: "Top 3 Quotes", description: "Save time and money", icon: Sparkles },
   { title: "Trusted Providers", description: "Verified and reliable", icon: ShieldCheck },
   { title: "Secure and Safe", description: "Your data is protected", icon: Bell },
 ];
@@ -140,37 +107,26 @@ function formatProductPrice(price: string) {
   })}`;
 }
 
-function LandingHeroSection({ onSearch }: { onSearch: (term: string) => void }) {
+function LandingHeroSection() {
   return (
-    <section className="landing-hero-section mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-8 px-4 py-8 lg:grid-cols-[1.15fr_0.85fr] lg:px-6">
-      <div className="landing-hero-copy rounded-[8px] bg-gradient-to-br from-[#f7f8fc] to-[#edf1ff] px-6 py-10 sm:px-10 lg:px-14 lg:py-16">
-        <h1 className="landing-hero-title max-w-[760px] text-[40px] font-bold leading-[1.08] tracking-normal text-[#0d1b3d] sm:text-[52px] lg:text-[64px]">
-          Compare. <span className="text-[#ff6a00]">Save.</span>
+    <section className="landing-hero-section mx-auto grid w-full max-w-[1440px] grid-cols-1 items-center gap-6 px-4 pb-4 pt-8 md:px-6 md:pt-9 lg:grid-cols-[1fr_0.95fr] lg:gap-8 lg:pb-0 lg:pt-12">
+      <div className="landing-hero-copy">
+        <h1 className="landing-hero-title max-w-[900px] text-[29px] font-bold leading-[1.16] tracking-normal text-[#06163a] min-[390px]:text-[30px] min-[430px]:text-[34px] sm:text-[44px] md:text-[50px] lg:text-[58px] xl:text-[64px]">
+          <span className="whitespace-nowrap">Compare Prices. <span className="text-[#ff6600]">Save.</span></span>
           <br />
-          Make the best choice.
+          <span>Make the best choice.</span>
         </h1>
-        <p className="landing-hero-subtitle mt-5 max-w-[560px] text-[17px] leading-7 text-[#4b5563]">
-          Search products, services, cards and local quotes with the same AI-assisted suggestions used across Ideolo.
-        </p>
       </div>
 
-      <div className="landing-hero-products grid grid-cols-3 items-end gap-4">
-        {featuredProducts.map((product, index) => (
-          <button
-            key={product.title}
-            type="button"
-            onClick={() => onSearch(product.query)}
-            className={`landing-hero-product-card rounded-[8px] bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition hover:-translate-y-1 ${
-              index === 1 ? "min-h-[230px]" : "min-h-[190px]"
-            }`}
-          >
-            <img
-              src={product.image}
-              alt={product.title}
-              className="landing-hero-product-image h-[150px] w-full object-contain"
-            />
-          </button>
-        ))}
+      <div className="landing-hero-products relative min-h-[190px] md:min-h-[230px] lg:min-h-[300px]">
+        <Image
+          src="/landing-hero-products.png"
+          alt="Popular products including headphones, phone, smartwatch, and tire"
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 48vw"
+          className="object-contain object-center"
+        />
       </div>
     </section>
   );
@@ -181,6 +137,7 @@ function LandingSearchSection({
   visibleSuggestions,
   isSearching,
   isFocused,
+  inputRef,
   onSubmit,
   onQueryChange,
   onFocus,
@@ -189,9 +146,9 @@ function LandingSearchSection({
   onLandingAction,
 }: SearchSectionProps) {
   return (
-    <section className="landing-search-bar mx-auto max-w-[1200px] px-4 lg:px-6">
-      <div className="landing-search-panel relative z-10 rounded-[8px] bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-        <div className="landing-services-bar mb-5 flex flex-wrap gap-2">
+    <section className="landing-search-bar mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pt-2 md:w-full md:px-6 lg:-mt-8 lg:pt-0">
+      <div className="landing-search-panel relative z-10 rounded-[8px] bg-white p-4 shadow-[0_8px_24px_rgba(6,22,58,0.12)] md:p-5">
+        <div className="landing-services-bar mb-4 grid grid-cols-2 gap-2 border-b border-[#e5e7eb] pb-0 md:flex md:gap-0">
           {serviceTabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -199,10 +156,10 @@ function LandingSearchSection({
                 key={tab.label}
                 type="button"
                 onClick={() => onLandingAction(tab.query)}
-                className={`landing-service-tab flex items-center gap-2 rounded-[4px] border px-4 py-2 text-[14px] font-bold transition ${
+                className={`landing-service-tab flex min-h-12 items-center justify-center gap-2 border-b-2 px-3 py-3 text-[13px] font-bold transition md:min-w-[180px] md:text-[14px] ${
                   tab.active
-                    ? "border-[#ff6a00] bg-[#fff3ea] text-[#ff6a00]"
-                    : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#ff6a00]"
+                    ? "border-[#ff6600] bg-[#fff4ed] text-[#ff6600] md:bg-transparent"
+                    : "border-transparent bg-white text-[#06163a] hover:border-[#ff6600] hover:text-[#ff6600]"
                 }`}
               >
                 <Icon size={17} />
@@ -217,7 +174,8 @@ function LandingSearchSection({
             <div className="landing-search-input-wrap relative min-w-0 flex-1">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6b7280]" />
               <input
-                className="landing-search-input h-14 w-full rounded-[6px] border border-[#d1d5db] bg-white pl-12 pr-12 text-[16px] text-[#111827] outline-none focus:border-[#ff6a00] focus:ring-2 focus:ring-[#ff6a00]/15"
+                ref={inputRef}
+                className="landing-search-input h-14 w-full rounded-[6px] border border-[#d1d5db] bg-white pl-12 pr-11 text-[13px] text-[#111827] outline-none focus:border-[#ff6600] focus:ring-2 focus:ring-[#ff6600]/15 min-[390px]:text-[14px] sm:text-[16px]"
                 type="text"
                 value={query}
                 onChange={(event) => onQueryChange(event.target.value)}
@@ -237,7 +195,7 @@ function LandingSearchSection({
             </div>
             <button
               type="submit"
-              className="landing-search-submit flex h-14 items-center justify-center gap-2 rounded-[6px] bg-[#ff6a00] px-7 text-[16px] font-bold text-white hover:bg-[#ea5f00]"
+              className="landing-search-submit flex h-14 items-center justify-center gap-2 rounded-[6px] bg-[#ff6600] px-7 text-[16px] font-bold text-white hover:bg-[#ea5f00] sm:min-w-[150px]"
             >
               <Search size={18} />
               Compare
@@ -268,46 +226,58 @@ function LandingSearchSection({
           )}
         </form>
 
-        <div className="landing-popular-searches mt-4 flex flex-wrap gap-2">
-          {popularSearches.map((term) => (
-            <button
-              key={term}
-              type="button"
-              onClick={() => onLandingAction(term)}
-              className="landing-popular-tag rounded-full bg-[#f3f4f6] px-4 py-2 text-[14px] font-medium text-[#374151] hover:bg-[#e5e7eb]"
-              title={term}
-            >
-              {clampText(term, 26)}
-            </button>
-          ))}
+        <div className="landing-popular-searches mt-4">
+          <span className="block text-[13px] font-bold text-[#06163a] sm:inline-block sm:mr-2">Popular Searches:</span>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-0 sm:inline-flex sm:flex-wrap sm:items-center">
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => onLandingAction(term)}
+                className="landing-popular-tag rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5 text-[12px] font-bold text-[#374151] hover:border-[#ff6600] hover:text-[#ff6600] sm:text-[13px]"
+                title={term}
+              >
+                {clampText(term, 26)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function LandingCompareSection() {
+function LandingCompareSection({ onCategoryAction }: { onCategoryAction: (term: string) => void }) {
   return (
-    <section className="landing-category-section mx-auto max-w-[1440px] px-4 py-10 lg:px-6">
-      <h2 className="landing-section-title mb-5 text-[28px] font-bold text-[#0d1b3d]">
+    <section className="landing-category-section mx-auto w-[calc(100vw-32px)] max-w-[1440px] px-0 py-8 md:w-full md:px-6 md:py-9">
+      <h2 className="landing-section-title mx-auto mb-5 max-w-[310px] text-center text-[22px] font-bold leading-tight text-[#06163a] sm:max-w-[720px] md:text-[28px]">
         What would you like to compare today?
       </h2>
-      <div className="landing-category-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="landing-category-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:mx-auto lg:max-w-[760px]">
         {categories.map((category) => {
           const Icon = category.icon;
           return (
-            <div
+            <button
               key={category.title}
-              className="landing-category-card rounded-[8px] bg-white p-6 text-center shadow-[0_4px_16px_rgba(0,0,0,0.05)]"
+              type="button"
+              onClick={() => onCategoryAction(category.query)}
+              className="landing-category-card flex min-h-[64px] items-center justify-between rounded-[8px] bg-white px-4 py-3 text-left shadow-[0_4px_16px_rgba(6,22,58,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(6,22,58,0.12)] sm:min-h-[190px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
             >
-              <span className="landing-category-icon mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#fff3ea] text-[#ff6a00]">
-                <Icon size={28} />
+              <span className="flex min-w-0 items-center gap-3 sm:flex-col sm:gap-0">
+                <span className="landing-category-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff3ea] text-[#00306e] sm:mx-auto sm:mb-4 sm:h-16 sm:w-16 sm:text-[#ff6600]">
+                  <Icon size={24} className="sm:h-8 sm:w-8" />
+                </span>
+                <span className="min-w-0">
+                  <span className="landing-category-title block text-[15px] font-bold text-[#06163a] sm:text-[18px]">
+                    {category.title}
+                  </span>
+                  <span className="landing-category-description mt-1 hidden text-[14px] leading-5 text-[#526175] sm:block">
+                    {category.description}
+                  </span>
+                </span>
               </span>
-              <span className="landing-category-title block text-[18px] font-bold text-[#111827]">{category.title}</span>
-              <span className="landing-category-description mt-2 block text-[14px] leading-5 text-[#6b7280]">
-                {category.description}
-              </span>
-            </div>
+              <ChevronRight size={18} className="shrink-0 text-[#526175] sm:hidden" />
+            </button>
           );
         })}
       </div>
@@ -315,69 +285,122 @@ function LandingCompareSection() {
   );
 }
 
-function LandingPopularProductsSection({
-  products,
-  loading,
+function ProductCard({
+  product,
   onOpenProduct,
 }: {
-  products: LandingProduct[];
-  loading: boolean;
+  product: LandingProduct;
   onOpenProduct: (product: LandingProduct) => void;
 }) {
   return (
-    <section className="landing-products-section mx-auto max-w-[1440px] px-4 pb-10 lg:px-6">
-      <div className="landing-products-header mb-5 flex items-center justify-between gap-4">
-        <h2 className="landing-section-title text-[28px] font-bold text-[#0d1b3d]">Popular Products</h2>
+    <button
+      type="button"
+      onClick={() => onOpenProduct(product)}
+      className="landing-product-card group relative flex h-full flex-col rounded-[8px] bg-white p-4 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(6,22,58,0.14)]"
+    >
+      <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-[#7890aa] group-hover:text-[#ff6600]">
+        <Heart size={17} />
+      </span>
+      <img
+        src={product.image_url}
+        alt={product.product_name}
+        className="landing-product-image mx-auto h-[132px] w-full object-contain sm:h-[150px] md:h-[165px]"
+      />
+      <span className="landing-product-title mt-4 block min-h-[44px] text-[14px] font-bold leading-5 text-[#06163a] sm:text-[15px]">
+        {product.product_name}
+      </span>
+      <span className="landing-product-price mt-2 block text-[15px] font-bold text-[#ff6600] sm:text-[16px]">
+        From {formatProductPrice(product.price)}
+      </span>
+    </button>
+  );
+}
+
+function ProductSkeleton() {
+  return (
+    <div className="landing-product-card rounded-[8px] bg-white p-4 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)]">
+      <div className="landing-product-image mx-auto h-[132px] w-full animate-pulse rounded-[6px] bg-[#eef1f5] sm:h-[150px] md:h-[165px]" />
+      <div className="mx-auto mt-4 h-4 w-4/5 animate-pulse rounded bg-[#eef1f5]" />
+      <div className="mx-auto mt-3 h-4 w-2/3 animate-pulse rounded bg-[#eef1f5]" />
+    </div>
+  );
+}
+
+function LandingProductsSection({
+  title,
+  products,
+  loading,
+  expanded,
+  onToggleExpanded,
+  onOpenProduct,
+}: {
+  title: string;
+  products: LandingProduct[];
+  loading: boolean;
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  onOpenProduct: (product: LandingProduct) => void;
+}) {
+  const visibleProducts = expanded ? products : products.slice(0, 8);
+
+  return (
+    <section className="landing-products-section mx-auto w-[calc(100vw-32px)] max-w-[1440px] px-0 pb-9 md:w-full md:px-6">
+      <div className="landing-products-header mb-4 flex items-center justify-between gap-4">
+        <h2 className="landing-section-title text-[24px] font-bold text-[#06163a] md:text-[28px]">{title}</h2>
+        {products.length > 0 && (
+          <button
+            type="button"
+            onClick={onToggleExpanded}
+            className="landing-view-all shrink-0 text-[13px] font-bold text-[#0066c0] hover:text-[#ff6600]"
+          >
+            {expanded ? "Show less" : "View all"}
+          </button>
+        )}
       </div>
 
-      <div className="landing-products-grid grid grid-cols-2 gap-4 lg:grid-cols-6">
-        {loading
-          ? Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="landing-product-card rounded-[8px] bg-white p-4 text-center shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
-              >
-                <div className="landing-product-image mx-auto h-[150px] w-full animate-pulse rounded-[6px] bg-[#eef1f5] sm:h-[170px]" />
-                <div className="mx-auto mt-4 h-4 w-4/5 animate-pulse rounded bg-[#eef1f5]" />
-                <div className="mx-auto mt-3 h-4 w-2/3 animate-pulse rounded bg-[#eef1f5]" />
-              </div>
-            ))
-          : products.map((product) => (
-              <button
-                key={product._id}
-                type="button"
-                onClick={() => onOpenProduct(product)}
-                className="landing-product-card rounded-[8px] bg-white p-4 text-center shadow-[0_4px_14px_rgba(0,0,0,0.05)] transition hover:-translate-y-1"
-              >
-                <img
-                  src={product.image_url}
-                  alt={product.product_name}
-                  className="landing-product-image mx-auto h-[150px] w-full object-contain sm:h-[170px]"
-                />
-                <span className="landing-product-title mt-4 block min-h-[44px] text-[15px] font-bold leading-5 text-[#111827]">
-                  {product.product_name}
-                </span>
-                <span className="landing-product-price mt-2 block text-[16px] font-bold text-[#ff6a00]">
-                  From {formatProductPrice(product.price)}
-                </span>
-              </button>
-            ))}
-      </div>
+      {expanded ? (
+        <div className="landing-products-grid grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+          {loading
+            ? Array.from({ length: 6 }).map((_, index) => <ProductSkeleton key={index} />)
+            : visibleProducts.map((product) => (
+                <ProductCard key={product._id} product={product} onOpenProduct={onOpenProduct} />
+              ))}
+        </div>
+      ) : (
+        <div className="landing-products-carousel -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 md:-mx-6 md:px-6">
+          {loading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="w-[46%] min-w-[46%] snap-start sm:w-[31%] sm:min-w-[31%] lg:w-[18%] lg:min-w-[18%]">
+                  <ProductSkeleton />
+                </div>
+              ))
+            : visibleProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="w-[46%] min-w-[46%] snap-start sm:w-[31%] sm:min-w-[31%] lg:w-[18%] lg:min-w-[18%]"
+                >
+                  <ProductCard product={product} onOpenProduct={onOpenProduct} />
+                </div>
+              ))}
+        </div>
+      )}
     </section>
   );
 }
 
 function LandingTrustSection() {
   return (
-    <section className="landing-trust-section mx-auto max-w-[1440px] px-4 pb-14 lg:px-6">
-      <div className="landing-trust-grid grid grid-cols-1 gap-4 rounded-[8px] bg-[#032b6b] p-6 text-white sm:grid-cols-2 lg:grid-cols-4">
+    <section className="landing-trust-section mx-auto w-[calc(100vw-32px)] max-w-[1440px] px-0 pb-14 md:w-full md:px-6">
+      <div className="landing-trust-grid grid grid-cols-3 gap-3 rounded-[8px] bg-[#032b6b] px-3 py-5 text-white shadow-[0_10px_24px_rgba(3,43,107,0.2)] md:gap-5 md:px-6">
         {trustItems.map((item) => {
           const Icon = item.icon;
           return (
             <div key={item.title} className="landing-trust-item text-center">
-              <Icon className="landing-trust-icon mx-auto mb-3 h-8 w-8 text-[#ffb26f]" />
-              <h3 className="landing-trust-title text-[17px] font-bold text-white">{item.title}</h3>
-              <p className="landing-trust-description mt-1 text-[14px] text-[#d1d5db]">{item.description}</p>
+              <Icon className="landing-trust-icon mx-auto mb-2 h-7 w-7 text-[#ffb26f] md:h-8 md:w-8" />
+              <h3 className="landing-trust-title text-[12px] font-bold leading-tight text-white md:text-[16px]">{item.title}</h3>
+              <p className="landing-trust-description mt-1 text-[11px] leading-snug text-[#d1d5db] md:text-[13px]">
+                {item.description}
+              </p>
             </div>
           );
         })}
@@ -388,20 +411,30 @@ function LandingTrustSection() {
 
 export default function Landing() {
   const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [iphoneProducts, setIphoneProducts] = useState<LandingProduct[]>([]);
+  const [dairyProducts, setDairyProducts] = useState<LandingProduct[]>([]);
+  const [fashionProducts, setFashionProducts] = useState<LandingProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [featuredExpanded, setFeaturedExpanded] = useState(false);
+  const [popularExpanded, setPopularExpanded] = useState(false);
 
   const visibleSuggestions = useMemo(
     () => suggestions.filter(Boolean).slice(0, 5),
     [suggestions]
   );
 
-  const popularIphoneProducts = useMemo(
-    () => iphoneProducts.filter((product) => product.product_url && product.product_name).slice(0, 6),
+  const featuredProducts = useMemo(() => {
+    const merged = [...fashionProducts, ...dairyProducts, ...iphoneProducts];
+    return merged.filter((product) => product.product_url && product.product_name);
+  }, [dairyProducts, fashionProducts, iphoneProducts]);
+
+  const popularProducts = useMemo(
+    () => iphoneProducts.filter((product) => product.product_url && product.product_name),
     [iphoneProducts]
   );
 
@@ -416,9 +449,13 @@ export default function Landing() {
 
         if (!alive) return;
         setIphoneProducts(Array.isArray(json.iphoneDeals) ? json.iphoneDeals : []);
+        setDairyProducts(Array.isArray(json.dairyProducts) ? json.dairyProducts : []);
+        setFashionProducts(Array.isArray(json.fashionProducts) ? json.fashionProducts : []);
       } catch {
         if (!alive) return;
         setIphoneProducts([]);
+        setDairyProducts([]);
+        setFashionProducts([]);
       } finally {
         if (!alive) return;
         setProductsLoading(false);
@@ -449,6 +486,14 @@ export default function Landing() {
     }
   }
 
+  function focusProductSearch() {
+    setQuery("");
+    setSuggestions([]);
+    setIsFocused(true);
+    searchInputRef.current?.focus();
+    searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   async function runSearch(term: string) {
     const q = normalizeSearchTerm(term);
     if (!q) return;
@@ -461,6 +506,11 @@ export default function Landing() {
       return;
     }
 
+    if (q.toLowerCase() === "products") {
+      focusProductSearch();
+      return;
+    }
+
     setIsSearching(true);
     await cacheAiSuggestions(q);
     setIsSearching(false);
@@ -470,11 +520,18 @@ export default function Landing() {
   }
 
   async function runLandingAction(term: string) {
-    if (normalizeSearchTerm(term).toLowerCase() === "credit cards") {
+    const q = normalizeSearchTerm(term).toLowerCase();
+
+    if (q === "credit cards") {
       setQuery("");
       setIsFocused(false);
       setSuggestions([]);
       router.push("/card-comparison");
+      return;
+    }
+
+    if (q === "products") {
+      focusProductSearch();
       return;
     }
 
@@ -517,13 +574,14 @@ export default function Landing() {
   }
 
   return (
-    <main className="landing-interface bg-[#f5f6fa] text-[#0d1b3d]">
-      <LandingHeroSection onSearch={runSearch} />
+    <main className="landing-interface box-border overflow-x-hidden bg-[#f5f6fa] font-sans text-[#06163a] [&_*]:box-border">
+      <LandingHeroSection />
       <LandingSearchSection
         query={query}
         visibleSuggestions={visibleSuggestions}
         isSearching={isSearching}
         isFocused={isFocused}
+        inputRef={searchInputRef}
         onSubmit={handleSubmit}
         onQueryChange={handleSuggestionRefresh}
         onFocus={() => setIsFocused(true)}
@@ -531,10 +589,21 @@ export default function Landing() {
         onSearch={runSearch}
         onLandingAction={runLandingAction}
       />
-      <LandingCompareSection />
-      <LandingPopularProductsSection
-        products={popularIphoneProducts}
+      <LandingCompareSection onCategoryAction={runLandingAction} />
+      <LandingProductsSection
+        title="Featured Products"
+        products={featuredProducts}
         loading={productsLoading}
+        expanded={featuredExpanded}
+        onToggleExpanded={() => setFeaturedExpanded((value) => !value)}
+        onOpenProduct={openProduct}
+      />
+      <LandingProductsSection
+        title="Popular Products"
+        products={popularProducts}
+        loading={productsLoading}
+        expanded={popularExpanded}
+        onToggleExpanded={() => setPopularExpanded((value) => !value)}
         onOpenProduct={openProduct}
       />
       <LandingTrustSection />
