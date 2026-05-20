@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Bell,
   BriefcaseBusiness,
+  ChevronLeft,
   ChevronRight,
   CreditCard,
   Heart,
@@ -109,16 +110,14 @@ function formatProductPrice(price: string) {
 
 function LandingHeroSection() {
   return (
-    <section className="landing-hero-section mx-auto grid w-full max-w-[1440px] grid-cols-1 items-center gap-6 px-4 pb-4 pt-8 md:px-6 md:pt-9 lg:grid-cols-[1fr_0.95fr] lg:gap-8 lg:pb-0 lg:pt-12">
+    <section className="landing-hero-section mx-auto grid w-full max-w-[1200px] grid-cols-1 items-center gap-6 px-4 pb-4 pt-7 md:px-6 md:pt-8 lg:grid-cols-[1fr_0.95fr] lg:gap-8 lg:pb-0 lg:pt-12">
       <div className="landing-hero-copy">
-        <h1 className="landing-hero-title max-w-[900px] text-[29px] font-bold leading-[1.16] tracking-normal text-[#06163a] min-[390px]:text-[30px] min-[430px]:text-[34px] sm:text-[44px] md:text-[50px] lg:text-[58px] xl:text-[64px]">
-          <span className="whitespace-nowrap">Compare Prices. <span className="text-[#ff6600]">Save.</span></span>
-          <br />
-          <span>Make the best choice.</span>
+        <h1 className="landing-hero-title max-w-[900px] text-[32px] font-bold leading-[1.12] tracking-normal text-[#06163a] min-[390px]:text-[35px] min-[430px]:text-[39px] sm:text-[52px] md:text-[62px] lg:text-[72px] xl:text-[80px]">
+          <span>Compare Prices. <span className="text-[#ff6600]">Save.</span></span>
         </h1>
       </div>
 
-      <div className="landing-hero-products relative min-h-[190px] md:min-h-[230px] lg:min-h-[300px]">
+      <div className="landing-hero-products relative hidden min-h-[300px] lg:block">
         <Image
           src="/landing-hero-products.png"
           alt="Popular products including headphones, phone, smartwatch, and tire"
@@ -249,7 +248,7 @@ function LandingSearchSection({
 
 function LandingCompareSection({ onCategoryAction }: { onCategoryAction: (term: string) => void }) {
   return (
-    <section className="landing-category-section mx-auto w-[calc(100vw-32px)] max-w-[1440px] px-0 py-8 md:w-full md:px-6 md:py-9">
+    <section className="landing-category-section mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 py-8 md:w-full md:px-6 md:py-9">
       <h2 className="landing-section-title mx-auto mb-5 max-w-[310px] text-center text-[22px] font-bold leading-tight text-[#06163a] sm:max-w-[720px] md:text-[28px]">
         What would you like to compare today?
       </h2>
@@ -296,7 +295,7 @@ function ProductCard({
     <button
       type="button"
       onClick={() => onOpenProduct(product)}
-      className="landing-product-card group relative flex h-full flex-col rounded-[8px] bg-white p-4 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(6,22,58,0.14)]"
+      className="landing-product-card group relative flex h-full w-full flex-col rounded-[8px] bg-white p-3 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(6,22,58,0.14)] sm:p-4"
     >
       <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-[#7890aa] group-hover:text-[#ff6600]">
         <Heart size={17} />
@@ -304,9 +303,9 @@ function ProductCard({
       <img
         src={product.image_url}
         alt={product.product_name}
-        className="landing-product-image mx-auto h-[132px] w-full object-contain sm:h-[150px] md:h-[165px]"
+        className="landing-product-image mx-auto h-[122px] w-full object-contain sm:h-[145px] md:h-[158px]"
       />
-      <span className="landing-product-title mt-4 block min-h-[44px] text-[14px] font-bold leading-5 text-[#06163a] sm:text-[15px]">
+      <span className="landing-product-title mt-3 block min-h-[44px] text-[14px] font-bold leading-5 text-[#06163a] sm:text-[15px]">
         {product.product_name}
       </span>
       <span className="landing-product-price mt-2 block text-[15px] font-bold text-[#ff6600] sm:text-[16px]">
@@ -318,9 +317,9 @@ function ProductCard({
 
 function ProductSkeleton() {
   return (
-    <div className="landing-product-card rounded-[8px] bg-white p-4 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)]">
-      <div className="landing-product-image mx-auto h-[132px] w-full animate-pulse rounded-[6px] bg-[#eef1f5] sm:h-[150px] md:h-[165px]" />
-      <div className="mx-auto mt-4 h-4 w-4/5 animate-pulse rounded bg-[#eef1f5]" />
+    <div className="landing-product-card w-full rounded-[8px] bg-white p-3 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)] sm:p-4">
+      <div className="landing-product-image mx-auto h-[122px] w-full animate-pulse rounded-[6px] bg-[#eef1f5] sm:h-[145px] md:h-[158px]" />
+      <div className="mx-auto mt-3 h-4 w-4/5 animate-pulse rounded bg-[#eef1f5]" />
       <div className="mx-auto mt-3 h-4 w-2/3 animate-pulse rounded bg-[#eef1f5]" />
     </div>
   );
@@ -342,9 +341,49 @@ function LandingProductsSection({
   onOpenProduct: (product: LandingProduct) => void;
 }) {
   const visibleProducts = expanded ? products : products.slice(0, 8);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  function updateCarouselArrows() {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft < maxScroll - 2);
+  }
+
+  useEffect(() => {
+    updateCarouselArrows();
+    const el = carouselRef.current;
+    if (!el || expanded) return;
+
+    const onScroll = () => updateCarouselArrows();
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(() => updateCarouselArrows());
+    resizeObserver.observe(el);
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      resizeObserver.disconnect();
+    };
+  }, [expanded, loading, visibleProducts.length]);
+
+  function scrollCarousel(direction: "left" | "right") {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const amount = Math.round(el.clientWidth * 0.85);
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  }
 
   return (
-    <section className="landing-products-section mx-auto w-[calc(100vw-32px)] max-w-[1440px] px-0 pb-9 md:w-full md:px-6">
+    <section className="landing-products-section mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pb-9 md:w-full md:px-6">
       <div className="landing-products-header mb-4 flex items-center justify-between gap-4">
         <h2 className="landing-section-title text-[24px] font-bold text-[#06163a] md:text-[28px]">{title}</h2>
         {products.length > 0 && (
@@ -367,21 +406,47 @@ function LandingProductsSection({
               ))}
         </div>
       ) : (
-        <div className="landing-products-carousel -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 md:-mx-6 md:px-6">
-          {loading
-            ? Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="w-[46%] min-w-[46%] snap-start sm:w-[31%] sm:min-w-[31%] lg:w-[18%] lg:min-w-[18%]">
-                  <ProductSkeleton />
-                </div>
-              ))
-            : visibleProducts.map((product) => (
-                <div
-                  key={product._id}
-                  className="w-[46%] min-w-[46%] snap-start sm:w-[31%] sm:min-w-[31%] lg:w-[18%] lg:min-w-[18%]"
-                >
-                  <ProductCard product={product} onOpenProduct={onOpenProduct} />
-                </div>
-              ))}
+        <div className="group relative">
+          {canScrollLeft && (
+            <button
+              type="button"
+              aria-label={`Previous ${title}`}
+              onClick={() => scrollCarousel("left")}
+              className="absolute left-0 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center bg-[#c7cfd7] text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 md:flex"
+            >
+              <ChevronLeft size={26} />
+            </button>
+          )}
+          {canScrollRight && (
+            <button
+              type="button"
+              aria-label={`Next ${title}`}
+              onClick={() => scrollCarousel("right")}
+              className="absolute right-0 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center bg-[#c7cfd7] text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 md:flex"
+            >
+              <ChevronRight size={26} />
+            </button>
+          )}
+
+          <div
+            ref={carouselRef}
+            className="landing-products-carousel hide-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 md:-mx-6 md:px-6"
+          >
+            {loading
+              ? Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="w-[46%] min-w-[46%] snap-start sm:w-[31%] sm:min-w-[31%] lg:w-[18%] lg:min-w-[18%]">
+                    <ProductSkeleton />
+                  </div>
+                ))
+              : visibleProducts.map((product) => (
+                  <div
+                    key={product._id}
+                    className="w-[46%] min-w-[46%] snap-start sm:w-[31%] sm:min-w-[31%] lg:w-[18%] lg:min-w-[18%]"
+                  >
+                    <ProductCard product={product} onOpenProduct={onOpenProduct} />
+                  </div>
+                ))}
+          </div>
         </div>
       )}
     </section>
@@ -390,7 +455,7 @@ function LandingProductsSection({
 
 function LandingTrustSection() {
   return (
-    <section className="landing-trust-section mx-auto w-[calc(100vw-32px)] max-w-[1440px] px-0 pb-14 md:w-full md:px-6">
+    <section className="landing-trust-section mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pb-14 md:w-full md:px-6">
       <div className="landing-trust-grid grid grid-cols-3 gap-3 rounded-[8px] bg-[#032b6b] px-3 py-5 text-white shadow-[0_10px_24px_rgba(3,43,107,0.2)] md:gap-5 md:px-6">
         {trustItems.map((item) => {
           const Icon = item.icon;
@@ -429,9 +494,9 @@ export default function Landing() {
   );
 
   const featuredProducts = useMemo(() => {
-    const merged = [...fashionProducts, ...dairyProducts, ...iphoneProducts];
+    const merged = [...fashionProducts, ...dairyProducts];
     return merged.filter((product) => product.product_url && product.product_name);
-  }, [dairyProducts, fashionProducts, iphoneProducts]);
+  }, [dairyProducts, fashionProducts]);
 
   const popularProducts = useMemo(
     () => iphoneProducts.filter((product) => product.product_url && product.product_name),
