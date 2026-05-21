@@ -1,20 +1,28 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BriefcaseBusiness, ChevronDown, CreditCard, Heart, Menu, Search, User, X } from "lucide-react";
 
 const topBarItems = ["Vouchers"];
 const mobileMenuItems = ["Vouchers"];
+const SUGGESTIONS_KEY = "last_search_suggestions_v1";
 
 export default function NewHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const [searchTypeOpen, setSearchTypeOpen] = useState(false);
 
   const showProductSearch = pathname.startsWith("/category");
+  const visibleSuggestions = useMemo(
+    () => suggestions.filter(Boolean).slice(0, 5),
+    [suggestions]
+  );
 
   function handleTopBarClick(item: string) {
     if (item === "Vouchers") {
@@ -23,19 +31,73 @@ export default function NewHeader() {
     }
   }
 
-  function submitProductSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const query = searchQuery.trim();
+  async function cacheAiSuggestions(query: string) {
+    try {
+      const res = await fetch(`/api/search-products?q=${encodeURIComponent(query)}`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      const tags = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
+
+      sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q: query, tags, ts: Date.now() }));
+      setSuggestions(tags);
+      return tags;
+    } catch {
+      sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q: query, tags: [], ts: Date.now() }));
+      setSuggestions([]);
+      return [];
+    }
+  }
+
+  async function runProductSearch(term: string) {
+    const query = term.trim();
     if (!query) return;
 
+    setIsSearching(true);
+    await cacheAiSuggestions(query);
+    setIsSearching(false);
     setSearchQuery("");
+    setSearchFocused(false);
     router.push(`/category/${encodeURIComponent(query)}?view=suggestions`);
+  }
+
+  function submitProductSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void runProductSearch(searchQuery);
+  }
+
+  async function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    setSearchFocused(true);
+
+    const query = value.trim();
+    if (query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsSearching(true);
+    await cacheAiSuggestions(query);
+    setIsSearching(false);
   }
 
   function openCreditCards() {
     setSearchTypeOpen(false);
     router.push("/card-comparison");
   }
+
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Element;
+      if (!target.closest("[data-product-search-root]")) {
+        setSearchFocused(false);
+        setSearchTypeOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
 
   return (
     <header className="landing-upper-toolbar relative z-40 bg-[#032b6b] text-white">
@@ -61,8 +123,9 @@ export default function NewHeader() {
 
         {showProductSearch ? (
           <form
+            data-product-search-root
             onSubmit={submitProductSearch}
-            className="hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex"
+            className="relative hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex"
           >
             <div className="relative">
               <button
@@ -104,11 +167,35 @@ export default function NewHeader() {
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
               <input
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => void handleSearchChange(event.target.value)}
+                onFocus={() => setSearchFocused(true)}
                 className="h-10 w-full rounded-r-[4px] border border-l-0 border-white/20 bg-white pl-11 pr-4 text-[15px] text-[#111827] outline-none focus:ring-2 focus:ring-[#ff6600]/35"
                 placeholder="What are you looking to compare?"
               />
             </div>
+
+            {searchFocused && (visibleSuggestions.length > 0 || isSearching) ? (
+              <div className="absolute left-1/2 top-[calc(100%+6px)] z-50 w-full max-w-[670px] -translate-x-1/2 overflow-hidden rounded-[6px] border border-[#d1d5db] bg-white text-[#111827] shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+                <div className="border-b border-[#eef0f3] px-4 py-2 text-[13px] font-bold text-[#6b7280]">
+                  Suggestions
+                </div>
+                {isSearching ? (
+                  <div className="px-4 py-3 text-[14px] text-[#6b7280]">Loading...</div>
+                ) : (
+                  visibleSuggestions.map((item, index) => (
+                    <button
+                      key={`${item}-${index}`}
+                      type="button"
+                      onClick={() => void runProductSearch(item)}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] hover:bg-[#f5f6fa]"
+                    >
+                      <Search size={15} className="text-[#6b7280]" />
+                      <span className="truncate">{item}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : null}
           </form>
         ) : null}
 
@@ -143,7 +230,7 @@ export default function NewHeader() {
       </div>
 
       {showProductSearch ? (
-        <form onSubmit={submitProductSearch} className="border-t border-white/10 px-4 pb-3 lg:hidden">
+        <form data-product-search-root onSubmit={submitProductSearch} className="relative border-t border-white/10 px-4 pb-3 lg:hidden">
           <div className="mx-auto flex max-w-[720px]">
             <button
               type="button"
@@ -157,12 +244,36 @@ export default function NewHeader() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
               <input
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => void handleSearchChange(event.target.value)}
+                onFocus={() => setSearchFocused(true)}
                 className="h-10 w-full rounded-r-[4px] bg-white pl-9 pr-3 text-[14px] text-[#111827] outline-none"
                 placeholder="Search products"
               />
             </div>
           </div>
+
+          {searchFocused && (visibleSuggestions.length > 0 || isSearching) ? (
+            <div className="absolute left-4 right-4 top-[calc(100%+2px)] z-50 overflow-hidden rounded-[6px] border border-[#d1d5db] bg-white text-[#111827] shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
+              <div className="border-b border-[#eef0f3] px-4 py-2 text-[13px] font-bold text-[#6b7280]">
+                Suggestions
+              </div>
+              {isSearching ? (
+                <div className="px-4 py-3 text-[14px] text-[#6b7280]">Loading...</div>
+              ) : (
+                visibleSuggestions.map((item, index) => (
+                  <button
+                    key={`${item}-${index}`}
+                    type="button"
+                    onClick={() => void runProductSearch(item)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] hover:bg-[#f5f6fa]"
+                  >
+                    <Search size={15} className="text-[#6b7280]" />
+                    <span className="truncate">{item}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : null}
         </form>
       ) : null}
 
