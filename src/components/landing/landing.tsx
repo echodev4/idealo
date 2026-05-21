@@ -110,14 +110,14 @@ function formatProductPrice(price: string) {
 
 function LandingHeroSection() {
   return (
-    <section className="landing-hero-section mx-auto grid w-full max-w-[1200px] grid-cols-1 items-center gap-6 px-4 pb-4 pt-7 md:px-6 md:pt-8 lg:grid-cols-[1fr_0.95fr] lg:gap-8 lg:pb-0 lg:pt-12">
+    <section className="landing-hero-section mx-auto grid w-full max-w-[1200px] grid-cols-1 items-center gap-5 px-4 pb-3 pt-5 md:px-6 md:pt-6 lg:grid-cols-[1fr_0.9fr] lg:gap-6 lg:pb-0 lg:pt-7">
       <div className="landing-hero-copy">
-        <h1 className="landing-hero-title max-w-[900px] text-[32px] font-bold leading-[1.12] tracking-normal text-[#06163a] min-[390px]:text-[35px] min-[430px]:text-[39px] sm:text-[52px] md:text-[62px] lg:text-[72px] xl:text-[80px]">
+        <h1 className="landing-hero-title max-w-[900px] text-[31px] font-bold leading-[1.1] tracking-normal text-[#06163a] min-[390px]:text-[34px] min-[430px]:text-[38px] sm:text-[48px] md:text-[56px] lg:text-[62px] xl:text-[68px]">
           <span>Compare Prices. <span className="text-[#ff6600]">Save.</span></span>
         </h1>
       </div>
 
-      <div className="landing-hero-products relative hidden min-h-[300px] lg:block">
+      <div className="landing-hero-products relative hidden min-h-[220px] lg:block xl:min-h-[250px]">
         <Image
           src="/landing-hero-products.png"
           alt="Popular products including headphones, phone, smartwatch, and tire"
@@ -145,9 +145,9 @@ function LandingSearchSection({
   onLandingAction,
 }: SearchSectionProps) {
   return (
-    <section className="landing-search-bar mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pt-2 md:w-full md:px-6 lg:-mt-8 lg:pt-0">
-      <div className="landing-search-panel relative z-10 rounded-[8px] bg-white p-4 shadow-[0_8px_24px_rgba(6,22,58,0.12)] md:p-5">
-        <div className="landing-services-bar mb-4 grid grid-cols-2 gap-2 border-b border-[#e5e7eb] pb-0 md:flex md:gap-0">
+    <section className="landing-search-bar mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pt-1 md:w-full md:px-6 lg:-mt-4 lg:pt-0">
+      <div className="landing-search-panel relative z-10 rounded-[8px] bg-white p-3 shadow-[0_8px_24px_rgba(6,22,58,0.12)] md:p-4">
+        <div className="landing-services-bar mb-3 grid grid-cols-2 gap-2 border-b border-[#e5e7eb] pb-0 md:flex md:gap-0">
           {serviceTabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -155,7 +155,7 @@ function LandingSearchSection({
                 key={tab.label}
                 type="button"
                 onClick={() => onLandingAction(tab.query)}
-                className={`landing-service-tab flex min-h-12 items-center justify-center gap-2 border-b-2 px-3 py-3 text-[13px] font-bold transition md:min-w-[180px] md:text-[14px] ${
+                className={`landing-service-tab flex min-h-11 items-center justify-center gap-2 border-b-2 px-3 py-2.5 text-[13px] font-bold transition md:min-w-[180px] md:text-[14px] ${
                   tab.active
                     ? "border-[#ff6600] bg-[#fff4ed] text-[#ff6600] md:bg-transparent"
                     : "border-transparent bg-white text-[#06163a] hover:border-[#ff6600] hover:text-[#ff6600]"
@@ -174,7 +174,7 @@ function LandingSearchSection({
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6b7280]" />
               <input
                 ref={inputRef}
-                className="landing-search-input h-14 w-full rounded-[6px] border border-[#d1d5db] bg-white pl-12 pr-11 text-[13px] text-[#111827] outline-none focus:border-[#ff6600] focus:ring-2 focus:ring-[#ff6600]/15 min-[390px]:text-[14px] sm:text-[16px]"
+                className="landing-search-input h-12 w-full rounded-[6px] border border-[#d1d5db] bg-white pl-12 pr-11 text-[13px] text-[#111827] outline-none focus:border-[#ff6600] focus:ring-2 focus:ring-[#ff6600]/15 min-[390px]:text-[14px] sm:text-[16px]"
                 type="text"
                 value={query}
                 onChange={(event) => onQueryChange(event.target.value)}
@@ -194,7 +194,7 @@ function LandingSearchSection({
             </div>
             <button
               type="submit"
-              className="landing-search-submit flex h-14 items-center justify-center gap-2 rounded-[6px] bg-[#ff6600] px-7 text-[16px] font-bold text-white hover:bg-[#ea5f00] sm:min-w-[150px]"
+              className="landing-search-submit flex h-12 items-center justify-center gap-2 rounded-[6px] bg-[#ff6600] px-7 text-[16px] font-bold text-white hover:bg-[#ea5f00] sm:min-w-[150px]"
             >
               <Search size={18} />
               Compare
@@ -225,7 +225,7 @@ function LandingSearchSection({
           )}
         </form>
 
-        <div className="landing-popular-searches mt-4">
+        <div className="landing-popular-searches mt-3">
           <span className="block text-[13px] font-bold text-[#06163a] sm:inline-block sm:mr-2">Popular Searches:</span>
           <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-0 sm:inline-flex sm:flex-wrap sm:items-center">
             {popularSearches.map((term) => (
@@ -248,8 +248,8 @@ function LandingSearchSection({
 
 function LandingCompareSection({ onCategoryAction }: { onCategoryAction: (term: string) => void }) {
   return (
-    <section className="landing-category-section mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 py-8 md:w-full md:px-6 md:py-9">
-      <h2 className="landing-section-title mx-auto mb-5 max-w-[310px] text-center text-[22px] font-bold leading-tight text-[#06163a] sm:max-w-[720px] md:text-[28px]">
+    <section className="landing-category-section mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 py-5 md:w-full md:px-6 md:py-6">
+      <h2 className="landing-section-title mx-auto mb-4 max-w-[310px] text-center text-[21px] font-bold leading-tight text-[#06163a] sm:max-w-[720px] md:text-[26px]">
         What would you like to compare today?
       </h2>
       <div className="landing-category-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:mx-auto lg:max-w-[760px]">
@@ -260,11 +260,11 @@ function LandingCompareSection({ onCategoryAction }: { onCategoryAction: (term: 
               key={category.title}
               type="button"
               onClick={() => onCategoryAction(category.query)}
-              className="landing-category-card flex min-h-[64px] items-center justify-between rounded-[8px] bg-white px-4 py-3 text-left shadow-[0_4px_16px_rgba(6,22,58,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(6,22,58,0.12)] sm:min-h-[190px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
+              className="landing-category-card flex min-h-[62px] items-center justify-between rounded-[8px] bg-white px-4 py-3 text-left shadow-[0_4px_16px_rgba(6,22,58,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(6,22,58,0.12)] sm:min-h-[142px] sm:flex-col sm:justify-center sm:p-5 sm:text-center"
             >
               <span className="flex min-w-0 items-center gap-3 sm:flex-col sm:gap-0">
-                <span className="landing-category-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff3ea] text-[#00306e] sm:mx-auto sm:mb-4 sm:h-16 sm:w-16 sm:text-[#ff6600]">
-                  <Icon size={24} className="sm:h-8 sm:w-8" />
+                <span className="landing-category-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fff3ea] text-[#00306e] sm:mx-auto sm:mb-3 sm:h-14 sm:w-14 sm:text-[#ff6600]">
+                  <Icon size={22} className="sm:h-7 sm:w-7" />
                 </span>
                 <span className="min-w-0">
                   <span className="landing-category-title block text-[15px] font-bold text-[#06163a] sm:text-[18px]">

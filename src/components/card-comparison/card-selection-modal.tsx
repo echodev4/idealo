@@ -5,6 +5,7 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { CardData } from "@/types/card";
 import { useLanguage } from "@/contexts/language-context";
+import { formatAprPercent } from "@/lib/cards/formatApr";
 
 interface Props {
     isOpen: boolean;
@@ -143,7 +144,7 @@ export default function CardSelectionModal({
                                             {card.bankName}
                                         </p>
 
-                                        <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
+                                        <div className="grid grid-cols-1 gap-3 mt-2 text-sm sm:grid-cols-3">
                                             <div>
                                                 <p className="text-muted-foreground">{t("cardComparison.selectionModal.salaryTransfer", "Salary Transfer")}</p>
                                                 <p className="font-semibold">
@@ -156,6 +157,12 @@ export default function CardSelectionModal({
                                                 <p className="text-muted-foreground">{t("cardComparison.selectionModal.annualFee", "Annual Fee")}</p>
                                                 <p className="font-semibold">
                                                     {card.joiningAnnualFee}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground">{t("cardComparison.cardDetails.stats.interestRate", "Interest Rate")}</p>
+                                                <p className="font-semibold">
+                                                    {formatAprPercent(card.apr) || "N/A"}
                                                 </p>
                                             </div>
                                         </div>

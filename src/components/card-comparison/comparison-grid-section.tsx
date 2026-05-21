@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { CardData } from "@/types/card";
 import styles from "@/app/card-comparison/comparison-grid-section.module.css";
 import { useLanguage } from "@/contexts/language-context";
+import { formatAprPercent } from "@/lib/cards/formatApr";
 
 const AttributeRow = ({
   icon: Icon,
@@ -173,7 +174,7 @@ const FilledCardSlot = ({
                     icon={TrendingUp}
                     label="APR"
                 >
-                    {card.apr || <span className="text-muted-foreground">{t("cardComparison.comparisonGrid.emptyValue", "—")}</span>}
+                    {formatAprPercent(card.apr) || <span className="text-muted-foreground">{t("cardComparison.comparisonGrid.emptyValue", "—")}</span>}
                 </AttributeRow>
 
                 <AttributeRow

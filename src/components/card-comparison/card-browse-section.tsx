@@ -7,6 +7,7 @@ import { CardData } from "@/types/card";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import { formatAprPercent } from "@/lib/cards/formatApr";
 
 interface Props {
     cards: CardData[];
@@ -301,7 +302,7 @@ export default function CardBrowseSection({
                                     {card.bankName}
                                 </p>
 
-                                <div className="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                <div className="mt-2 grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
                                     <div>
                                         <p className="text-muted-foreground">{t("cardComparison.browseSection.salaryTransfer", "Salary Transfer")}</p>
                                         <p className="font-semibold">
@@ -313,6 +314,10 @@ export default function CardBrowseSection({
                                     <div>
                                         <p className="text-muted-foreground">{t("cardComparison.browseSection.annualFee", "Annual Fee")}</p>
                                         <p className="font-semibold">{card.joiningAnnualFee}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground">{t("cardComparison.cardDetails.stats.interestRate", "Interest Rate")}</p>
+                                        <p className="font-semibold">{formatAprPercent(card.apr) || "N/A"}</p>
                                     </div>
                                 </div>
 

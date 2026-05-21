@@ -14,6 +14,7 @@ import {
     Building2,
     ArrowRight,
 } from "lucide-react";
+import { formatAprPercent } from "@/lib/cards/formatApr";
 
 type Card = {
     _id: string;
@@ -155,7 +156,7 @@ export default function CardDetailsPage() {
                             <StatBox
                                 icon={<Percent />}
                                 label={t("cardComparison.cardDetails.stats.interestRate", "Interest Rate")}
-                                value={card.apr || t("cardComparison.cardDetails.na", "N/A")}
+                                value={formatAprPercent(card.apr) || t("cardComparison.cardDetails.na", "N/A")}
                             />
                             <StatBox
                                 icon={<Building2 />}
