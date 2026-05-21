@@ -110,14 +110,15 @@ function formatProductPrice(price: string) {
 
 function LandingHeroSection() {
   return (
-    <section className="landing-hero-section mx-auto grid w-full max-w-[1200px] grid-cols-1 items-center gap-5 px-4 pb-3 pt-5 md:px-6 md:pt-6 lg:grid-cols-[1fr_0.9fr] lg:gap-6 lg:pb-0 lg:pt-7">
-      <div className="landing-hero-copy">
-        <h1 className="landing-hero-title max-w-[900px] text-[31px] font-bold leading-[1.1] tracking-normal text-[#06163a] min-[390px]:text-[34px] min-[430px]:text-[38px] sm:text-[48px] md:text-[56px] lg:text-[62px] xl:text-[68px]">
-          <span>Compare Prices. <span className="text-[#ff6600]">Save.</span></span>
+    <section className="landing-hero-section mx-auto grid w-full max-w-[1080px] grid-cols-1 items-center gap-3 px-4 pb-0 pt-0 md:px-6 lg:grid-cols-[1.18fr_0.82fr] lg:gap-4">
+      <div className="landing-hero-copy text-center lg:text-left">
+        <h1 className="landing-hero-title mx-auto max-w-[620px] text-[31px] font-bold leading-[1.08] tracking-normal text-[#06163a] min-[390px]:text-[34px] min-[430px]:text-[38px] sm:text-[46px] md:text-[54px] lg:mx-0 lg:text-[58px] xl:text-[62px]">
+          <span className="block whitespace-nowrap">Compare Prices.</span>
+          <span className="block w-full text-center text-[#ff6600]">Save.</span>
         </h1>
       </div>
 
-      <div className="landing-hero-products relative hidden min-h-[220px] lg:block xl:min-h-[250px]">
+      <div className="landing-hero-products relative hidden min-h-[235px] lg:block xl:min-h-[250px]">
         <Image
           src="/landing-hero-products.png"
           alt="Popular products including headphones, phone, smartwatch, and tire"
@@ -145,7 +146,7 @@ function LandingSearchSection({
   onLandingAction,
 }: SearchSectionProps) {
   return (
-    <section className="landing-search-bar mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pt-1 md:w-full md:px-6 lg:-mt-4 lg:pt-0">
+    <section className="landing-search-bar mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pt-0 md:w-full md:px-6 lg:-mt-8 lg:pt-0">
       <div className="landing-search-panel relative z-10 rounded-[8px] bg-white p-3 shadow-[0_8px_24px_rgba(6,22,58,0.12)] md:p-4">
         <div className="landing-services-bar mb-3 grid grid-cols-2 gap-2 border-b border-[#e5e7eb] pb-0 md:flex md:gap-0">
           {serviceTabs.map((tab) => {
@@ -349,9 +350,22 @@ function LandingProductsSection({
     const el = carouselRef.current;
     if (!el) return;
 
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    setCanScrollLeft(el.scrollLeft > 2);
-    setCanScrollRight(el.scrollLeft < maxScroll - 2);
+    const items = Array.from(el.children) as HTMLElement[];
+    const firstItem = items[0];
+    const lastItem = items[items.length - 1];
+
+    if (!firstItem || !lastItem) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+
+    const viewport = el.getBoundingClientRect();
+    const first = firstItem.getBoundingClientRect();
+    const last = lastItem.getBoundingClientRect();
+
+    setCanScrollLeft(first.left < viewport.left - 2);
+    setCanScrollRight(last.right > viewport.right + 2);
   }
 
   useEffect(() => {
