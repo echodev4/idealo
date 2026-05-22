@@ -53,6 +53,7 @@ type SearchSectionProps = {
   onClear: () => void;
   onSearch: (term: string) => void;
   onLandingAction: (term: string) => void;
+  onPopularSearch: (term: string) => void;
 };
 
 const serviceTabs = [
@@ -146,6 +147,7 @@ function LandingSearchSection({
   onClear,
   onSearch,
   onLandingAction,
+  onPopularSearch,
 }: SearchSectionProps) {
   return (
     <section className="landing-search-bar mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pt-0 md:w-full md:px-6 lg:-mt-8 lg:pt-0">
@@ -235,7 +237,7 @@ function LandingSearchSection({
               <button
                 key={term}
                 type="button"
-                onClick={() => onLandingAction(term)}
+                onClick={() => onPopularSearch(term)}
                 className="landing-popular-tag rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5 text-[12px] font-bold text-[#374151] hover:border-[#ff6600] hover:text-[#ff6600] sm:text-[13px]"
                 title={term}
               >
@@ -638,6 +640,13 @@ export default function Landing() {
     await runSearch(term);
   }
 
+  function handlePopularSearch(term: string) {
+    const q = normalizeSearchTerm(term);
+    if (!q) return;
+
+    router.push(`/category/${encodeURIComponent(q)}`);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await runSearch(query);
@@ -707,6 +716,7 @@ export default function Landing() {
         onClear={clearSearch}
         onSearch={runSearch}
         onLandingAction={runLandingAction}
+        onPopularSearch={handlePopularSearch}
       />
       <LandingCompareSection onCategoryAction={runLandingAction} />
       <LandingProductsSection
