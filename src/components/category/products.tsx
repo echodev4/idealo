@@ -210,11 +210,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
     const href = getProductHref(product);
 
     return (
-        <div className="relative bg-white px-4 py-4 sm:px-5">
-            <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
-                <WatchlistToggle product={product} iconSize={16} buttonSize={9} className="h-8 w-8 sm:h-10 sm:w-10" />
-            </div>
-
+        <div className="bg-white px-4 py-4 sm:px-5">
             <div className="flex items-start gap-4">
                 <Link href={href} className="shrink-0">
                     <div className="relative h-[92px] w-[92px] overflow-hidden rounded bg-white">
@@ -266,6 +262,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                 </div>
 
                 <div className="hidden sm:flex w-[180px] flex-col items-end justify-center gap-2 pr-1">
+                    <WatchlistToggle product={product} iconSize={16} buttonSize={9} className="h-8 w-8 sm:h-10 sm:w-10" />
                     {/* <div className="text-[12px] text-gray-500">{source}</div> */}
                     <div className="text-right">
                         <div className="text-[12px] text-gray-700">{t("category.products.from", "from")}</div>
@@ -280,6 +277,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
                     <span className="text-[12px] text-gray-700">{t("category.products.from", "from")} </span>
                     <PriceAmount product={product} className="text-[16px] font-semibold text-[#ff6a00]" />
                 </div>
+                <WatchlistToggle product={product} iconSize={16} buttonSize={9} className="h-8 w-8" />
             </div>
         </div>
     );
