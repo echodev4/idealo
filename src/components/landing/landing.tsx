@@ -112,15 +112,15 @@ function formatProductPrice(price: string) {
 
 function LandingHeroSection() {
   return (
-    <section className="landing-hero-section mx-auto grid w-full max-w-[1080px] grid-cols-1 items-center gap-3 px-4 pb-0 pt-0 md:px-6 lg:grid-cols-[1.18fr_0.82fr] lg:gap-4">
-      <div className="landing-hero-copy text-center lg:text-left">
-        <h1 className="landing-hero-title mx-auto max-w-[620px] text-[31px] font-bold leading-[1.08] tracking-normal text-[#06163a] min-[390px]:text-[34px] min-[430px]:text-[38px] sm:text-[46px] md:text-[54px] lg:mx-0 lg:text-[58px] xl:text-[62px]">
-          <span className="block whitespace-nowrap">Compare Prices.</span>
-          <span className="block w-full text-center text-[#ff6600]">Save.</span>
+    <section className="landing-hero-section mx-auto grid w-full max-w-[1080px] grid-cols-1 items-center gap-2 px-4 pt-1 pb-1 md:px-6 lg:grid-cols-[1.18fr_0.82fr] lg:gap-2 lg:px-6 lg:py-0">
+      <div className="landing-hero-copy flex min-h-[68px] items-center justify-center text-center lg:min-h-0 lg:justify-start lg:text-left">
+        <h1 className="landing-hero-title mx-auto flex w-fit max-w-[620px] flex-row items-center justify-center gap-x-2 whitespace-nowrap text-[24px] font-bold leading-none tracking-normal text-[#06163a] min-[390px]:text-[26px] min-[430px]:text-[28px] sm:text-[30px] md:text-[34px] lg:mx-0 lg:w-full lg:flex-col lg:items-center lg:gap-x-0 lg:gap-y-0 lg:whitespace-normal lg:text-[58px] xl:text-[62px]">
+          <span className="text-center lg:block">Compare Prices.</span>
+          <span className="text-center text-[#ff6600] lg:block">Save.</span>
         </h1>
       </div>
 
-      <div className="landing-hero-products relative hidden min-h-[235px] lg:block xl:min-h-[250px]">
+      <div className="landing-hero-products relative hidden min-h-[220px] lg:block xl:min-h-[238px]">
         <Image
           src="/landing-hero-products.png"
           alt="Popular products including headphones, phone, smartwatch, and tire"

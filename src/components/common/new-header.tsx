@@ -133,7 +133,7 @@ export default function NewHeader() {
 
   return (
     <header className="landing-upper-toolbar relative z-40 bg-[#032b6b] text-white">
-      <div className="landing-page-container mx-auto grid min-h-[42px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-1.5 lg:flex lg:min-h-[46px] lg:items-center lg:justify-between lg:gap-4 lg:px-6">
+      <div className="landing-page-container relative mx-auto grid min-h-[42px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-1.5 lg:flex lg:min-h-[46px] lg:items-center lg:justify-between lg:gap-4 lg:px-6">
         <button
           type="button"
           onClick={() => setMobileMenuOpen((value) => !value)}
@@ -146,7 +146,7 @@ export default function NewHeader() {
 
         <Link
           href="/"
-          className="landing-toolbar-logo justify-self-center shrink-0 text-[24px] font-bold leading-none text-white sm:text-[26px] lg:justify-self-auto lg:text-[28px]"
+          className="landing-toolbar-logo absolute left-1/2 top-1/2 z-10 shrink-0 -translate-x-1/2 -translate-y-1/2 text-[24px] font-bold leading-none text-white sm:text-[26px] lg:static lg:translate-x-0 lg:translate-y-0 lg:text-[28px]"
           aria-label="Ideolo home"
         >
           idea<span className="text-[#ff6a00]">lo</span>
