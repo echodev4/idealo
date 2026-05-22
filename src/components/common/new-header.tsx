@@ -243,13 +243,14 @@ export default function NewHeader() {
               {item}
             </button>
           ))}
-          <button
-            type="button"
-            className="landing-toolbar-action hidden items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold hover:bg-white/10 sm:flex"
+          <Link
+            href="/watchlist"
+            className="landing-toolbar-action flex items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold hover:bg-white/10"
+            aria-label="Watchlist"
           >
             <Heart size={18} />
-            Watchlist
-          </button>
+            <span className="hidden sm:inline">Watchlist</span>
+          </Link>
           <button
             type="button"
             className="landing-toolbar-action flex items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold hover:bg-white/10"
