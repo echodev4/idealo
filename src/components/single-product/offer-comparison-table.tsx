@@ -66,6 +66,10 @@ function normalizeSourceName(source?: string | null) {
     return value;
 }
 
+function getProductKey(item: { product_url?: string | null; source?: string | null }) {
+    return `${String(item?.product_url || "").trim()}::${normalizeSourceName(item?.source || "")}`;
+}
+
 function getSourceLogo(source: string) {
     const normalized = normalizeSourceName(source);
 
@@ -203,6 +207,11 @@ export default function OfferComparisonTable() {
     if (offersLoading || (loading && !(offers || []).length)) return <OfferComparisonTableSkeleton />;
 
     const sourceOffers = (offers || []).length ? offers : product ? [product] : [];
+    const selectedProductKey = getProductKey({
+        product_url: product?.product_url,
+        source: product?.source,
+    });
+    const selectedProductImage = String(product?.images?.[0]?.src || product?.image_url || "").trim();
 
     const offerRows: Offer[] = sourceOffers
         .map((p: any, idx: number) => {
@@ -250,6 +259,19 @@ export default function OfferComparisonTable() {
             } as Offer;
         })
         .filter(Boolean) as Offer[];
+
+    function getTopProductImage(row: Offer): string {
+        if (
+            selectedProductKey &&
+            row.source === "sharafdg" &&
+            getProductKey({ product_url: row.url, source: row.source }) === selectedProductKey &&
+            selectedProductImage
+        ) {
+            return selectedProductImage;
+        }
+
+        return row.imageUrl;
+    }
 
     const totalOffersCount = Math.max(1, offerCount || offerRows.length);
 
@@ -305,9 +327,9 @@ export default function OfferComparisonTable() {
                                         </div>
 
                                         <div className="w-[34px] h-[34px] rounded border border-[#e5e7eb] bg-white relative overflow-hidden">
-                                            {!!p.imageUrl && (
+                                            {!!getTopProductImage(p) && (
                                                 <Image
-                                                    src={p.imageUrl}
+                                                    src={getTopProductImage(p)}
                                                     alt={p.title}
                                                     fill
                                                     sizes="34px"
