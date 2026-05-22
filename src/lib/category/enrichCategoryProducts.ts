@@ -38,6 +38,24 @@ function getSharafOfferDisplayImages(product: CategoryProduct): ProductImage[] {
         .filter((image) => isUsableImage(image.src));
 }
 
+function getUsableProductImages(product: CategoryProduct): ProductImage[] {
+    return (product.images || [])
+        .map((image) => ({
+            src: String(image?.src || "").trim(),
+            alt: String(image?.alt || "").trim() || getProductAlt(product),
+        }))
+        .filter((image) => isUsableImage(image.src));
+}
+
+function getBorrowableImages(product: CategoryProduct): ProductImage[] {
+    const offerDisplayImages = getSharafOfferDisplayImages(product);
+    if (offerDisplayImages.length > 0) {
+        return offerDisplayImages;
+    }
+
+    return getUsableProductImages(product);
+}
+
 function getSharafFallbackImage(
     products: CategoryProduct[],
     sharafIndex: number,
@@ -45,7 +63,7 @@ function getSharafFallbackImage(
 ): ProductImage | null {
     const indexedCandidates = products
         .map((product, index) => ({ product, index }))
-        .filter(({ product, index }) => index !== sharafIndex && !isSharafdgProduct(product))
+        .filter(({ index }) => index !== sharafIndex)
         .sort((a, b) => {
             const distanceDiff =
                 Math.abs(a.index - sharafIndex) - Math.abs(b.index - sharafIndex);
@@ -55,14 +73,9 @@ function getSharafFallbackImage(
         });
 
     for (const { product } of indexedCandidates) {
-        for (const image of product.images || []) {
-            const src = String(image?.src || "").trim();
-            if (!isUsableImage(src) || usedImageSrcs.has(src)) continue;
-
-            return {
-                src,
-                alt: image?.alt || getProductAlt(product),
-            };
+        for (const image of getBorrowableImages(product)) {
+            if (usedImageSrcs.has(image.src)) continue;
+            return image;
         }
     }
 
@@ -74,8 +87,9 @@ export function enrichCategoryProducts({
     offerCountMap,
 }: EnrichCategoryProductsParams): CategoryProduct[] {
     const usedFallbackImageSrcs = new Set<string>();
+    const enrichedProducts: CategoryProduct[] = [];
 
-    return visibleProducts.map((product, index) => {
+    visibleProducts.forEach((product, index) => {
         const enrichedProduct: CategoryProduct = {
             ...product,
             offerCount: Math.max(1, offerCountMap.get(getProductKey(product)) || 0),
@@ -84,30 +98,36 @@ export function enrichCategoryProducts({
         const primaryImage = String(enrichedProduct.images?.[0]?.src || "").trim();
 
         if (!isSharafdgProduct(enrichedProduct) || isUsableImage(primaryImage)) {
-            return enrichedProduct;
+            enrichedProducts.push(enrichedProduct);
+            return;
         }
 
         const offerDisplayImages = getSharafOfferDisplayImages(enrichedProduct);
         if (offerDisplayImages.length > 0) {
-            return {
+            enrichedProducts.push({
                 ...enrichedProduct,
                 images: offerDisplayImages,
-            };
+            });
+            return;
         }
 
+        const candidateProducts = visibleProducts.map((candidate, candidateIndex) =>
+            candidateIndex < enrichedProducts.length ? enrichedProducts[candidateIndex] : candidate
+        );
         const fallbackImage = getSharafFallbackImage(
-            visibleProducts,
+            candidateProducts,
             index,
             usedFallbackImageSrcs
         );
 
         if (!fallbackImage) {
-            return enrichedProduct;
+            enrichedProducts.push(enrichedProduct);
+            return;
         }
 
         usedFallbackImageSrcs.add(fallbackImage.src);
 
-        return {
+        enrichedProducts.push({
             ...enrichedProduct,
             images: [
                 {
@@ -115,6 +135,8 @@ export function enrichCategoryProducts({
                     alt: fallbackImage.alt || getProductAlt(enrichedProduct),
                 },
             ],
-        };
+        });
     });
+
+    return enrichedProducts;
 }
