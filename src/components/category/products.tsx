@@ -1,8 +1,9 @@
 ﻿import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ExternalLink, Heart, Star } from "lucide-react";
+import { ExternalLink, Star } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
+import WatchlistToggle from "@/components/common/watchlist-toggle";
 import {
     normalizeProductSource,
     PRODUCT_PLACEHOLDER_SRC,
@@ -138,16 +139,9 @@ function ProductCellGrid({ product }: { product: Product }) {
 
     return (
         <div className="relative h-full bg-white px-4 pb-5 pt-4 sm:px-5 sm:pb-6">
-            <button
-                type="button"
-                className="absolute right-4 top-4 z-10 hidden h-10 w-10 place-items-center rounded-full border border-gray-300 bg-white text-[#0b63c8] cursor-not-allowed sm:grid"
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}
-            >
-                <Heart className="h-5 w-5" />
-            </button>
+            <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
+                <WatchlistToggle product={product} iconSize={16} buttonSize={9} className="h-8 w-8 sm:h-10 sm:w-10" />
+            </div>
 
             <Link href={href} className="block">
                 <div className="relative mx-auto mt-8 h-[170px] w-full max-w-[230px]">
@@ -217,6 +211,10 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
 
     return (
         <div className="relative bg-white px-4 py-4 sm:px-5">
+            <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
+                <WatchlistToggle product={product} iconSize={16} buttonSize={9} className="h-8 w-8 sm:h-10 sm:w-10" />
+            </div>
+
             <div className="flex items-start gap-4">
                 <Link href={href} className="shrink-0">
                     <div className="relative h-[92px] w-[92px] overflow-hidden rounded bg-white">

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
+import WatchlistToggle from "@/components/common/watchlist-toggle";
 
 const ProductGallerySkeleton = () => {
   return (
@@ -76,7 +77,24 @@ export default function ProductGallery() {
   };
 
   return (
-    <div className="w-full">
+    <div className="relative w-full">
+      <div className="absolute right-2 top-2 z-20 lg:right-3 lg:top-3">
+        <WatchlistToggle
+          product={{
+            product_url: product?.product_url,
+            source: product?.source,
+            product_name: product?.title || product?.product_name,
+            image_url: product?.image_url || product?.images?.[0]?.src,
+            price: product?.price || product?.currentPrice,
+            currentPrice: product?.currentPrice,
+            images: product?.images,
+          }}
+          iconSize={16}
+          buttonSize={9}
+          className="h-8 w-8 lg:h-10 lg:w-10"
+        />
+      </div>
+
       <div className="lg:hidden">
         <div
           onTouchStart={handleTouchStart}

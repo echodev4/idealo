@@ -1,12 +1,14 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { BriefcaseBusiness, ChevronDown, CreditCard, Heart, Menu, Search, User, X } from "lucide-react";
 
 const topBarItems = ["Vouchers"];
 const mobileMenuItems = ["Vouchers"];
 const SUGGESTIONS_KEY = "last_search_suggestions_v1";
+const SEARCH_DEBOUNCE_MS = 450;
 
 export default function NewHeader() {
   const router = useRouter();
@@ -17,8 +19,10 @@ export default function NewHeader() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchTypeOpen, setSearchTypeOpen] = useState(false);
+  const suggestionRequestIdRef = useRef(0);
+  const suggestionTimeoutRef = useRef<number | undefined>(undefined);
 
-  const showProductSearch = pathname.startsWith("/category");
+  const showProductSearch = pathname.startsWith("/category") || pathname.startsWith("/product");
   const visibleSuggestions = useMemo(
     () => suggestions.filter(Boolean).slice(0, 5),
     [suggestions]
@@ -31,7 +35,7 @@ export default function NewHeader() {
     }
   }
 
-  async function cacheAiSuggestions(query: string) {
+  async function cacheAiSuggestions(query: string, requestId?: number) {
     try {
       const res = await fetch(`/api/search-products?q=${encodeURIComponent(query)}`, {
         cache: "no-store",
@@ -40,11 +44,15 @@ export default function NewHeader() {
       const tags = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
 
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q: query, tags, ts: Date.now() }));
-      setSuggestions(tags);
+      if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
+        setSuggestions(tags);
+      }
       return tags;
     } catch {
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q: query, tags: [], ts: Date.now() }));
-      setSuggestions([]);
+      if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
+        setSuggestions([]);
+      }
       return [];
     }
   }
@@ -53,6 +61,11 @@ export default function NewHeader() {
     const query = term.trim();
     if (!query) return;
 
+    if (suggestionTimeoutRef.current !== undefined) {
+      window.clearTimeout(suggestionTimeoutRef.current);
+      suggestionTimeoutRef.current = undefined;
+    }
+    suggestionRequestIdRef.current += 1;
     setIsSearching(true);
     await cacheAiSuggestions(query);
     setIsSearching(false);
@@ -66,20 +79,39 @@ export default function NewHeader() {
     void runProductSearch(searchQuery);
   }
 
-  async function handleSearchChange(value: string) {
+  function handleSearchChange(value: string) {
     setSearchQuery(value);
     setSearchFocused(true);
+  }
 
-    const query = value.trim();
+  useEffect(() => {
+    if (!searchFocused) return;
+
+    const query = searchQuery.trim();
+    const requestId = suggestionRequestIdRef.current + 1;
+    suggestionRequestIdRef.current = requestId;
+
     if (query.length < 3) {
       setSuggestions([]);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    await cacheAiSuggestions(query);
-    setIsSearching(false);
-  }
+    suggestionTimeoutRef.current = window.setTimeout(async () => {
+      await cacheAiSuggestions(query, requestId);
+      if (suggestionRequestIdRef.current === requestId) {
+        setIsSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (suggestionTimeoutRef.current !== undefined) {
+        window.clearTimeout(suggestionTimeoutRef.current);
+        suggestionTimeoutRef.current = undefined;
+      }
+    };
+  }, [searchFocused, searchQuery]);
 
   function openCreditCards() {
     setSearchTypeOpen(false);
@@ -101,7 +133,7 @@ export default function NewHeader() {
 
   return (
     <header className="landing-upper-toolbar relative z-40 bg-[#032b6b] text-white">
-      <div className="landing-page-container mx-auto flex min-h-[42px] max-w-[1440px] items-center justify-between gap-4 px-4 py-1.5 lg:min-h-[46px] lg:px-6">
+      <div className="landing-page-container mx-auto grid min-h-[42px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-1.5 lg:flex lg:min-h-[46px] lg:items-center lg:justify-between lg:gap-4 lg:px-6">
         <button
           type="button"
           onClick={() => setMobileMenuOpen((value) => !value)}
@@ -112,14 +144,13 @@ export default function NewHeader() {
           {mobileMenuOpen ? <X size={19} /> : <Menu size={20} />}
         </button>
 
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="landing-toolbar-logo shrink-0 text-[24px] font-bold leading-none text-white sm:text-[26px] lg:text-[28px]"
+        <Link
+          href="/"
+          className="landing-toolbar-logo justify-self-center shrink-0 text-[24px] font-bold leading-none text-white sm:text-[26px] lg:justify-self-auto lg:text-[28px]"
           aria-label="Ideolo home"
         >
           idea<span className="text-[#ff6a00]">lo</span>
-        </button>
+        </Link>
 
         {showProductSearch ? (
           <form
@@ -201,7 +232,7 @@ export default function NewHeader() {
 
         {!showProductSearch ? <div className="hidden flex-1 lg:block" /> : null}
 
-        <div className="landing-toolbar-actions ml-auto flex items-center gap-2 sm:gap-4">
+        <div className="landing-toolbar-actions ml-auto flex items-center justify-self-end gap-2 sm:gap-4 lg:justify-self-auto">
           {topBarItems.map((item) => (
             <button
               key={item}
@@ -230,8 +261,8 @@ export default function NewHeader() {
       </div>
 
       {showProductSearch ? (
-        <form data-product-search-root onSubmit={submitProductSearch} className="relative border-t border-white/10 px-4 pb-3 lg:hidden">
-          <div className="mx-auto flex max-w-[720px]">
+        <form data-product-search-root onSubmit={submitProductSearch} className="relative px-4 pb-3 pt-2 lg:hidden">
+          <div className="mx-auto flex max-w-[720px] gap-0">
             <button
               type="button"
               onClick={() => setSearchTypeOpen((value) => !value)}

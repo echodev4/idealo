@@ -15,8 +15,10 @@ import {
   Tag,
   X,
 } from "lucide-react";
+import WatchlistToggle from "@/components/common/watchlist-toggle";
 
 const SUGGESTIONS_KEY = "last_search_suggestions_v1";
+const SEARCH_DEBOUNCE_MS = 450;
 
 type LandingProduct = {
   _id: string;
@@ -293,26 +295,34 @@ function ProductCard({
   onOpenProduct: (product: LandingProduct) => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onOpenProduct(product)}
-      className="landing-product-card group relative flex h-full w-full flex-col rounded-[8px] bg-white p-3 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(6,22,58,0.14)] sm:p-4"
-    >
-      <span className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-[#7890aa] group-hover:text-[#ff6600]">
-        <Heart size={17} />
-      </span>
-      <img
-        src={product.image_url}
-        alt={product.product_name}
-        className="landing-product-image mx-auto h-[122px] w-full object-contain sm:h-[145px] md:h-[158px]"
-      />
-      <span className="landing-product-title mt-3 block min-h-[44px] text-[14px] font-bold leading-5 text-[#06163a] sm:text-[15px]">
-        {product.product_name}
-      </span>
-      <span className="landing-product-price mt-2 block text-[15px] font-bold text-[#ff6600] sm:text-[16px]">
-        From {formatProductPrice(product.price)}
-      </span>
-    </button>
+    <div className="landing-product-card group relative flex h-full w-full flex-col rounded-[8px] bg-white p-3 text-center shadow-[0_4px_14px_rgba(6,22,58,0.08)] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(6,22,58,0.14)] sm:p-4">
+      <div className="absolute right-3 top-3 z-10">
+        <WatchlistToggle
+          product={product}
+          iconSize={16}
+          buttonSize={9}
+          className="h-8 w-8 sm:h-9 sm:w-9"
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onOpenProduct(product)}
+        className="flex w-full flex-1 flex-col"
+      >
+        <img
+          src={product.image_url}
+          alt={product.product_name}
+          className="landing-product-image mx-auto h-[122px] w-full object-contain sm:h-[145px] md:h-[158px]"
+        />
+        <span className="landing-product-title mt-3 block min-h-[44px] text-[14px] font-bold leading-5 text-[#06163a] sm:text-[15px]">
+          {product.product_name}
+        </span>
+        <span className="landing-product-price mt-2 block text-[15px] font-bold text-[#ff6600] sm:text-[16px]">
+          From {formatProductPrice(product.price)}
+        </span>
+      </button>
+    </div>
   );
 }
 
@@ -501,6 +511,8 @@ export default function Landing() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [featuredExpanded, setFeaturedExpanded] = useState(false);
   const [popularExpanded, setPopularExpanded] = useState(false);
+  const suggestionRequestIdRef = useRef(0);
+  const suggestionTimeoutRef = useRef<number | undefined>(undefined);
 
   const visibleSuggestions = useMemo(
     () => suggestions.filter(Boolean).slice(0, 5),
@@ -547,7 +559,7 @@ export default function Landing() {
     };
   }, []);
 
-  async function cacheAiSuggestions(q: string) {
+  async function cacheAiSuggestions(q: string, requestId?: number) {
     try {
       const res = await fetch(`/api/search-products?q=${encodeURIComponent(q)}`, {
         cache: "no-store",
@@ -556,11 +568,15 @@ export default function Landing() {
       const tags = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
 
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags, ts: Date.now() }));
-      setSuggestions(tags);
+      if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
+        setSuggestions(tags);
+      }
       return tags;
     } catch {
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags: [], ts: Date.now() }));
-      setSuggestions([]);
+      if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
+        setSuggestions([]);
+      }
       return [];
     }
   }
@@ -590,6 +606,11 @@ export default function Landing() {
       return;
     }
 
+    if (suggestionTimeoutRef.current !== undefined) {
+      window.clearTimeout(suggestionTimeoutRef.current);
+      suggestionTimeoutRef.current = undefined;
+    }
+    suggestionRequestIdRef.current += 1;
     setIsSearching(true);
     await cacheAiSuggestions(q);
     setIsSearching(false);
@@ -622,20 +643,39 @@ export default function Landing() {
     await runSearch(query);
   }
 
-  async function handleSuggestionRefresh(nextQuery: string) {
+  function handleSuggestionRefresh(nextQuery: string) {
     setQuery(nextQuery);
     setIsFocused(true);
+  }
 
-    const q = normalizeSearchTerm(nextQuery);
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const q = normalizeSearchTerm(query);
+    const requestId = suggestionRequestIdRef.current + 1;
+    suggestionRequestIdRef.current = requestId;
+
     if (q.length < 3) {
       setSuggestions([]);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    await cacheAiSuggestions(q);
-    setIsSearching(false);
-  }
+    suggestionTimeoutRef.current = window.setTimeout(async () => {
+      await cacheAiSuggestions(q, requestId);
+      if (suggestionRequestIdRef.current === requestId) {
+        setIsSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (suggestionTimeoutRef.current !== undefined) {
+        window.clearTimeout(suggestionTimeoutRef.current);
+        suggestionTimeoutRef.current = undefined;
+      }
+    };
+  }, [isFocused, query]);
 
   function clearSearch() {
     setQuery("");
