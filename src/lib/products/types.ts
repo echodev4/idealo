@@ -26,6 +26,10 @@ export type RawProduct = {
   faiss_score?: number;
   specifications?: Record<string, unknown>;
   productOffers?: string[];
+  display_images?: { src?: string; alt?: string }[];
+  display_image_url?: string;
+  display_source?: string;
+  display_product_url?: string;
 };
 
 export type CategoryProduct = {
@@ -51,6 +55,10 @@ export type CategoryProduct = {
   faiss_score?: number;
   specifications?: Record<string, unknown>;
   productOffers?: string[];
+  displayImages?: { src: string; alt?: string }[];
+  displayImageUrl?: string;
+  displaySource?: string;
+  displayProductUrl?: string;
 };
 
 export type SearchProductsResult = {

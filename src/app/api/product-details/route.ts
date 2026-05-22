@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const product_url = searchParams.get("product_url");
+    const source = searchParams.get("source");
 
     if (!product_url) {
       return NextResponse.json(
@@ -29,7 +30,10 @@ export async function GET(req: Request) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ product_url }),
+      body: JSON.stringify({
+        product_url,
+        source: typeof source === "string" ? source.trim() : "",
+      }),
       cache: "no-store",
     });
 

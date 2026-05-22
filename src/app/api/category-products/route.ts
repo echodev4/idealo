@@ -61,15 +61,47 @@ export async function GET(req: Request) {
     const countJson = await countRes.json();
 
     const offerCountMap = new Map<string, number>();
+    const displayImageMap = new Map<
+      string,
+      {
+        displayImages: { src: string; alt?: string }[];
+        displayImageUrl: string;
+        displaySource: string;
+        displayProductUrl: string;
+      }
+    >();
     const results = Array.isArray(countJson?.results) ? countJson.results : [];
 
     for (const item of results) {
       const key = `${item?.product_url || ""}::${item?.source || ""}`;
       offerCountMap.set(key, Number(item?.offer_count || 0));
+
+      displayImageMap.set(key, {
+        displayImages: Array.isArray(item?.display_images) ? item.display_images : [],
+        displayImageUrl:
+          typeof item?.display_image_url === "string" ? item.display_image_url : "",
+        displaySource: typeof item?.display_source === "string" ? item.display_source : "",
+        displayProductUrl:
+          typeof item?.display_product_url === "string" ? item.display_product_url : "",
+      });
     }
 
     const enrichedProducts = enrichCategoryProducts({
-      visibleProducts: paginated.products,
+      visibleProducts: paginated.products.map((product) => {
+        const displayImage = displayImageMap.get(
+          `${product.product_url}::${product.source || ""}`
+        );
+
+        if (!displayImage) return product;
+
+        return {
+          ...product,
+          displayImages: displayImage.displayImages,
+          displayImageUrl: displayImage.displayImageUrl,
+          displaySource: displayImage.displaySource,
+          displayProductUrl: displayImage.displayProductUrl,
+        };
+      }),
       offerCountMap,
     });
 

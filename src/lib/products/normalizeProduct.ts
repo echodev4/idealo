@@ -11,6 +11,17 @@ function normalizeImage(raw: RawProduct): { src: string; alt?: string }[] {
     return resolveProductImages(raw);
 }
 
+function normalizeDisplayImages(raw: RawProduct): { src: string; alt?: string }[] {
+    if (!Array.isArray(raw.display_images)) return [];
+
+    return raw.display_images
+        .map((image) => ({
+            src: toText(image?.src),
+            alt: toText(image?.alt) || undefined,
+        }))
+        .filter((image) => image.src);
+}
+
 export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
     const id = toText(raw._id);
     const productUrl = toText(raw.product_url);
@@ -22,6 +33,7 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         specifications: raw.specifications,
     });
     const images = normalizeImage(raw);
+    const displayImages = normalizeDisplayImages(raw);
 
     const currentPrice = toText(
         raw.currentPrice !== undefined && raw.currentPrice !== null && raw.currentPrice !== ""
@@ -69,5 +81,9 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         productOffers: Array.isArray(raw.productOffers)
             ? raw.productOffers.map((item) => String(item)).filter(Boolean)
             : [],
+        displayImages,
+        displayImageUrl: toText(raw.display_image_url),
+        displaySource: toText(raw.display_source),
+        displayProductUrl: toText(raw.display_product_url),
     };
 }

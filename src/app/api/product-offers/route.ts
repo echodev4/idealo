@@ -83,6 +83,12 @@ export async function POST(req: Request) {
       is_mobile_product: Boolean(data?.is_mobile_product),
       offer_count: Number(data?.offer_count || 0),
       offers: Array.isArray(data?.offers) ? data.offers : [],
+      display_images: Array.isArray(data?.display_images) ? data.display_images : [],
+      display_image_url:
+        typeof data?.display_image_url === "string" ? data.display_image_url : "",
+      display_source: typeof data?.display_source === "string" ? data.display_source : "",
+      display_product_url:
+        typeof data?.display_product_url === "string" ? data.display_product_url : "",
     });
   } catch (err) {
     console.error("product-offers route error:", err);

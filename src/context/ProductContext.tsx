@@ -201,6 +201,22 @@ function getDisplayTitle(item: any): string {
     return String(item?.title || item?.product_name || "").trim() || "Product image";
 }
 
+function getSharafDisplayImages(item: any): ProductImage[] {
+    if (!Array.isArray(item?.display_images) && !Array.isArray(item?.displayImages)) {
+        return [];
+    }
+
+    const rawImages = Array.isArray(item?.displayImages) ? item.displayImages : item.display_images;
+    const fallbackAlt = getDisplayTitle(item);
+
+    return rawImages
+        .map((image: any): ProductImage => ({
+            src: String(image?.src || "").trim(),
+            alt: String(image?.alt || "").trim() || fallbackAlt,
+        }))
+        .filter((image: ProductImage) => image.src && image.src !== PRODUCT_PLACEHOLDER_SRC);
+}
+
 function getUsableImages(item: any): ProductImage[] {
     if (isSharafdgSource(item?.source)) return [];
 
@@ -495,7 +511,7 @@ export function ProductProvider({
 
                 const url = `/api/product-details?product_url=${encodeURIComponent(
                     productUrl
-                )}`;
+                )}&source=${encodeURIComponent(sourceName || "")}`;
 
                 const res = await fetch(url, { cache: "no-store" });
                 const json = await res.json();
@@ -530,6 +546,12 @@ export function ProductProvider({
 
                 selectedProduct.images = resolveProductImages(selectedProduct);
                 selectedProduct.image_url = resolvePrimaryProductImage(selectedProduct);
+
+                const sharafDisplayImages = getSharafDisplayImages(selectedProduct);
+                if (isSharafdgSource(selectedProduct.source) && sharafDisplayImages.length > 0) {
+                    selectedProduct.images = sharafDisplayImages;
+                    selectedProduct.image_url = sharafDisplayImages[0]?.src || selectedProduct.image_url;
+                }
 
                 setProduct(selectedProduct);
                 return selectedProduct;
@@ -740,6 +762,20 @@ export function ProductProvider({
             if (!selectedProduct || !isSharafdgSource(selectedProduct.source)) {
                 return {
                     product: selectedProduct,
+                    offers: offerItems,
+                };
+            }
+
+            const sharafDisplayImages = getSharafDisplayImages(selectedProduct);
+            if (sharafDisplayImages.length > 0) {
+                const nextProduct = {
+                    ...selectedProduct,
+                    images: sharafDisplayImages,
+                    image_url: sharafDisplayImages[0]?.src || selectedProduct.image_url,
+                };
+                setProduct(nextProduct);
+                return {
+                    product: nextProduct,
                     offers: offerItems,
                 };
             }

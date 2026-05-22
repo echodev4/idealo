@@ -27,6 +27,17 @@ function getProductAlt(product: CategoryProduct): string {
     return product.title || "Product image";
 }
 
+function getSharafOfferDisplayImages(product: CategoryProduct): ProductImage[] {
+    if (!Array.isArray(product.displayImages)) return [];
+
+    return product.displayImages
+        .map((image) => ({
+            src: String(image?.src || "").trim(),
+            alt: String(image?.alt || "").trim() || getProductAlt(product),
+        }))
+        .filter((image) => isUsableImage(image.src));
+}
+
 function getSharafFallbackImage(
     products: CategoryProduct[],
     sharafIndex: number,
@@ -74,6 +85,14 @@ export function enrichCategoryProducts({
 
         if (!isSharafdgProduct(enrichedProduct) || isUsableImage(primaryImage)) {
             return enrichedProduct;
+        }
+
+        const offerDisplayImages = getSharafOfferDisplayImages(enrichedProduct);
+        if (offerDisplayImages.length > 0) {
+            return {
+                ...enrichedProduct,
+                images: offerDisplayImages,
+            };
         }
 
         const fallbackImage = getSharafFallbackImage(
