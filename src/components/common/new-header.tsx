@@ -154,11 +154,13 @@ export default function NewHeader() {
 
         {showProductSearch ? (
           <form
+
             data-product-search-root
             onSubmit={submitProductSearch}
-            className="relative hidden min-w-0 flex-1 items-center justify-center gap-0 lg:flex"
+            className="relative hidden flex-1 items-center justify-center gap-0 lg:flex"
           >
-            <div className="relative">
+
+            <div className="relative hidden lg:block">
               <button
                 type="button"
                 onClick={() => setSearchTypeOpen((value) => !value)}
@@ -260,54 +262,6 @@ export default function NewHeader() {
           </button>
         </div>
       </div>
-
-      {showProductSearch ? (
-        <form data-product-search-root onSubmit={submitProductSearch} className="relative px-4 pb-3 pt-2 lg:hidden">
-          <div className="mx-auto flex max-w-[720px] gap-0">
-            <button
-              type="button"
-              onClick={() => setSearchTypeOpen((value) => !value)}
-              className="flex h-10 min-w-[118px] items-center justify-center gap-2 rounded-l-[4px] bg-white px-3 text-[13px] font-bold text-[#ff6600]"
-            >
-              <BriefcaseBusiness size={16} />
-              Products
-            </button>
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7280]" />
-              <input
-                value={searchQuery}
-                onChange={(event) => void handleSearchChange(event.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                className="h-10 w-full rounded-r-[4px] bg-white pl-9 pr-3 text-[14px] text-[#111827] outline-none"
-                placeholder="Search products"
-              />
-            </div>
-          </div>
-
-          {searchFocused && (visibleSuggestions.length > 0 || isSearching) ? (
-            <div className="absolute left-4 right-4 top-[calc(100%+2px)] z-50 overflow-hidden rounded-[6px] border border-[#d1d5db] bg-white text-[#111827] shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
-              <div className="border-b border-[#eef0f3] px-4 py-2 text-[13px] font-bold text-[#6b7280]">
-                Suggestions
-              </div>
-              {isSearching ? (
-                <div className="px-4 py-3 text-[14px] text-[#6b7280]">Loading...</div>
-              ) : (
-                visibleSuggestions.map((item, index) => (
-                  <button
-                    key={`${item}-${index}`}
-                    type="button"
-                    onClick={() => void runProductSearch(item)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] hover:bg-[#f5f6fa]"
-                  >
-                    <Search size={15} className="text-[#6b7280]" />
-                    <span className="truncate">{item}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          ) : null}
-        </form>
-      ) : null}
 
       {mobileMenuOpen && (
         <div className="absolute left-0 right-0 top-full border-t border-white/10 bg-[#032b6b] shadow-[0_12px_24px_rgba(3,43,107,0.22)] lg:hidden">
