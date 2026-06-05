@@ -140,6 +140,11 @@ function dedupeProducts(products: Product[], limit: number): Product[] {
   return selected;
 }
 
+function excludeSources(products: Product[], sources: string[]): Product[] {
+  const blocked = new Set(sources.map((source) => source.trim().toLowerCase()));
+  return products.filter((product) => !blocked.has(product.source.trim().toLowerCase()));
+}
+
 async function fetchProductsBySearchQuery(
   query: string,
   limit: number,
@@ -192,16 +197,60 @@ async function fetchProductsByQueries(
   return dedupeProducts(merged, limit);
 }
 
+async function fetchProductsByQueriesBalanced(
+  queries: string[],
+  limit: number,
+  candidateLimit: number,
+  perQueryLimit: number
+): Promise<Product[]> {
+  const queryResults = await Promise.all(
+    queries.map((query) => fetchProductsBySearchQuery(query, perQueryLimit, candidateLimit))
+  );
+
+  const merged: Product[] = [];
+  let index = 0;
+
+  while (merged.length < limit) {
+    let addedInRound = false;
+
+    for (const products of queryResults) {
+      if (index < products.length) {
+        merged.push(products[index]);
+        addedInRound = true;
+      }
+    }
+
+    if (!addedInRound) break;
+    index += 1;
+  }
+
+  return dedupeProducts(merged, limit);
+}
+
 export async function GET() {
   try {
     const [iphoneDeals, dairyProducts, fashionProducts] = await Promise.all([
-      fetchProductsByQueries(["iphone 16", "iphone 17", "iphone 15", "iphone"], 12, 80),
-      fetchProductsByQueries(["milk", "laban", "yogurt", "cheese"], 12, 80),
-      fetchProductsByQueries(["dress", "abaya", "shirt", "fashion"], 18, 100),
+      fetchProductsByQueries(
+        ["iphone 17 pro max", "iphone 17 pro", "iphone 17", "iphone"],
+        12,
+        80
+      ),
+      fetchProductsByQueries(
+        ["greek yogurt", "fresh milk", "cheddar cheese", "laban"],
+        12,
+        80
+      ),
+      fetchProductsByQueriesBalanced(
+        ["women handbag", "women jeans", "women sneakers", "abaya"],
+        18,
+        100
+        ,
+        6
+      ),
     ]);
 
     return NextResponse.json({
-      iphoneDeals,
+      iphoneDeals: excludeSources(iphoneDeals, ["sharafdg"]),
       dairyProducts,
       fashionProducts,
     });
