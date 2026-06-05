@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { LANDING_EMBEDDINGS } from "@/lib/landingEmbeddings";
 import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
 import { formatProductDisplayName } from "@/lib/products/displayName";
 
@@ -141,8 +140,8 @@ function dedupeProducts(products: Product[], limit: number): Product[] {
   return selected;
 }
 
-async function fetchFaissByVector(
-  vector: number[],
+async function fetchProductsBySearchQuery(
+  query: string,
   limit: number,
   candidateLimit: number
 ): Promise<Product[]> {
@@ -151,20 +150,15 @@ async function fetchFaissByVector(
     return [];
   }
 
-  const res = await fetch(`${BASE_URL}/faiss/search_by_vector`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      vector,
-      limit: candidateLimit,
-    }),
+  const res = await fetch(
+    `${BASE_URL}/search/products?q=${encodeURIComponent(query)}&limit=${candidateLimit}`,
+    {
     cache: "no-store",
-  });
+    }
+  );
 
   if (!res.ok) {
-    console.error("FAISS error:", res.status);
+    console.error("Elasticsearch search error:", res.status);
     return [];
   }
 
@@ -181,9 +175,9 @@ async function fetchFaissByVector(
 export async function GET() {
   try {
     const [iphoneDeals, dairyProducts, fashionProducts] = await Promise.all([
-      fetchFaissByVector(LANDING_EMBEDDINGS.iphoneDeals, 12, 60),
-      fetchFaissByVector(LANDING_EMBEDDINGS.dairyProducts, 12, 60),
-      fetchFaissByVector(LANDING_EMBEDDINGS.fashionProducts, 18, 80),
+      fetchProductsBySearchQuery("iphone 16", 12, 60),
+      fetchProductsBySearchQuery("milk", 12, 60),
+      fetchProductsBySearchQuery("fashion", 18, 80),
     ]);
 
     return NextResponse.json({

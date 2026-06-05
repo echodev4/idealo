@@ -1,23 +1,54 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
+import { formatProductDisplayName } from "@/lib/products/displayName";
 
 export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!BASE_URL) {
   throw new Error("SCRAPER_API_BASE_URL is not defined");
 }
 
-if (!OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY is not defined");
+function toText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
 }
 
+function normalizeProduct(raw: any) {
+  const source = toText(raw?.source);
+  const category = toText(raw?.category);
+  const productName =
+    toText(raw?.suggestedName) ||
+    formatProductDisplayName(raw?.title || raw?.product_name, {
+      source,
+      category,
+      specifications: raw?.specifications,
+    });
+  const imageUrl = resolvePrimaryProductImage(raw);
+  const price =
+    raw?.price !== undefined && raw?.price !== null && raw?.price !== ""
+      ? toText(raw.price)
+      : toText(raw?.currentPrice);
 
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
+  if (
+    !toText(raw?._id) ||
+    !toText(raw?.product_url) ||
+    !source ||
+    !productName ||
+    !imageUrl ||
+    !price
+  ) {
+    return null;
+  }
+
+  return {
+    ...raw,
+    product_name: productName,
+    image_url: imageUrl,
+    price,
+  };
+}
 
 export async function GET(req: Request) {
   try {
@@ -33,39 +64,16 @@ export async function GET(req: Request) {
       });
     }
 
-    /* =========================
-       CREATE EMBEDDING (NODE)
-    ========================= */
-
-    const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: q,
-    });
-
-    const vector = embeddingResponse.data[0].embedding;
-
-    /* =========================
-       CALL PYTHON FAISS
-    ========================= */
-
-    const faissResponse = await fetch(
-      `${BASE_URL}/faiss/search_by_vector`,
+    const searchResponse = await fetch(
+      `${BASE_URL}/search/products?q=${encodeURIComponent(q)}&limit=${limit}`,
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          vector,
-          limit,
-        }),
         cache: "no-store",
       }
     );
 
-    if (!faissResponse.ok) {
-      const errorText = await faissResponse.text();
-      console.error("FAISS backend error:", errorText);
+    if (!searchResponse.ok) {
+      const errorText = await searchResponse.text();
+      console.error("Elasticsearch backend error:", errorText);
 
       return NextResponse.json(
         {
@@ -76,30 +84,16 @@ export async function GET(req: Request) {
       );
     }
 
-    const data = await faissResponse.json();
-
-    /* =========================
-       FILTER INVALID PRODUCTS
-    ========================= */
+    const data = await searchResponse.json();
 
     const products = Array.isArray(data.products)
-      ? data.products.filter((p: any) => {
-        return (
-          typeof p._id === "string" &&
-          typeof p.product_url === "string" &&
-          p.product_url.startsWith("http") &&
-          typeof p.source === "string" &&
-          typeof p.product_name === "string" &&
-          typeof p.image_url === "string" &&
-          p.image_url.startsWith("http") &&
-          typeof p.price === "string" &&
-          p.price.trim() !== ""
-        );
-      })
+      ? data.products
+          .map((product: any) => normalizeProduct(product))
+          .filter((product: any) => product !== null)
       : [];
 
     return NextResponse.json({
-      count: products.length,
+      count: typeof data?.count === "number" ? data.count : products.length,
       products,
     });
 
