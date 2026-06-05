@@ -172,12 +172,32 @@ async function fetchProductsBySearchQuery(
   return dedupeProducts(normalizedProducts, limit);
 }
 
+async function fetchProductsByQueries(
+  queries: string[],
+  limit: number,
+  candidateLimit: number
+): Promise<Product[]> {
+  const merged: Product[] = [];
+
+  for (const query of queries) {
+    const items = await fetchProductsBySearchQuery(query, limit, candidateLimit);
+    merged.push(...items);
+
+    const deduped = dedupeProducts(merged, limit);
+    if (deduped.length >= limit) {
+      return deduped;
+    }
+  }
+
+  return dedupeProducts(merged, limit);
+}
+
 export async function GET() {
   try {
     const [iphoneDeals, dairyProducts, fashionProducts] = await Promise.all([
-      fetchProductsBySearchQuery("iphone 16", 12, 60),
-      fetchProductsBySearchQuery("milk", 12, 60),
-      fetchProductsBySearchQuery("fashion", 18, 80),
+      fetchProductsByQueries(["iphone 16", "iphone 17", "iphone 15", "iphone"], 12, 80),
+      fetchProductsByQueries(["milk", "laban", "yogurt", "cheese"], 12, 80),
+      fetchProductsByQueries(["dress", "abaya", "shirt", "fashion"], 18, 100),
     ]);
 
     return NextResponse.json({
