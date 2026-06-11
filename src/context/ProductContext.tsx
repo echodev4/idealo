@@ -719,7 +719,7 @@ export function ProductProvider({
             if (!productUrl) return [];
 
             try {
-                const res = await fetch("/api/product-variants", {
+                const res = await fetch("/api/product-image-candidates", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -728,7 +728,6 @@ export function ProductProvider({
                     body: JSON.stringify({
                         product_url: productUrl,
                         source: sourceName || "",
-                        product_name: productName || "",
                     }),
                 });
 
