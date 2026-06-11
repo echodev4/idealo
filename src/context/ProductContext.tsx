@@ -38,7 +38,6 @@ export interface OfferProduct {
     created_at?: string;
     updated_at?: string;
     match_score?: number;
-    faiss_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
     initialNumericPrice?: number;
@@ -63,7 +62,6 @@ export interface RelatedProduct {
     created_at?: string;
     updated_at?: string;
     match_score?: number;
-    faiss_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
     initialNumericPrice?: number;
@@ -189,8 +187,6 @@ function normalizeListProduct(item: any): OfferProduct {
         updated_at: typeof item?.updated_at === "string" ? item.updated_at : "",
         match_score:
             typeof item?.match_score === "number" ? item.match_score : undefined,
-        faiss_score:
-            typeof item?.faiss_score === "number" ? item.faiss_score : undefined,
         numericPrice: cleanPrice(item?.price ?? item?.currentPrice),
         numericOldPrice: cleanPrice(item?.old_price ?? item?.previousPrice),
         initialNumericPrice: cleanPrice(item?.price ?? item?.currentPrice),
@@ -646,72 +642,6 @@ export function ProductProvider({
                 setRelatedLoading(false);
             }
 
-            // Variants are intentionally hidden for now.
-            // Keep the original fetch logic commented instead of removing it.
-            /*
-            if (!productUrl) {
-                setRelatedProducts([]);
-                setVariantCount(0);
-                setRelatedLoading(false);
-                return [];
-            }
-
-            try {
-                setRelatedLoading(true);
-
-                const res = await fetch("/api/product-variants", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    cache: "no-store",
-                    body: JSON.stringify({
-                        product_url: productUrl,
-                        source: sourceName || "",
-                        product_name: productName || "",
-                    }),
-                });
-
-                const json = await res.json();
-
-                if (!active) return [];
-
-                if (!res.ok || json?.success === false) {
-                    setRelatedProducts([]);
-                    setVariantCount(0);
-                    return [];
-                }
-
-                const apiRelated = Array.isArray(json?.products) ? json.products : [];
-
-                const mapped = apiRelated
-                    .map(normalizeListProduct)
-                    .filter((p: any) => p.product_name && p.image_url && p.product_url);
-
-                setRelatedProducts(mapped);
-                setVariantCount(Number(json?.variant_count || 0));
-
-                if (typeof json?.product_case === "string") {
-                    setProductCase(json.product_case);
-                }
-
-                if (typeof json?.is_mobile_product === "boolean") {
-                    setIsMobileProduct(json.is_mobile_product);
-                }
-
-                return mapped;
-            } catch (err) {
-                console.error("Related products fetch error:", err);
-                if (active) {
-                    setRelatedProducts([]);
-                    setVariantCount(0);
-                }
-                return [];
-            } finally {
-                if (active) setRelatedLoading(false);
-            }
-            */
-
             return [];
         }
 
@@ -835,10 +765,6 @@ export function ProductProvider({
             await refreshLiveItem(selectedProduct, "Selected product");
         }
 
-        async function refreshRelatedProducts(items: RelatedProduct[]) {
-            await refreshLiveItemsSequentially(items, "Variant");
-        }
-
         async function refreshOffers(items: OfferProduct[]) {
             await refreshLiveItemsSequentially(items, "Offer");
         }
@@ -878,12 +804,6 @@ export function ProductProvider({
             } else if (!selectedExistsInOffers) {
                 await refreshOneProduct(displayProduct);
             }
-
-            // Variant live refresh is intentionally disabled while the variants panel is hidden.
-            /*
-            if (!active || liveController.signal.aborted) return;
-            await refreshRelatedProducts(related as RelatedProduct[]);
-            */
         }
 
         run();

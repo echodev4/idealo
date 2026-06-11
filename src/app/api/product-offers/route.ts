@@ -4,7 +4,6 @@ export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
 const OFFER_LIMIT = 160;
-const CANDIDATE_LIMIT = 160;
 
 export async function POST(req: Request) {
   try {
@@ -53,7 +52,6 @@ export async function POST(req: Request) {
         product_url,
         source,
         limit: OFFER_LIMIT,
-        candidate_limit: CANDIDATE_LIMIT,
       }),
       cache: "no-store",
     });

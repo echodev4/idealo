@@ -19,7 +19,6 @@ type Product = {
   ratingCount?: string;
   reviews?: string;
   average_rating?: number | null;
-  faiss_score?: number;
 };
 
 type RawProduct = {
@@ -39,7 +38,6 @@ type RawProduct = {
   discount?: string | number;
   reviews?: string | number;
   average_rating?: number | null;
-  faiss_score?: number;
   specifications?: Record<string, unknown>;
 };
 
@@ -119,8 +117,6 @@ function normalizeProduct(raw: RawProduct): Product | null {
         : undefined,
     average_rating:
       typeof raw?.average_rating === "number" ? raw.average_rating : null,
-    faiss_score:
-      typeof raw?.faiss_score === "number" ? raw.faiss_score : undefined,
   };
 }
 

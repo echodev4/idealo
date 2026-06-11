@@ -5,8 +5,8 @@ import { enrichCategoryProducts } from "@/lib/category/enrichCategoryProducts";
 
 export const runtime = "nodejs";
 
-const CANDIDATE_LIMIT = 160;
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
+const SEARCH_LIMIT = 160;
 
 export async function GET(req: Request) {
   try {
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       throw new Error("SCRAPER_API_BASE_URL is not defined");
     }
 
-    const searchResult = await searchProducts(q, CANDIDATE_LIMIT);
+    const searchResult = await searchProducts(q, SEARCH_LIMIT);
     const paginated = paginateProducts(searchResult.products, page, limit);
 
     const countPayload = {
@@ -41,7 +41,6 @@ export async function GET(req: Request) {
         product_url: product.product_url,
         source: product.source || "",
       })),
-      candidate_limit: CANDIDATE_LIMIT,
     };
 
     const countRes = await fetch(`${BASE_URL}/offers/count-by-products`, {

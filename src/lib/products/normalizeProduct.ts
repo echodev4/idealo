@@ -73,7 +73,6 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         source_record_id: id,
         scraped_at: toText(raw.scraped_at || raw.created_at || raw.inserted_at),
         offerCount: 0,
-        faiss_score: typeof raw.faiss_score === "number" ? raw.faiss_score : undefined,
         specifications:
             raw.specifications && typeof raw.specifications === "object"
                 ? raw.specifications

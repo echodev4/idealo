@@ -23,7 +23,6 @@ export type RawProduct = {
   lastLiveScrapedAt?: string;
   created_at?: string;
   inserted_at?: string;
-  faiss_score?: number;
   specifications?: Record<string, unknown>;
   productOffers?: string[];
   display_images?: { src?: string; alt?: string }[];
@@ -52,7 +51,6 @@ export type CategoryProduct = {
   numericOldPrice?: number;
   scraped_at?: string;
   offerCount?: number;
-  faiss_score?: number;
   specifications?: Record<string, unknown>;
   productOffers?: string[];
   displayImages?: { src: string; alt?: string }[];
