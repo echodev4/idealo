@@ -7,6 +7,81 @@ export const runtime = "nodejs";
 
 const BASE_URL = process.env.SCRAPER_API_BASE_URL;
 const SEARCH_LIMIT = 160;
+const STOPWORDS = new Set([
+  "the",
+  "and",
+  "for",
+  "with",
+  "from",
+  "new",
+  "best",
+  "sale",
+  "shop",
+  "buy",
+  "price",
+]);
+
+function normalizeTokens(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token && !STOPWORDS.has(token) && (token.length > 1 || /^\d+$/.test(token)));
+}
+
+function scoreProductForQuery(query: string, product: any): number {
+  const queryTokens = normalizeTokens(query);
+  if (queryTokens.length === 0) return 0;
+
+  const productTokens = new Set(
+    normalizeTokens(
+      [
+        product?.product_name,
+        product?.title,
+        product?.category,
+        product?.main_category,
+        product?.category_path_text,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    )
+  );
+
+  let score = 0;
+  for (const token of queryTokens) {
+    if (productTokens.has(token)) {
+      score += 1;
+    }
+  }
+
+  const productText = Array.from(productTokens).join(" ");
+  const accessoryTerms = [
+    "adapter",
+    "band",
+    "cable",
+    "case",
+    "charger",
+    "cover",
+    "glass",
+    "holder",
+    "mount",
+    "protector",
+    "receiver",
+    "screen",
+    "skin",
+  ];
+
+  if (accessoryTerms.some((term) => productText.includes(term))) {
+    score -= 1;
+  }
+
+  return score;
+}
+
+function shouldApplyStrictFilter(query: string): boolean {
+  return normalizeTokens(query).length >= 2;
+}
 
 export async function GET(req: Request) {
   try {
@@ -34,7 +109,20 @@ export async function GET(req: Request) {
     }
 
     const searchResult = await searchProducts(q, SEARCH_LIMIT);
-    const paginated = paginateProducts(searchResult.products, page, limit);
+    const applyStrictFilter = shouldApplyStrictFilter(q);
+    const rankedProducts = [...searchResult.products]
+      .map((product) => ({
+        product,
+        score: scoreProductForQuery(q, product),
+      }))
+      .filter(({ score }) => (applyStrictFilter ? score > 0 : true))
+      .sort((a, b) => b.score - a.score);
+
+    const paginated = paginateProducts(
+      rankedProducts.map(({ product }) => product),
+      page,
+      limit
+    );
 
     const countPayload = {
       items: paginated.products.map((product) => ({
