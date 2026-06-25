@@ -21,6 +21,11 @@ const STOPWORDS = new Set([
   "price",
 ]);
 
+type RankedProduct = {
+  product: any;
+  score: number;
+};
+
 function normalizeTokens(text: string): string[] {
   return text
     .toLowerCase()
@@ -83,6 +88,57 @@ function shouldApplyStrictFilter(query: string): boolean {
   return normalizeTokens(query).length >= 2;
 }
 
+function normalizeGroupName(product: any): string {
+  const suggestedName = String(product?.suggestedName || "").trim();
+  if (suggestedName) {
+    return suggestedName.toLowerCase().replace(/\s+/g, " ");
+  }
+
+  return String(product?.product_url || product?._id || "")
+    .trim()
+    .toLowerCase();
+}
+
+function parsePrice(value: unknown): number {
+  const text = String(value || "").trim();
+  if (!text) return Number.POSITIVE_INFINITY;
+
+  const numeric = Number(text.replace(/[^\d.]/g, ""));
+  return Number.isFinite(numeric) ? numeric : Number.POSITIVE_INFINITY;
+}
+
+function groupProductsBySuggestedName(products: RankedProduct[]): any[] {
+  const groups = new Map<
+    string,
+    {
+      product: any;
+      price: number;
+      order: number;
+    }
+  >();
+
+  products.forEach(({ product }, index) => {
+    const key = normalizeGroupName(product);
+    if (!key) return;
+
+    const price = parsePrice(product?.currentPrice ?? product?.price);
+    const existing = groups.get(key);
+
+    if (!existing) {
+      groups.set(key, { product, price, order: index });
+      return;
+    }
+
+    if (price < existing.price) {
+      groups.set(key, { product, price, order: existing.order });
+    }
+  });
+
+  return Array.from(groups.values())
+    .sort((a, b) => a.order - b.order)
+    .map(({ product }) => product);
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -118,11 +174,8 @@ export async function GET(req: Request) {
       .filter(({ score }) => (applyStrictFilter ? score > 0 : true))
       .sort((a, b) => b.score - a.score);
 
-    const paginated = paginateProducts(
-      rankedProducts.map(({ product }) => product),
-      page,
-      limit
-    );
+    const groupedProducts = groupProductsBySuggestedName(rankedProducts);
+    const paginated = paginateProducts(groupedProducts, page, limit);
 
     const countPayload = {
       items: paginated.products.map((product) => ({
@@ -214,3 +267,5 @@ export async function GET(req: Request) {
     );
   }
 }
+
+
