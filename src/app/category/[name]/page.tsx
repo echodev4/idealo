@@ -130,6 +130,7 @@ export default function CategoryPage() {
   const sortRef = useRef<HTMLDivElement | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -192,64 +193,66 @@ export default function CategoryPage() {
     const controller = new AbortController();
     let stopped = false;
     const liveProducts = getUniqueLiveProducts(products);
-
     async function refreshVisiblePrices() {
       if (!liveProducts.length) return;
 
-      for (const product of liveProducts) {
-        if (stopped || controller.signal.aborted) return;
+      setIsRefreshingPrices(true);
 
-        const productKey = getProductKey(product);
-        const liveSource = normalizeLivePriceSource(product.source);
-
-        setProducts((current) =>
-          current.map((item) =>
-            getProductKey(item) === productKey ? { ...item, livePriceLoading: true } : item
-          )
-        );
-
-        try {
-          const res = await fetch("/api/live-price", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            cache: "no-store",
-            signal: controller.signal,
-            body: JSON.stringify({
-              product_url: product.product_url,
-              source: liveSource,
-            }),
-          });
-
-          const json = await res.json();
-
-          if (!res.ok || json?.success === false || !json?.currentPrice) {
-            throw new Error(json?.error || "Live current price could not be fetched");
-          }
-
+      try {
+        for (const product of liveProducts) {
           if (stopped || controller.signal.aborted) return;
 
-          const nextPrice = String(json.currentPrice);
-          const nextPreviousPrice =
-            typeof json.previousPrice === "string" && json.previousPrice.trim()
-              ? json.previousPrice
-              : undefined;
-          const nextDiscountPercentage =
-            typeof json.discountPercentage === "string" && json.discountPercentage.trim()
-              ? json.discountPercentage
-              : undefined;
-          const nextRating =
-            typeof json.rating === "string" && json.rating.trim()
-              ? json.rating
-              : undefined;
-          const nextRatingCount =
-            typeof json.ratingCount === "string" && json.ratingCount.trim()
-              ? json.ratingCount
-              : undefined;
+          const productKey = getProductKey(product);
+          const liveSource = normalizeLivePriceSource(product.source);
 
           setProducts((current) =>
             current.map((item) =>
-              getProductKey(item) === productKey
-                ? {
+              getProductKey(item) === productKey ? { ...item, livePriceLoading: true } : item
+            )
+          );
+
+          try {
+            const res = await fetch("/api/live-price", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              cache: "no-store",
+              signal: controller.signal,
+              body: JSON.stringify({
+                product_url: product.product_url,
+                source: liveSource,
+              }),
+            });
+
+            const json = await res.json();
+
+            if (!res.ok || json?.success === false || !json?.currentPrice) {
+              throw new Error(json?.error || "Live current price could not be fetched");
+            }
+
+            if (stopped || controller.signal.aborted) return;
+
+            const nextPrice = String(json.currentPrice);
+            const nextPreviousPrice =
+              typeof json.previousPrice === "string" && json.previousPrice.trim()
+                ? json.previousPrice
+                : undefined;
+            const nextDiscountPercentage =
+              typeof json.discountPercentage === "string" && json.discountPercentage.trim()
+                ? json.discountPercentage
+                : undefined;
+            const nextRating =
+              typeof json.rating === "string" && json.rating.trim()
+                ? json.rating
+                : undefined;
+            const nextRatingCount =
+              typeof json.ratingCount === "string" && json.ratingCount.trim()
+                ? json.ratingCount
+                : undefined;
+
+            setProducts((current) =>
+              current.map((item) =>
+                getProductKey(item) === productKey
+                  ? {
                     ...item,
                     currentPrice: nextPrice,
                     previousPrice: nextPreviousPrice ?? item.previousPrice,
@@ -261,21 +264,24 @@ export default function CategoryPage() {
                     liveNumericPrice: cleanPrice(nextPrice),
                     livePriceLoading: false,
                   }
-                : item
-            )
-          );
-        } catch (err: any) {
-          if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
+                  : item
+              )
+            );
+          } catch (err: any) {
+            if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
 
-          console.error("Live current price refresh error:", product.product_url, err);
-          setProducts((current) =>
-            current.map((item) =>
-              getProductKey(item) === productKey
-                ? { ...item, livePriceLoading: false }
-                : item
-            )
-          );
+            console.error("Live current price refresh error:", product.product_url, err);
+            setProducts((current) =>
+              current.map((item) =>
+                getProductKey(item) === productKey
+                  ? { ...item, livePriceLoading: false }
+                  : item
+              )
+            );
+          }
         }
+      } finally {
+        setIsRefreshingPrices(false);
       }
     }
 
@@ -310,7 +316,12 @@ export default function CategoryPage() {
   }, [products]);
 
   const sortedProducts = useMemo(() => {
-    const arr = [...filteredProducts];
+    // Freeze current order while live prices are refreshing
+    if (isRefreshingPrices) {
+      return products;
+    }
+
+    const arr = [...products];
 
     const popA = (p: Product) =>
       Number((p.ratingCount || "").toString().replace(/[^\d]/g, "")) || 0;
@@ -330,7 +341,7 @@ export default function CategoryPage() {
     });
 
     return arr;
-  }, [filteredProducts, sortKey]);
+  }, [products, sortKey, isRefreshingPrices]);
 
   const sortLabel = useMemo(() => {
     if (sortKey === "popular") return t("categoryPage.sort.popular", "Most popular first");
@@ -421,9 +432,8 @@ export default function CategoryPage() {
                           setSortKey(o.k as SortKey);
                           setSortOpen(false);
                         }}
-                        className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${
-                          active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                        }`}
+                        className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                          }`}
                       >
                         <span>{o.t}</span>
                       </button>
@@ -437,18 +447,16 @@ export default function CategoryPage() {
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`grid h-10 w-10 place-items-center ${
-                  viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                }`}
+                className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                  }`}
               >
                 <GridIcon active={viewMode === "grid"} />
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("list")}
-                className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${
-                  viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                }`}
+                className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                  }`}
               >
                 <ListIcon active={viewMode === "list"} />
               </button>
@@ -487,9 +495,8 @@ export default function CategoryPage() {
                             setSortKey(o.k as SortKey);
                             setSortOpen(false);
                           }}
-                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${
-                            active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                          }`}
+                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                            }`}
                         >
                           <span>{o.t}</span>
                         </button>
@@ -503,18 +510,16 @@ export default function CategoryPage() {
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
-                  className={`grid h-10 w-10 place-items-center ${
-                    viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                  }`}
+                  className={`grid h-10 w-10 place-items-center ${viewMode === "grid" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                    }`}
                 >
                   <GridIcon active={viewMode === "grid"} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("list")}
-                  className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${
-                    viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                  }`}
+                  className={`grid h-10 w-10 place-items-center border-l border-[#cfd6dd] ${viewMode === "list" ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
+                    }`}
                 >
                   <ListIcon active={viewMode === "list"} />
                 </button>
@@ -562,11 +567,10 @@ export default function CategoryPage() {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`h-10 w-10 rounded border text-sm font-medium ${
-                      active
-                        ? "border-[#0b63c8] bg-[#0b63c8] text-white"
-                        : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
-                    }`}
+                    className={`h-10 w-10 rounded border text-sm font-medium ${active
+                      ? "border-[#0b63c8] bg-[#0b63c8] text-white"
+                      : "border-[#cfd6dd] text-[#0b63c8] hover:bg-[#f2f6fb]"
+                      }`}
                   >
                     {page}
                   </button>
@@ -576,14 +580,13 @@ export default function CategoryPage() {
 
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${
-                currentPage === totalPages
-                  ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
-                  : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
-              }`}
+              className={`ml-2 h-10 w-[84px] rounded border text-sm font-semibold ${currentPage === totalPages
+                ? "cursor-not-allowed border-[#cfd6dd] bg-[#e9eef5] text-[#9aa7b6]"
+                : "border-[#0b63c8] bg-[#0b63c8] text-white hover:bg-[#095bb6]"
+                }`}
               disabled={currentPage === totalPages}
             >
-            →
+              →
             </button>
           </div>
         ) : null}
