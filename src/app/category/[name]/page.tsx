@@ -79,6 +79,29 @@ function getUniqueLiveProducts(products: Product[]) {
   return unique;
 }
 
+function sortProducts(products: Product[], sortKey: SortKey): Product[] {
+  const arr = [...products];
+
+  const popA = (p: Product) =>
+    Number((p.ratingCount || "").toString().replace(/[^\d]/g, "")) || 0;
+
+  const savings = (p: Product) =>
+    Math.max(0, (p.numericOldPrice || 0) - (p.numericPrice || 0));
+
+  const price = (p: Product) => p.numericPrice || 0;
+
+  arr.sort((a, b) => {
+    if (sortKey === "popular") return popA(b) - popA(a);
+    if (sortKey === "savings") return savings(b) - savings(a);
+    if (sortKey === "cheap") return price(a) - price(b);
+    if (sortKey === "high") return price(b) - price(a);
+    if (sortKey === "new") return getScrapedAtMs(b) - getScrapedAtMs(a);
+    return 0;
+  });
+
+  return arr;
+}
+
 function GridIcon({ active }: { active: boolean }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" className={active ? "fill-current" : "fill-current"}>
@@ -131,6 +154,7 @@ export default function CategoryPage() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
+  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     let isActive = true;
@@ -158,7 +182,10 @@ export default function CategoryPage() {
             offerCount: Math.max(1, typeof p.offerCount === "number" ? p.offerCount : 0),
           }));
 
+        const initialSorted = sortProducts(mapped, sortKey);
+
         setProducts(mapped);
+        setDisplayProducts(initialSorted);
         setLoadedResultKey(`${searchedName}::${currentPage}`);
         setRefreshRunId((id) => id + 1);
         setTotalProducts(Number(json.total) || 0);
@@ -192,7 +219,7 @@ export default function CategoryPage() {
 
     const controller = new AbortController();
     let stopped = false;
-    const liveProducts = getUniqueLiveProducts(products);
+    const liveProducts = getUniqueLiveProducts(displayProducts);
     async function refreshVisiblePrices() {
       if (!liveProducts.length) return;
 
@@ -205,7 +232,7 @@ export default function CategoryPage() {
           const productKey = getProductKey(product);
           const liveSource = normalizeLivePriceSource(product.source);
 
-          setProducts((current) =>
+          setDisplayProducts((current) =>
             current.map((item) =>
               getProductKey(item) === productKey ? { ...item, livePriceLoading: true } : item
             )
@@ -249,7 +276,7 @@ export default function CategoryPage() {
                 ? json.ratingCount
                 : undefined;
 
-            setProducts((current) =>
+            setDisplayProducts((current) =>
               current.map((item) =>
                 getProductKey(item) === productKey
                   ? {
@@ -271,7 +298,7 @@ export default function CategoryPage() {
             if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
 
             console.error("Live current price refresh error:", product.product_url, err);
-            setProducts((current) =>
+            setDisplayProducts((current) =>
               current.map((item) =>
                 getProductKey(item) === productKey
                   ? { ...item, livePriceLoading: false }
@@ -310,38 +337,6 @@ export default function CategoryPage() {
     setSortKey("popular");
     setViewMode("grid");
   }, [searchedName]);
-
-  const filteredProducts = useMemo(() => {
-    return products;
-  }, [products]);
-
-  const sortedProducts = useMemo(() => {
-    // Freeze current order while live prices are refreshing
-    if (isRefreshingPrices) {
-      return products;
-    }
-
-    const arr = [...products];
-
-    const popA = (p: Product) =>
-      Number((p.ratingCount || "").toString().replace(/[^\d]/g, "")) || 0;
-
-    const savings = (p: Product) =>
-      Math.max(0, (p.numericOldPrice || 0) - (p.numericPrice || 0));
-
-    const price = (p: Product) => p.numericPrice || 0;
-
-    arr.sort((a, b) => {
-      if (sortKey === "popular") return popA(b) - popA(a);
-      if (sortKey === "savings") return savings(b) - savings(a);
-      if (sortKey === "cheap") return price(a) - price(b);
-      if (sortKey === "high") return price(b) - price(a);
-      if (sortKey === "new") return getScrapedAtMs(b) - getScrapedAtMs(a);
-      return 0;
-    });
-
-    return arr;
-  }, [products, sortKey, isRefreshingPrices]);
 
   const sortLabel = useMemo(() => {
     if (sortKey === "popular") return t("categoryPage.sort.popular", "Most popular first");
@@ -543,7 +538,7 @@ export default function CategoryPage() {
                 </div>
               </div>
             ) : (
-              <Products products={sortedProducts as any} view={viewMode} />
+              <Products products={displayProducts} view={viewMode} />
             )}
           </main>
         </div>
