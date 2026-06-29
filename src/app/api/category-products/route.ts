@@ -108,35 +108,18 @@ function parsePrice(value: unknown): number {
 }
 
 function groupProductsBySuggestedName(products: RankedProduct[]): any[] {
-  const groups = new Map<
-    string,
-    {
-      product: any;
-      price: number;
-      order: number;
-    }
-  >();
+  const seen = new Set<string>();
+  const groupedProducts: any[] = [];
 
-  products.forEach(({ product }, index) => {
+  products.forEach(({ product }) => {
     const key = normalizeGroupName(product);
-    if (!key) return;
+    if (!key || seen.has(key)) return;
 
-    const price = parsePrice(product?.currentPrice ?? product?.price);
-    const existing = groups.get(key);
-
-    if (!existing) {
-      groups.set(key, { product, price, order: index });
-      return;
-    }
-
-    if (price < existing.price) {
-      groups.set(key, { product, price, order: existing.order });
-    }
+    seen.add(key);
+    groupedProducts.push(product);
   });
 
-  return Array.from(groups.values())
-    .sort((a, b) => a.order - b.order)
-    .map(({ product }) => product);
+  return groupedProducts;
 }
 
 export async function GET(req: Request) {

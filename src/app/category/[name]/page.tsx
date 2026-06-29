@@ -79,28 +79,6 @@ function getUniqueLiveProducts(products: Product[]) {
   return unique;
 }
 
-function sortProducts(products: Product[], sortKey: SortKey): Product[] {
-  const arr = [...products];
-
-  const popA = (p: Product) =>
-    Number((p.ratingCount || "").toString().replace(/[^\d]/g, "")) || 0;
-
-  const savings = (p: Product) =>
-    Math.max(0, (p.numericOldPrice || 0) - (p.numericPrice || 0));
-
-  const price = (p: Product) => p.numericPrice || 0;
-
-  arr.sort((a, b) => {
-    if (sortKey === "popular") return popA(b) - popA(a);
-    if (sortKey === "savings") return savings(b) - savings(a);
-    if (sortKey === "cheap") return price(a) - price(b);
-    if (sortKey === "high") return price(b) - price(a);
-    if (sortKey === "new") return getScrapedAtMs(b) - getScrapedAtMs(a);
-    return 0;
-  });
-
-  return arr;
-}
 
 function GridIcon({ active }: { active: boolean }) {
   return (
@@ -170,6 +148,7 @@ export default function CategoryPage() {
 
         const json = await res.json();
         const apiProducts: Product[] = Array.isArray(json.products) ? json.products : [];
+        console.log(apiProducts);
 
         if (!isActive) return;
 
@@ -182,10 +161,8 @@ export default function CategoryPage() {
             offerCount: Math.max(1, typeof p.offerCount === "number" ? p.offerCount : 0),
           }));
 
-        const initialSorted = sortProducts(mapped, sortKey);
-
         setProducts(mapped);
-        setDisplayProducts(initialSorted);
+        setDisplayProducts(mapped);
         setLoadedResultKey(`${searchedName}::${currentPage}`);
         setRefreshRunId((id) => id + 1);
         setTotalProducts(Number(json.total) || 0);
