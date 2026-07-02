@@ -85,7 +85,48 @@ export default function ProductHeaderInfo() {
     .filter(([k, v]) => k.length > 0 && v.length > 0);
 
   const specs = normalizedSpecs.slice(0, 7);
-  const mobileSpecs = normalizedSpecs.slice(0, 3);
+
+  // Pick only the Color and Internal Memory (storage) specs for the mobile chips.
+  // Some sources use different keys (e.g. "Color" vs "Colour Name"), so
+  // try several common variants when searching the product specifications.
+  function findSpecByCandidates(
+    entries: readonly (readonly [string, string])[],
+    candidates: string[]
+  ): readonly [string, string] | null {
+    const normalized = entries.map(([k, v]) => [k, v, String(k ?? "").toLowerCase().replace(/\s+/g, " ").trim()] as const);
+    for (const cand of candidates) {
+      for (const [k, v, low] of normalized) {
+        if (low.includes(cand)) return [k, v];
+      }
+    }
+    return null;
+  }
+
+  const colorCandidates = [
+    "colour name",
+    "color name",
+    "colour",
+    "color",
+    "colourname",
+    "colorname",
+  ];
+  const storageCandidates = [
+    "internal memory",
+    "internal storage",
+    "storage capacity",
+    "storage size",
+    "built-in storage",
+    "builtin storage",
+    "rom",
+    "storage",
+  ];
+
+  const colorSpec = findSpecByCandidates(normalizedSpecs, colorCandidates);
+  const storageSpec = findSpecByCandidates(normalizedSpecs, storageCandidates);
+
+  const mobileSpecs: Array<readonly [string, string]> = [];
+  if (colorSpec) mobileSpecs.push(colorSpec);
+  if (storageSpec) mobileSpecs.push(storageSpec);
 
   return (
     <div className="w-full">
