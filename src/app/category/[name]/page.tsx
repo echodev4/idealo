@@ -315,13 +315,6 @@ export default function CategoryPage() {
     setViewMode("grid");
   }, [searchedName]);
 
-  const sortLabel = useMemo(() => {
-    if (sortKey === "popular") return t("categoryPage.sort.popular", "Most popular first");
-    if (sortKey === "savings") return t("categoryPage.sort.savings", "Biggest savings first");
-    if (sortKey === "cheap") return t("categoryPage.sort.cheap", "Price: Cheapest first");
-    if (sortKey === "high") return t("categoryPage.sort.high", "Price: Highest first");
-    return t("categoryPage.sort.newest", "Newest first");
-  }, [sortKey, t]);
 
   const pageButtons = useMemo(() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => String(i + 1));
@@ -376,44 +369,6 @@ export default function CategoryPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <div ref={sortRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setSortOpen((v) => !v)}
-                className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
-              >
-                <span className="text-[#0b63c8]">{sortLabel}</span>
-                <span className="text-gray-500">▾</span>
-              </button>
-
-              {sortOpen ? (
-                <div className="absolute right-0 top-[44px] z-30 w-[260px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-                  {[
-                    { k: "popular", t: t("categoryPage.sort.popular", "Most popular first") },
-                    { k: "savings", t: t("categoryPage.sort.savings", "Biggest savings first") },
-                    { k: "cheap", t: t("categoryPage.sort.cheap", "Price: Cheapest first") },
-                    { k: "high", t: t("categoryPage.sort.high", "Price: Highest first") },
-                    { k: "new", t: t("categoryPage.sort.newest", "Newest first") },
-                  ].map((o) => {
-                    const active = sortKey === (o.k as SortKey);
-                    return (
-                      <button
-                        key={o.k}
-                        type="button"
-                        onClick={() => {
-                          setSortKey(o.k as SortKey);
-                          setSortOpen(false);
-                        }}
-                        className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                          }`}
-                      >
-                        <span>{o.t}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
 
             <div className="flex items-center overflow-hidden rounded border border-[#cfd6dd] bg-white">
               <button
@@ -439,45 +394,6 @@ export default function CategoryPage() {
         <div className="mb-3 flex flex-col gap-2 md:hidden">
           <div className="flex items-center justify-end gap-2">
             <div className="flex items-center gap-2">
-              <div ref={sortRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setSortOpen((v) => !v)}
-                  className="inline-flex h-10 items-center gap-2 rounded border border-[#cfd6dd] bg-white px-3 text-[13px] font-medium text-gray-800"
-                >
-                  <span className="text-[#0b63c8]">{sortLabel}</span>
-                  <span className="text-gray-500">▾</span>
-                </button>
-
-                {sortOpen ? (
-                  <div className="absolute right-0 top-[44px] z-30 w-[240px] overflow-hidden rounded border border-[#cfd6dd] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-                    {[
-                      { k: "popular", t: t("categoryPage.sort.popular", "Most popular first") },
-                      { k: "savings", t: t("categoryPage.sort.savings", "Biggest savings first") },
-                      { k: "cheap", t: t("categoryPage.sort.cheap", "Price: Cheapest first") },
-                      { k: "high", t: t("categoryPage.sort.high", "Price: Highest first") },
-                      { k: "new", t: t("categoryPage.sort.newest", "Newest first") },
-                    ].map((o) => {
-                      const active = sortKey === (o.k as SortKey);
-                      return (
-                        <button
-                          key={o.k}
-                          type="button"
-                          onClick={() => {
-                            setSortKey(o.k as SortKey);
-                            setSortOpen(false);
-                          }}
-                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-[13px] ${active ? "bg-[#0b63c8] text-white" : "text-[#0b63c8] hover:bg-[#f2f6fb]"
-                            }`}
-                        >
-                          <span>{o.t}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-
               <div className="flex items-center overflow-hidden rounded border border-[#cfd6dd] bg-white">
                 <button
                   type="button"

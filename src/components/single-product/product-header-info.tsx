@@ -234,19 +234,6 @@ export default function ProductHeaderInfo() {
           </div>
         </div>
       </div>
-
-      <div className="mt-2 text-[13px] leading-[1.55] text-[#111827]">
-        <span className="font-semibold">{t("singleProduct.headerInfo.similarProducts", "Similar products:")}</span>{" "}
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="text-[#1a73e8] hover:underline cursor-not-allowed"
-        >
-          {variantCount
-            ? `${variantCount} ${t("singleProduct.headerInfo.productsCount", "products")}`
-            : t("singleProduct.headerInfo.productsCount", "products")}
-        </a>
-      </div>
     </div>
   );
 }
