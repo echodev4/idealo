@@ -125,8 +125,12 @@ export default function ProductHeaderInfo() {
   const storageSpec = findSpecByCandidates(normalizedSpecs, storageCandidates);
 
   const mobileSpecs: Array<readonly [string, string]> = [];
-  if (colorSpec) mobileSpecs.push(colorSpec);
-  if (storageSpec) mobileSpecs.push(storageSpec);
+  if (colorSpec) {
+    mobileSpecs.push(["Color", colorSpec[1]]);
+  }
+  if (storageSpec) {
+    mobileSpecs.push(["Internal Memory", storageSpec[1]]);
+  }
 
   return (
     <div className="w-full">
