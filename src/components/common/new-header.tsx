@@ -240,14 +240,14 @@ export default function NewHeader() {
               key={item}
               type="button"
               onClick={() => handleTopBarClick(item)}
-              className="landing-toolbar-action hidden rounded-[4px] px-2 py-1.5 text-[14px] font-semibold hover:bg-white/10 sm:block"
+              className="landing-toolbar-action hidden rounded-[4px] px-2 py-1.5 text-[14px] font-semibold !text-white hover:bg-white/10 sm:block"
             >
               {item}
             </button>
           ))}
           <Link
             href="/watchlist"
-            className="landing-toolbar-action flex items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold hover:bg-white/10"
+            className="landing-toolbar-action flex items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold !text-white hover:bg-white/10"
             aria-label="Watchlist"
           >
             <Heart size={18} />
@@ -255,7 +255,7 @@ export default function NewHeader() {
           </Link>
           <button
             type="button"
-            className="landing-toolbar-action flex items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold hover:bg-white/10"
+            className="landing-toolbar-action flex items-center gap-2 rounded-[4px] px-2 py-1.5 text-[14px] font-semibold !text-white hover:bg-white/10"
           >
             <User size={18} />
             <span className="hidden sm:inline">Sign in</span>
@@ -282,3 +282,4 @@ export default function NewHeader() {
     </header>
   );
 }
+

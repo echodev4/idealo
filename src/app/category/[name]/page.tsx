@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { Home } from "lucide-react";
 import { useParams } from "next/navigation";
 import Products from "@/components/category/products";
 import ProductCardSkeleton from "@/components/category/skeleton-product-card";
@@ -96,21 +97,6 @@ function ListIcon({ active }: { active: boolean }) {
   );
 }
 
-function HomeIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" className="fill-current">
-      <path d="M12 3l9 8h-3v10h-5v-6H11v6H6V11H3l9-8z" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" className="fill-current">
-      <path d="M9 18l6-6-6-6" />
-    </svg>
-  );
-}
 
 export default function CategoryPage() {
   const { t } = useLanguage();
@@ -348,14 +334,12 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-[#eef2f6]">
       <div className="max-w-[1280px] mx-auto px-3 lg:px-0 py-5">
-        <div className="mb-3 flex items-center gap-2 text-[13px] text-gray-600">
-          <Link href="/" className="inline-flex items-center gap-2 text-[#0b63c8] hover:underline">
-            <HomeIcon />
+        <div className="mb-3 flex items-center gap-2 text-[12px] text-[#6b7280]">
+          <Link href="/" className="inline-flex items-center text-[#111827] hover:text-[#1a73e8] hover:no-underline">
+            <Home className="w-3.5 h-3.5" />
           </Link>
-          <span className="text-gray-400">
-            <ChevronRightIcon />
-          </span>
-          <span className="cursor-not-allowed text-gray-600 capitalize">{searchedName}</span>
+          <span className="text-[#9ca3af]">&gt;</span>
+          <span className="cursor-not-allowed text-[#111827] capitalize">{searchedName}</span>
         </div>
 
         <div className="mb-3 flex items-start justify-between gap-4">

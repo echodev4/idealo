@@ -120,7 +120,7 @@ function ProductComparisonContent() {
           </div>
         </div>
 
-        <div className="hidden lg:block mt-8 max-w-[1216px] mx-auto">
+        <div className="hidden lg:block mt-8">
           <OfferComparisonTable />
         </div>
       </main>
@@ -141,5 +141,6 @@ export default function ProductComparisonPage({ productUrl, productName, sourceN
     </ProductProvider>
   );
 }
+
 
 
