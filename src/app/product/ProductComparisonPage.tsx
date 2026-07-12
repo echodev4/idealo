@@ -95,7 +95,7 @@ function ProductComparisonContent() {
       <main className="container max-w-[1280px] mx-auto px-3 lg:px-0 pt-2 pb-6">
         <ProductTopNav />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_280px] gap-6 lg:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[182px_minmax(0,1fr)_280px] gap-6 lg:gap-10">
           <div className="lg:pt-6">
             <ProductGallery />
           </div>
@@ -141,4 +141,5 @@ export default function ProductComparisonPage({ productUrl, productName, sourceN
     </ProductProvider>
   );
 }
+
 

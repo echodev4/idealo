@@ -112,7 +112,7 @@ export default function ProductGallery() {
                   alt={img.alt ?? title}
                   fill
                   sizes="95vw"
-                  className="object-contain p-2.5"
+                  className="object-contain p-[15%]"
                   priority={idx === 0}
                 />
               </div>
@@ -156,7 +156,7 @@ export default function ProductGallery() {
                 alt={img.alt ?? title}
                 fill
                 sizes="(min-width: 1024px) 120px, 45vw"
-                className="object-contain p-2.5 lg:p-3"
+                className="object-contain p-[15%]"
                 priority={idx === 0}
               />
             </button>
@@ -166,4 +166,5 @@ export default function ProductGallery() {
     </div>
   );
 }
+
 

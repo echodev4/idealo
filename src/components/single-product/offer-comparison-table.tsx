@@ -1,32 +1,18 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import noonLogo from "../../../public/uploads/sources/noon.jpg";
 import carrefourLogo from "../../../public/uploads/sources/carrefouruae.png";
 import sharafDgLogo from "../../../public/uploads/sources/sharaf.jpg";
 
-const PAYMENT_ICONS = [
-    {
-        key: "paypal",
-        src: "https://cdn.idealo.com/storage/offerpage/assets/offerpage/img/payment-icons/2x/paypal-c038cb02ad0744a542c4.png",
-        alt: "PayPal",
-    },
-    {
-        key: "visa",
-        src: "https://cdn.idealo.com/storage/offerpage/assets/offerpage/img/payment-icons/2x/visa-ac94b93bc9a9921b1f11.png",
-        alt: "Visa",
-    },
-];
-
 function formatAED(n: number) {
     return `AED ${n.toLocaleString()}`;
 }
-
 
 function PriceText({
     price,
@@ -49,6 +35,7 @@ function PriceText({
         </span>
     );
 }
+
 function parseAED(price: string | number | null | undefined): number | null {
     if (price === null || price === undefined || price === "") return null;
     const num = Number(String(price).replace(/[^\d.]/g, ""));
@@ -97,7 +84,6 @@ type Offer = {
     price: number;
     full_name?: string;
     sortPrice: number;
-    oldPrice?: number | null;
     loading?: boolean;
     url: string;
     imageUrl: string;
@@ -106,7 +92,6 @@ type Offer = {
     averageRating?: number | null;
     ratingCount?: string;
     reviews?: string | number;
-    matchScore?: number;
 };
 
 function OfferComparisonTableSkeleton() {
@@ -126,9 +111,7 @@ function OfferComparisonTableSkeleton() {
 
 function Star({ filled }: { filled: boolean }) {
     return (
-        <span className={cn("text-[14px] leading-none", filled ? "text-[#22c55e]" : "text-[#d1d5db]")}>
-            ★
-        </span>
+        <span className={cn("text-[14px] leading-none", filled ? "text-[#22c55e]" : "text-[#d1d5db]")}>&#9733;</span>
     );
 }
 
@@ -142,23 +125,19 @@ function Rating({ value, count }: { value: number | null; count?: string | numbe
     const countText = hasRatingCount ? String(count).trim() : "";
 
     return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col items-start gap-1">
             {hasRatingValue ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                     <div className="flex items-center gap-[1px]">
                         {Array.from({ length: 5 }).map((_, i) => (
                             <Star key={i} filled={i < full} />
                         ))}
                     </div>
-                    <span className="text-[12px] text-[#111827] font-semibold">
-                        {value.toFixed(1)}
-                    </span>
+                    <span className="text-[12px] text-[#111827] font-semibold">{value.toFixed(1)}</span>
                 </div>
             ) : null}
             {countText ? (
-                <div className="text-[12px] text-[#6b7280] leading-none">
-                    {countText} ratings
-                </div>
+                <div className="text-[12px] text-[#6b7280] leading-none">{countText} ratings</div>
             ) : null}
         </div>
     );
@@ -193,6 +172,23 @@ function ButtonPill({
     );
 }
 
+function RetailerLogoAndRating({ source, ratingValue, ratingCount }: { source: string; ratingValue: number | null; ratingCount?: string }) {
+    const sourceLogo = getSourceLogo(source);
+
+    return (
+        <div className="flex min-w-[112px] flex-col items-start gap-2">
+            {sourceLogo ? (
+                <div className="relative h-[38px] w-[112px] overflow-hidden bg-white">
+                    <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes="112px" className="object-contain" />
+                </div>
+            ) : (
+                <span className="text-[13px] font-semibold text-[#111827]">{source}</span>
+            )}
+            <Rating value={ratingValue} count={ratingCount} />
+        </div>
+    );
+}
+
 export default function OfferComparisonTable() {
     const router = useRouter();
     const { product, loading, offers, offersLoading, offerCount } = useProduct();
@@ -202,7 +198,6 @@ export default function OfferComparisonTable() {
     const [noReturnShippingCosts, setNoReturnShippingCosts] = React.useState(false);
     const [sortKey, setSortKey] = React.useState<"price" | "total">("price");
     const [visible, setVisible] = React.useState(10);
-    const [expandedOffers, setExpandedOffers] = React.useState<Record<string, boolean>>({});
 
     if (offersLoading || (loading && !(offers || []).length)) return <OfferComparisonTableSkeleton />;
 
@@ -226,7 +221,6 @@ export default function OfferComparisonTable() {
                     : typeof p?.numericPrice === "number" && p.numericPrice > 0
                         ? p.numericPrice
                         : price;
-            const oldP = parseAED(p?.old_price ?? p?.previousPrice);
             const source = normalizeSourceName(p?.source || product?.source || "");
 
             return {
@@ -236,17 +230,15 @@ export default function OfferComparisonTable() {
                     p?.title ||
                     t("singleProduct.offerComparisonTable.offerFallback", "Offer")
                 ),
-                full_name:p.full_name || "",
+                full_name: p.full_name || "",
                 price,
                 sortPrice,
-                oldPrice: oldP,
                 loading: Boolean(p?.livePriceLoading),
                 url: String(p?.product_url || "#"),
                 imageUrl: String(p?.image_url || p?.images?.[0]?.src || ""),
                 available: true,
                 source: source || "unknown",
-                averageRating:
-                    typeof p?.average_rating === "number" ? p.average_rating : null,
+                averageRating: typeof p?.average_rating === "number" ? p.average_rating : null,
                 ratingCount:
                     p?.ratingCount !== undefined && p?.ratingCount !== null
                         ? String(p.ratingCount)
@@ -254,8 +246,6 @@ export default function OfferComparisonTable() {
                             ? String(p.reviews)
                             : "",
                 reviews: p?.reviews,
-                matchScore:
-                    typeof p?.match_score === "number" ? p.match_score : undefined,
             } as Offer;
         })
         .filter(Boolean) as Offer[];
@@ -286,9 +276,7 @@ export default function OfferComparisonTable() {
 
     const filtered = availableImmediately ? sorted.filter((o) => o.available) : sorted;
     const cheapest = filtered.length ? Math.min(...filtered.map((o) => o.price)) : 0;
-
     const ordered = filtered;
-
     const top10 = sorted.slice(0, 10);
 
     return (
@@ -300,8 +288,7 @@ export default function OfferComparisonTable() {
 
                 <div className="lg:hidden mb-3">
                     <div className="text-[22px] leading-none font-semibold text-[#111827] mt-1">
-                        {totalOffersCount}{" "}
-                        {t("singleProduct.offerComparisonTable.offersAvailable", "Offers")}
+                        {totalOffersCount} {t("singleProduct.offerComparisonTable.offersAvailable", "Offers")}
                     </div>
                 </div>
 
@@ -344,7 +331,7 @@ export default function OfferComparisonTable() {
                                             </div>
                                             <div className="text-[13px] text-[#111827]">
                                                 <span className="text-[#6b7280]">
-                                                    {t("singleProduct.offerComparisonTable.from", "from")}{" "}
+                                                    {t("singleProduct.offerComparisonTable.from", "from")} {" "}
                                                 </span>
                                                 <PriceText price={p.price} loading={p.loading} className="font-semibold" />
                                             </div>
@@ -366,9 +353,7 @@ export default function OfferComparisonTable() {
                                             onChange={(e) => setAvailableImmediately(e.target.checked)}
                                             className="w-4 h-4 accent-[#111827]"
                                         />
-                                        <span>
-                                            {t("singleProduct.offerComparisonTable.filters.availableImmediately", "Available immediately")}
-                                        </span>
+                                        <span>{t("singleProduct.offerComparisonTable.filters.availableImmediately", "Available immediately")}</span>
                                     </label>
 
                                     <label className="flex items-center gap-2 text-[12px] text-[#111827] select-none">
@@ -378,9 +363,7 @@ export default function OfferComparisonTable() {
                                             onChange={(e) => setNoReturnShippingCosts(e.target.checked)}
                                             className="w-4 h-4 accent-[#111827]"
                                         />
-                                        <span>
-                                            {t("singleProduct.offerComparisonTable.filters.noReturnShippingCosts", "No return shipping costs")}
-                                        </span>
+                                        <span>{t("singleProduct.offerComparisonTable.filters.noReturnShippingCosts", "No return shipping costs")}</span>
                                     </label>
                                 </div>
 
@@ -397,112 +380,44 @@ export default function OfferComparisonTable() {
                                 </div>
                             </div>
 
-                            <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
+                            <div className="hidden lg:grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_minmax(0,1.15fr)_minmax(0,0.9fr)] gap-4 px-3 py-2 text-[12px] font-semibold text-[#111827] border-b border-[#e5e7eb]">
                                 <div>{t("singleProduct.offerComparisonTable.columns.offerTitle", "Offer title")}</div>
-                                <div>{t("singleProduct.offerComparisonTable.columns.priceShipping", "Price & Shipping")}</div>
-                                {/* <div>{t("singleProduct.offerComparisonTable.columns.paymentMethods", "Payment methods*")}</div> */}
+                                <div>Price</div>
                                 <div>{t("singleProduct.offerComparisonTable.columns.shopReview", "Shop & Shop Review")}</div>
                                 <div className="text-right"></div>
                             </div>
 
                             <div className="divide-y divide-[#e5e7eb]">
-                                {ordered.slice(0, visible).map((o, idx) => {
+                                {ordered.slice(0, visible).map((o) => {
                                     const isCheapest = o.price === cheapest;
                                     const ratingValue =
                                         typeof o.averageRating === "number" && o.averageRating > 0
                                             ? o.averageRating
                                             : null;
-                                    const sourceLogo = getSourceLogo(o.source);
-                                    const isExpanded = !!expandedOffers[o.id];
 
                                     return (
                                         <div key={o.id} className="p-3">
-                                            <div className="hidden lg:grid grid-cols-[minmax(0,2.35fr)_minmax(0,1.15fr)_minmax(0,1.1fr)_minmax(0,1.55fr)_minmax(0,0.85fr)] gap-4 items-start">
+                                            <div className="hidden lg:grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_minmax(0,1.15fr)_minmax(0,0.9fr)] gap-4 items-start">
                                                 <div className="min-w-0">
                                                     <div className="text-[13px] font-semibold text-[#111827]">
                                                         <a href={o.url} target="_blank" rel="noreferrer" className="text-[#1a73e8] hover:underline">
                                                             {o.full_name || o.title}
                                                         </a>
                                                     </div>
-
-                                                    <div className="mt-2">
-                                                        <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">
-                                                            {t("singleProduct.offerComparisonTable.details", "Details")}
-                                                        </span>
-                                                    </div>
                                                 </div>
 
                                                 <div>
+                                                    {isCheapest ? (
+                                                        <div className="mb-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] font-semibold px-2 py-1 rounded-sm">
+                                                            {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
+                                                        </div>
+                                                    ) : null}
                                                     <div className="text-[24px] font-semibold text-[#111827] leading-none">
                                                         <PriceText price={o.price} loading={o.loading} />
                                                     </div>
-
-                                                    {isCheapest && (
-                                                        <div className="mt-2 inline-block border border-[#fb923c] text-[#ea580c] text-[12px] px-2 py-1 rounded-sm">
-                                                            {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
-                                                            <div className="text-[#111827]">
-                                                                <PriceText price={o.price} loading={o.loading} />{" "}
-                                                                {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {!isCheapest && (
-                                                        <div className="mt-2 text-[12px] text-[#111827]">
-                                                            <PriceText price={o.price} loading={o.loading} />{" "}
-                                                            {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
-                                                        </div>
-                                                    )}
-
-                                                    {o.oldPrice && o.oldPrice > o.price ? (
-                                                        <div className="mt-2 inline-flex items-center gap-2">
-                                                            <span className="text-[12px] border border-[#d1d5db] px-2 py-0.5 rounded-sm">
-                                                                {t("singleProduct.offerComparisonTable.priceIncludes", "Price includes")}
-                                                            </span>
-                                                            <span className="text-[12px] text-[#1a73e8] cursor-not-allowed">
-                                                                {t("singleProduct.offerComparisonTable.voucher", "voucher")}
-                                                            </span>
-                                                        </div>
-                                                    ) : null}
                                                 </div>
 
-                                                {/* <div className="flex items-start gap-2 pt-1">
-                                                    {PAYMENT_ICONS.map((p, i) => (
-                                                        <div
-                                                            key={p.key}
-                                                            className={`w-[46px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden ${i > 0 ? "hidden sm:block" : ""}`}
-                                                        >
-                                                            <Image src={p.src} alt={p.alt} fill sizes="46px" className="object-contain p-1" />
-                                                        </div>
-                                                    ))}
-                                                </div> */}
-
-                                                <div className="pt-1">
-                                                    <div className="flex items-start gap-3">
-                                                        {sourceLogo ? (
-                                                            <div className="relative w-[110px] h-[36px]">
-                                                                <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes="110px" className="object-contain" />
-                                                            </div>
-                                                        ) : null}
-                                                        <div className="min-w-0">
-                                                            <div className="text-[12px] text-[#111827]">
-                                                                <span className="text-[#6b7280]">
-                                                                    {t("singleProduct.offerComparisonTable.soldBy", "Sold by:")}{" "}
-                                                                </span>
-                                                                <span className="cursor-not-allowed">
-                                                                    {sourceLogo?.label || o.source}
-                                                                </span>
-                                                            </div>
-                                                            <div className="mt-2">
-                                                                <Rating value={ratingValue} count={o.ratingCount} />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* <div className="mt-2 text-[12px] text-[#1a73e8] cursor-not-allowed">
-                                                        {t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}
-                                                    </div> */}
-                                                </div>
+                                                <RetailerLogoAndRating source={o.source} ratingValue={ratingValue} ratingCount={o.ratingCount} />
 
                                                 <div className="flex justify-end">
                                                     <button
@@ -528,50 +443,13 @@ export default function OfferComparisonTable() {
                                                     </a>
                                                 </div>
 
-                                                <div className="mt-3">
-                                                    <div className="text-[24px] font-semibold text-[#111827] leading-none">
-                                                        <PriceText price={o.price} loading={o.loading} />
+                                                <div className="mt-3 flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <div className="text-[24px] font-semibold text-[#111827] leading-none">
+                                                            <PriceText price={o.price} loading={o.loading} />
+                                                        </div>
                                                     </div>
-                                                    <div className="mt-1 text-[14px] text-[#374151]">
-                                                        <PriceText price={o.price} loading={o.loading} />{" "}
-                                                        {t("singleProduct.offerComparisonTable.includingShipping", "incl. shipping")}
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-3 flex items-center justify-between gap-2">
-                                                    <div className="min-w-0 flex items-center gap-2">
-                                                        {sourceLogo ? (
-                                                            <div className="relative w-[120px] h-[40px]">
-                                                                <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes="120px" className="object-contain" />
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-[13px] font-semibold text-[#111827]">
-                                                                {o.source}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        aria-label={isExpanded ? "Collapse offer details" : "Expand offer details"}
-                                                        onClick={() =>
-                                                            setExpandedOffers((prev) => ({
-                                                                ...prev,
-                                                                [o.id]: !prev[o.id],
-                                                            }))
-                                                        }
-                                                        className="shrink-0 h-11 w-11 rounded-full border border-[#d1d5db] bg-[#f3f4f6] flex items-center justify-center"
-                                                    >
-                                                        <span
-                                                            className={cn(
-                                                                "text-[#6b7280] transition-transform",
-                                                                isExpanded ? "rotate-180" : "rotate-0"
-                                                            )}
-                                                        >
-                                                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
-                                                                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                            </svg>
-                                                        </span>
-                                                    </button>
+                                                    <RetailerLogoAndRating source={o.source} ratingValue={ratingValue} ratingCount={o.ratingCount} />
                                                 </div>
 
                                                 <div className="mt-3">
@@ -590,34 +468,6 @@ export default function OfferComparisonTable() {
                                                         </span>
                                                     </button>
                                                 </div>
-
-                                                {isExpanded ? (
-                                                    <div className="mt-3 pt-3 border-t border-[#e5e7eb]">
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <div>
-                                                                <Rating value={ratingValue} count={o.ratingCount} />
-                                                            </div>
-                                                            <div className="shrink-0 flex items-center gap-2">
-                                                                {PAYMENT_ICONS.map((p) => (
-                                                                    <div
-                                                                        key={p.key}
-                                                                        className="w-[44px] h-[26px] border border-[#d1d5db] bg-white rounded-sm relative overflow-hidden"
-                                                                    >
-                                                                        <Image src={p.src} alt={p.alt} fill sizes="44px" className="object-contain p-1" />
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        <div className="mt-2 flex items-center justify-between text-[13px]">
-                                                            <span className="text-[#1a73e8] cursor-not-allowed">
-                                                                {t("singleProduct.offerComparisonTable.details", "Details")}
-                                                            </span>
-                                                            <span className="text-[#1a73e8] cursor-not-allowed">
-                                                                {t("singleProduct.offerComparisonTable.shopDetails", "Shop details")}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ) : null}
                                             </div>
                                         </div>
                                     );
@@ -645,4 +495,5 @@ export default function OfferComparisonTable() {
         </section>
     );
 }
+
 

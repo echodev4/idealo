@@ -1,9 +1,6 @@
 "use client";
 
-import * as React from "react";
-import Image from "next/image";
 import { useProduct } from "@/context/ProductContext";
-import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 
 function parseRating(v: any): number {
@@ -36,7 +33,7 @@ function Stars({ value }: { value: number }) {
           className={cn("text-[14px] leading-none", i < rounded ? "text-black" : "text-[#cbd5e1]")}
           aria-hidden
         >
-          ★
+          &#9733;
         </span>
       ))}
     </div>
@@ -56,8 +53,7 @@ const ProductHeaderInfoSkeleton = () => {
 };
 
 export default function ProductHeaderInfo() {
-  const { product, loading, relatedProducts, relatedLoading, variantCount } = useProduct();
-  const { t } = useLanguage();
+  const { product, loading, offers, offersLoading, relatedProducts, relatedLoading } = useProduct();
 
   if (loading || relatedLoading) return <ProductHeaderInfoSkeleton />;
 
@@ -69,11 +65,17 @@ export default function ProductHeaderInfo() {
     product?.ratingCount !== undefined && product?.ratingCount !== null && String(product.ratingCount).trim() !== ""
       ? String(product.ratingCount)
       : product?.reviews !== undefined && product?.reviews !== null && String(product.reviews).trim() !== ""
-      ? String(product.reviews)
-      : relatedProducts?.[0]?.reviews
-        ? String(relatedProducts[0].reviews)
-        : null;
-  const currentPrice = parsePrice(product?.currentPrice ?? product?.price);
+        ? String(product.reviews)
+        : relatedProducts?.[0]?.reviews
+          ? String(relatedProducts[0].reviews)
+          : null;
+
+  const offerPrices = ((offers || []).length ? offers : product ? [product] : [])
+    .map((item: any) => parsePrice(item?.price ?? item?.currentPrice))
+    .filter((value: number | null): value is number => value !== null);
+  const currentPrice = offerPrices.length
+    ? Math.min(...offerPrices)
+    : parsePrice(product?.currentPrice ?? product?.price);
 
   const specifications = (product?.specifications || {}) as Record<string, string>;
   const normalizedSpecs = Object.entries(specifications)
@@ -84,11 +86,6 @@ export default function ProductHeaderInfo() {
     })
     .filter(([k, v]) => k.length > 0 && v.length > 0);
 
-  const specs = normalizedSpecs.slice(0, 7);
-
-  // Pick only the Color and Internal Memory (storage) specs for the mobile chips.
-  // Some sources use different keys (e.g. "Color" vs "Colour Name"), so
-  // try several common variants when searching the product specifications.
   function findSpecByCandidates(
     entries: readonly (readonly [string, string])[],
     candidates: string[]
@@ -102,15 +99,15 @@ export default function ProductHeaderInfo() {
     return null;
   }
 
-  const colorCandidates = [
+  const colorSpec = findSpecByCandidates(normalizedSpecs, [
     "colour name",
     "color name",
     "colour",
     "color",
     "colourname",
     "colorname",
-  ];
-  const storageCandidates = [
+  ]);
+  const storageSpec = findSpecByCandidates(normalizedSpecs, [
     "internal memory",
     "internal storage",
     "storage capacity",
@@ -119,18 +116,11 @@ export default function ProductHeaderInfo() {
     "builtin storage",
     "rom",
     "storage",
-  ];
-
-  const colorSpec = findSpecByCandidates(normalizedSpecs, colorCandidates);
-  const storageSpec = findSpecByCandidates(normalizedSpecs, storageCandidates);
+  ]);
 
   const mobileSpecs: Array<readonly [string, string]> = [];
-  if (colorSpec) {
-    mobileSpecs.push(["Color", colorSpec[1]]);
-  }
-  if (storageSpec) {
-    mobileSpecs.push(["Internal Memory", storageSpec[1]]);
-  }
+  if (colorSpec) mobileSpecs.push(["Color", colorSpec[1]]);
+  if (storageSpec) mobileSpecs.push(["Internal Memory", storageSpec[1]]);
 
   return (
     <div className="w-full">
@@ -142,10 +132,11 @@ export default function ProductHeaderInfo() {
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[#111827]">
           {currentPrice ? (
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="text-[20px] font-semibold leading-none">
+              <span className="text-[13px] font-semibold leading-none text-[#4b5563]">from</span>
+              <span className="text-[24px] font-bold leading-none text-[#ff6600]">
                 {formatAED(currentPrice)}
               </span>
-              {product?.livePriceLoading ? (
+              {product?.livePriceLoading || offersLoading ? (
                 <span
                   aria-label="Refreshing product data"
                   className="inline-block h-3 w-10 animate-pulse rounded bg-[#e5e7eb] align-middle"
@@ -166,21 +157,6 @@ export default function ProductHeaderInfo() {
         </div>
       ) : null}
 
-      {/* <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#111827] lg:justify-start">
-        <span className="text-[#374151]">{t("singleProduct.headerInfo.reviewsLabel", "10 product reviews:")}</span>
-        <div className="flex items-center gap-2">
-          <Stars value={ratingValue} />
-          <span className="text-[#111827]">
-            {reviewsCount ? `(${reviewsCount})` : t("singleProduct.headerInfo.reviewsEmpty", "(—)")}
-          </span>
-        </div>
-        <span className="text-[#6b7280]">{t("singleProduct.headerInfo.testReportsLabel", "2 test reports:")}</span>
-      </div>
-
-      <div className="mt-1 text-[13px] font-semibold text-[#111827]">
-        {t("singleProduct.headerInfo.averageGrade", "Average grade 2.0")}
-      </div> */}
-
       {mobileSpecs.length ? (
         <div className="lg:hidden mt-3 grid grid-cols-3 gap-2">
           {mobileSpecs.map(([label, value], idx) => (
@@ -195,45 +171,8 @@ export default function ProductHeaderInfo() {
           ))}
         </div>
       ) : null}
-
-      <div className="mt-4 text-[13px] leading-[1.55] text-[#111827]">
-        <div className="flex items-start gap-3">
-          {specs.length ? (
-            <div className="pt-[2px] flex-shrink-0">
-              <Image
-                src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/8d3a1cc2-409a-47cb-abb2-a933b24d9e94-idealo-de/assets/svgs/A-Right-WithAGScale-2.svg?"
-                alt={t("singleProduct.headerInfo.energyClassAlt", "Energy efficiency class")}
-                width={39}
-                height={28}
-                unoptimized
-              />
-            </div>
-          ) : null}
-
-          <div className="min-w-0">
-            <span className="font-semibold">{t("singleProduct.headerInfo.productOverview", "Product overview:")}</span>{" "}
-            {specs.length ? (
-              <span className="text-[#374151]">
-                {specs.map(([k, v], idx) => (
-                  <span key={k}>
-                    {k}: {v}
-                    {idx < specs.length - 1 ? <span className="text-[#9ca3af]"> · </span> : null}
-                  </span>
-                ))}{" "}
-                <a href="#specifications" className="text-[#1a73e8] hover:underline whitespace-nowrap">
-                  {t("singleProduct.headerInfo.productDetailsLink", "product details")}
-                </a>
-              </span>
-            ) : (
-              <span className="text-[#374151]">
-                <a href="#specifications" className="text-[#1a73e8] hover:underline whitespace-nowrap">
-                  {t("singleProduct.headerInfo.productDetailsLink", "product details")}
-                </a>
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
+
+
