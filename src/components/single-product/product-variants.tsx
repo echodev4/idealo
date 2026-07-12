@@ -68,6 +68,68 @@ function getVariantLabel(product: VariantProduct) {
   return label || getVariantName(product);
 }
 
+type RtlScrollType = "negative" | "reverse" | "default";
+
+let cachedRtlScrollType: RtlScrollType | null = null;
+
+function getRtlScrollType(): RtlScrollType {
+  if (cachedRtlScrollType) return cachedRtlScrollType;
+  if (typeof document === "undefined") return "negative";
+
+  const outer = document.createElement("div");
+  const inner = document.createElement("div");
+
+  outer.dir = "rtl";
+  outer.style.width = "4px";
+  outer.style.height = "1px";
+  outer.style.overflow = "scroll";
+  outer.style.position = "absolute";
+  outer.style.top = "-9999px";
+
+  inner.style.width = "8px";
+  inner.style.height = "1px";
+  outer.appendChild(inner);
+  document.body.appendChild(outer);
+
+  outer.scrollLeft = 1;
+
+  if (outer.scrollLeft === 0) {
+    cachedRtlScrollType = "negative";
+  } else {
+    const initial = outer.scrollLeft;
+    outer.scrollLeft = 0;
+    cachedRtlScrollType = outer.scrollLeft === 0 ? "default" : initial > 0 ? "reverse" : "negative";
+  }
+
+  document.body.removeChild(outer);
+  return cachedRtlScrollType;
+}
+
+function getNormalizedScrollLeft(el: HTMLDivElement) {
+  const isRtl = getComputedStyle(el).direction === "rtl";
+  if (!isRtl) return el.scrollLeft;
+
+  const max = el.scrollWidth - el.clientWidth;
+  const left = el.scrollLeft;
+  const type = getRtlScrollType();
+
+  if (type === "negative") return max + left;
+  if (type === "reverse") return max - left;
+  return left;
+}
+
+function getNativeScrollLeft(normalizedLeft: number, el: HTMLDivElement) {
+  const isRtl = getComputedStyle(el).direction === "rtl";
+  if (!isRtl) return normalizedLeft;
+
+  const max = el.scrollWidth - el.clientWidth;
+  const type = getRtlScrollType();
+
+  if (type === "negative") return normalizedLeft - max;
+  if (type === "reverse") return max - normalizedLeft;
+  return normalizedLeft;
+}
+
 function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
   const [canLeft, setCanLeft] = React.useState(false);
   const [canRight, setCanRight] = React.useState(false);
@@ -77,8 +139,10 @@ function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
     if (!el) return;
 
     const max = el.scrollWidth - el.clientWidth;
-    setCanLeft(el.scrollLeft > 2);
-    setCanRight(el.scrollLeft < max - 2);
+    const left = getNormalizedScrollLeft(el);
+
+    setCanLeft(left > 2);
+    setCanRight(left < max - 2);
   }, [ref]);
 
   React.useEffect(() => {
@@ -86,12 +150,13 @@ function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
     if (!el) return;
 
     update();
+    const resizeObserver = new ResizeObserver(update);
     el.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    resizeObserver.observe(el);
 
     return () => {
       el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      resizeObserver.disconnect();
     };
   }, [ref, update]);
 
@@ -100,12 +165,18 @@ function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
       const el = ref.current;
       if (!el) return;
 
-      el.scrollBy({
-        left: direction === "left" ? -520 : 520,
+      const max = el.scrollWidth - el.clientWidth;
+      const current = getNormalizedScrollLeft(el);
+      const next = Math.max(0, Math.min(max, current + (direction === "left" ? -520 : 520)));
+
+      el.scrollTo({
+        left: getNativeScrollLeft(next, el),
         behavior: "smooth",
       });
+
+      window.requestAnimationFrame(update);
     },
-    [ref]
+    [ref, update]
   );
 
   return { canLeft, canRight, scrollBy, update };

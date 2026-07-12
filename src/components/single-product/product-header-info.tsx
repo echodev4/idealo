@@ -77,51 +77,6 @@ export default function ProductHeaderInfo() {
     ? Math.min(...offerPrices)
     : parsePrice(product?.currentPrice ?? product?.price);
 
-  const specifications = (product?.specifications || {}) as Record<string, string>;
-  const normalizedSpecs = Object.entries(specifications)
-    .map(([key, value]) => {
-      const k = String(key ?? "").trim();
-      const v = String(value ?? "").trim();
-      return [k, v] as const;
-    })
-    .filter(([k, v]) => k.length > 0 && v.length > 0);
-
-  function findSpecByCandidates(
-    entries: readonly (readonly [string, string])[],
-    candidates: string[]
-  ): readonly [string, string] | null {
-    const normalized = entries.map(([k, v]) => [k, v, String(k ?? "").toLowerCase().replace(/\s+/g, " ").trim()] as const);
-    for (const cand of candidates) {
-      for (const [k, v, low] of normalized) {
-        if (low.includes(cand)) return [k, v];
-      }
-    }
-    return null;
-  }
-
-  const colorSpec = findSpecByCandidates(normalizedSpecs, [
-    "colour name",
-    "color name",
-    "colour",
-    "color",
-    "colourname",
-    "colorname",
-  ]);
-  const storageSpec = findSpecByCandidates(normalizedSpecs, [
-    "internal memory",
-    "internal storage",
-    "storage capacity",
-    "storage size",
-    "built-in storage",
-    "builtin storage",
-    "rom",
-    "storage",
-  ]);
-
-  const mobileSpecs: Array<readonly [string, string]> = [];
-  if (colorSpec) mobileSpecs.push(["Color", colorSpec[1]]);
-  if (storageSpec) mobileSpecs.push(["Internal Memory", storageSpec[1]]);
-
   return (
     <div className="w-full">
       <h1 className="mt-3 text-[#111827] text-[28px] font-semibold leading-[1.1]">
@@ -154,21 +109,6 @@ export default function ProductHeaderInfo() {
               ) : null}
             </div>
           ) : null}
-        </div>
-      ) : null}
-
-      {mobileSpecs.length ? (
-        <div className="lg:hidden mt-3 grid grid-cols-3 gap-2">
-          {mobileSpecs.map(([label, value], idx) => (
-            <div key={`${label}-${idx}`} className="overflow-hidden rounded-[10px] border border-[#2d7fd9]">
-              <div className="bg-[#63b3ff] px-2 py-1.5 text-[12px] font-semibold leading-tight text-[#0f172a] truncate" title={value}>
-                {value}
-              </div>
-              <div className="bg-[#1f2937] px-2 py-1 text-[11px] leading-tight text-white/95 truncate" title={label}>
-                {label}
-              </div>
-            </div>
-          ))}
         </div>
       ) : null}
     </div>
