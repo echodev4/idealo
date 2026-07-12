@@ -410,7 +410,7 @@ function LandingProductsSection({
 
   return (
     <section className="landing-products-section mx-auto w-[calc(100vw-32px)] max-w-[1200px] px-0 pb-9 md:w-full md:px-6">
-      <div className="landing-products-header mb-4 flex items-center justify-between gap-4">
+      <div className="landing-products-header mb-4 flex items-center justify-between gap-4 md:-mx-6">
         <h2 className="landing-section-title text-[24px] font-bold text-[#06163a] md:text-[28px]">{title}</h2>
         {products.length > 0 && (
           <button

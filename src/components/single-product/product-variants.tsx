@@ -68,6 +68,56 @@ function getVariantLabel(product: VariantProduct) {
   return label || getVariantName(product);
 }
 
+const COLOR_SPEC_KEYS = [
+  "colour name",
+  "color name",
+  "colour",
+  "color",
+  "colourname",
+  "colorname",
+];
+
+const STORAGE_SPEC_KEYS = [
+  "internal memory",
+  "internal storage",
+  "storage capacity",
+  "storage size",
+  "built-in storage",
+  "builtin storage",
+  "rom",
+  "storage",
+];
+
+function normalizeSpecKey(value: unknown) {
+  return String(value ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function readSpecValue(specifications: unknown, candidates: string[]) {
+  if (!specifications || typeof specifications !== "object" || Array.isArray(specifications)) return "";
+
+  const entries = Object.entries(specifications as Record<string, unknown>)
+    .map(([key, value]) => ({
+      key: normalizeSpecKey(key),
+      value: String(value ?? "").trim(),
+    }))
+    .filter((entry) => entry.key && entry.value);
+
+  for (const candidate of candidates) {
+    const normalizedCandidate = normalizeSpecKey(candidate);
+    const match = entries.find((entry) => entry.key.includes(normalizedCandidate));
+    if (match) return match.value;
+  }
+
+  return "";
+}
+
+function isLikelyMobileProduct(product: any) {
+  return Boolean(
+    readSpecValue(product?.specifications, COLOR_SPEC_KEYS) &&
+      readSpecValue(product?.specifications, STORAGE_SPEC_KEYS)
+  );
+}
+
 type RtlScrollType = "negative" | "reverse" | "default";
 
 let cachedRtlScrollType: RtlScrollType | null = null;
@@ -207,6 +257,31 @@ function FilterButton({
   );
 }
 
+function ProductVariantsSkeleton() {
+  return (
+    <section className="mt-7 w-full lg:mt-8" aria-label="Loading product variants">
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <div className="h-4 w-40 animate-pulse rounded bg-[#e5e7eb]" />
+        <div className="h-9 w-[118px] animate-pulse rounded-[4px] bg-[#e5e7eb]" />
+      </div>
+
+      <div className="flex gap-2 overflow-hidden pb-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-[168px] w-[118px] shrink-0 animate-pulse rounded-[4px] border border-[#d5d9de] bg-white"
+          >
+            <div className="h-[88px] rounded-t-[4px] bg-[#f0f1f3]" />
+            <div className="m-2 h-3 rounded bg-[#e5e7eb]" />
+            <div className="mx-2 h-3 w-16 rounded bg-[#e5e7eb]" />
+            <div className="mx-2 mt-5 h-4 w-20 rounded bg-[#e5e7eb]" />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ProductVariants() {
   const { product, loading } = useProduct();
   const [variants, setVariants] = React.useState<VariantProduct[]>([]);
@@ -299,7 +374,9 @@ export default function ProductVariants() {
     update();
   }, [filteredVariants.length, update]);
 
-  if (!isApplicable) return null;
+  if (!isApplicable) {
+    return isLoading && isLikelyMobileProduct(product) ? <ProductVariantsSkeleton /> : null;
+  }
 
   const cheapest = variants
     .map((variant) => parsePrice(variant.currentPrice ?? variant.price))
