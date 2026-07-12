@@ -7,7 +7,7 @@ import { ProductProvider, useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import ProductGallery from "@/components/single-product/product-gallery";
 import ProductHeaderInfo from "@/components/single-product/product-header-info";
-// import ProductVariantsSelector from "@/components/single-product/product-variants-selector";
+import ProductVariants from "@/components/single-product/product-variants";
 import OfferComparisonTable from "@/components/single-product/offer-comparison-table";
 import ProductDetailsSpecifications from "@/components/single-product/product-details-specifications";
 import PriceDevelopmentPanel from "@/components/single-product/price-development-panel";
@@ -95,16 +95,14 @@ function ProductComparisonContent() {
       <main className="container max-w-[1280px] mx-auto px-3 lg:px-0 pt-2 pb-6">
         <ProductTopNav />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[182px_minmax(0,1fr)_280px] gap-6 lg:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_280px] gap-6 lg:gap-10">
           <div className="lg:pt-6">
             <ProductGallery />
           </div>
 
           <div className="min-w-0 lg:pt-4">
             <ProductHeaderInfo />
-            {/* <div className="mt-4 lg:mt-5">
-              <ProductVariantsSelector />
-            </div> */}
+            <ProductVariants />
 
             <MobileProductTabs activeTab={mobileTab} onChange={setMobileTab} />
 
@@ -141,6 +139,3 @@ export default function ProductComparisonPage({ productUrl, productName, sourceN
     </ProductProvider>
   );
 }
-
-
-
