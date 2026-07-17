@@ -266,9 +266,9 @@ export const translations: Record<Locale, any> = {
       variantsSelector: {
         variants: "variants",
         from: "from",
-        filter: "filter",
+        filter: "Show all variants",
         allVariants: "All variants",
-        away: "away",
+        away: "from",
         aria: {
           scrollLeft: "Scroll left",
           scrollRight: "Scroll right",
@@ -850,7 +850,7 @@ export const translations: Record<Locale, any> = {
       variantsSelector: {
         variants: "متغيرات",
         from: "من",
-        filter: "تصفية",
+        filter: "عرض كل المتغيرات",
         allVariants: "كل المتغيرات",
         away: "ابتداءً من",
         aria: {

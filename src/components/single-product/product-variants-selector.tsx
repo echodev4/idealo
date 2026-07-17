@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Check, Play } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
@@ -37,13 +37,10 @@ function truncate(s: string, n: number) {
 const ProductVariantsSelectorSkeleton = () => {
     return (
         <section className="mt-3 animate-pulse">
-            <div className="h-4 w-56 bg-muted rounded" />
-            <div className="mt-3 flex gap-2 overflow-hidden">
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="w-[124px] h-[204px] bg-muted rounded" />
-                ))}
+            <div className="flex items-center justify-between gap-4">
+                <div className="h-4 w-56 rounded bg-muted" />
+                <div className="h-9 w-36 rounded-[3px] bg-muted" />
             </div>
-            <div className="mt-3 h-2 w-full bg-muted rounded" />
         </section>
     );
 };
@@ -53,6 +50,7 @@ export default function ProductVariantsSelector() {
     const { relatedProducts, relatedLoading, variantCount } = useProduct();
     const { t } = useLanguage();
     const [selectedIdx, setSelectedIdx] = React.useState(0);
+    const [variantsOpen, setVariantsOpen] = React.useState(false);
 
     const scrollerRef = React.useRef<HTMLDivElement | null>(null);
     const trackRef = React.useRef<HTMLDivElement | null>(null);
@@ -81,6 +79,7 @@ export default function ProductVariantsSelector() {
     };
 
     React.useEffect(() => {
+        if (!variantsOpen) return;
         if (relatedLoading) return;
         if (!relatedProducts?.length) return;
 
@@ -99,7 +98,7 @@ export default function ProductVariantsSelector() {
             el.removeEventListener("scroll", onScroll);
             window.removeEventListener("resize", onResize);
         };
-    }, [relatedLoading, relatedProducts]);
+    }, [variantsOpen, relatedLoading, relatedProducts]);
 
     if (relatedLoading) return <ProductVariantsSelectorSkeleton />;
     if (!relatedProducts?.length) return null;
@@ -163,15 +162,18 @@ export default function ProductVariantsSelector() {
 
                 <button
                     type="button"
-                    onClick={(e) => e.preventDefault()}
-                    className="hidden lg:inline-flex items-center justify-center gap-2 h-9 px-7 rounded-[3px] border border-[#1a73e8] text-[#1a73e8] bg-white text-[13px] font-semibold cursor-not-allowed"
+                    onClick={() => setVariantsOpen((open) => !open)}
+                    aria-expanded={variantsOpen}
+                    aria-controls="single-product-variants-list"
+                    className="inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-[3px] border border-[#1a73e8] bg-white px-5 text-[13px] font-semibold text-[#1a73e8]"
                 >
-                    <Play className="w-4 h-4 fill-[#1a73e8] text-[#1a73e8]" />
-                    {t("singleProduct.variantsSelector.filter", "filter")}
+                    <ChevronDown className={cn("w-4 h-4 text-[#1a73e8] transition-transform", variantsOpen ? "rotate-180" : "")} />
+                    {t("singleProduct.variantsSelector.filter", "Show all variants")}
                 </button>
             </div>
 
-            <div className="mt-3">
+            {variantsOpen ? (
+                <div id="single-product-variants-list" className="mt-3">
                 <div
                     ref={scrollerRef}
                     className={cn(
@@ -208,7 +210,7 @@ export default function ProductVariantsSelector() {
 
                             <div className="mt-auto pt-2">
                                 <div className="text-[12px] text-[#6b7280] leading-[1.2]">
-                                    {t("singleProduct.variantsSelector.away", "away")}
+                                    {t("singleProduct.variantsSelector.from", "from")}
                                 </div>
                                 <div className="text-[18px] font-semibold text-[#f97316] leading-[1.1] break-words">
                                     <VariantPrice price={minPrice} loading={items.some((item) => item.loading)} />
@@ -248,7 +250,7 @@ export default function ProductVariantsSelector() {
 
                                     <div className="mt-auto pt-2">
                                         <div className="text-[12px] text-[#6b7280] leading-[1.2]">
-                                            {t("singleProduct.variantsSelector.away", "away")}
+                                            {t("singleProduct.variantsSelector.from", "from")}
                                         </div>
                                         <div className="text-[18px] font-semibold text-[#f97316] leading-[1.1] break-words">
                                             <VariantPrice price={item.price} loading={item.loading} />
@@ -290,8 +292,8 @@ export default function ProductVariantsSelector() {
                         ›
                     </button>
                 </div>
-            </div>
+                </div>
+            ) : null}
         </section>
     );
 }
-

@@ -99,7 +99,7 @@ export default function ProductGallery() {
         <div
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          dir="ltr" className="overflow-hidden rounded-[4px] border border-[#e5e7eb] bg-[#f3f4f6]"
+          dir="ltr" className="mx-auto max-w-[78vw] overflow-hidden rounded-[4px] border border-[#e5e7eb] bg-white"
         >
           <div
             className="flex transition-transform duration-300 ease-out"
@@ -111,8 +111,8 @@ export default function ProductGallery() {
                   src={img.src}
                   alt={img.alt ?? title}
                   fill
-                  sizes="95vw"
-                  className="object-contain p-[15%]"
+                  sizes="78vw"
+                  className="object-contain p-[4%]"
                   priority={idx === 0}
                 />
               </div>
