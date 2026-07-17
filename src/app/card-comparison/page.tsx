@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import PageHeroTitle from "@/components/card-comparison/page-hero-title";
 import CardSelectionModal from "@/components/card-comparison/card-selection-modal";
@@ -8,27 +8,14 @@ import ComparisonGridSection from "@/components/card-comparison/comparison-grid-
 import CardBrowseSection from "@/components/card-comparison/card-browse-section";
 import ApplyCardModal from "@/components/card-comparison/ApplyCardModal";
 import type { CardData } from "@/types/card";
-
-type Card = {
-    _id: string;
-    bankName: string;
-    joiningAnnualFee: string;
-    apr: string;
-    salaryTransferRequired: boolean;
-    welcomeBonus: string;
-    earnRates: string;
-    keyLifestyleBenefits: string;
-    pointsRedemption: string;
-    documentsRequired: string;
-    cardImageUrl: string;
-};
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function CardComparisonSkeleton() {
     return (
         <main className="flex flex-1 flex-col bg-white">
             <div className="mx-auto w-full max-w-[1280px] px-4 py-5">
                 <div className="mx-auto h-10 w-[min(760px,90vw)] animate-pulse rounded bg-[#eef1f5]" />
-                <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3">
                     {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="rounded-xl border bg-white p-4 shadow-sm">
                             <div className="mb-4 aspect-[1.6/1] w-full animate-pulse rounded-md bg-[#eef1f5]" />
@@ -109,12 +96,14 @@ export default function Home() {
     const [cards, setCards] = useState<CardData[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>("");
+    const isMobile = useIsMobile();
+    const maxComparisonSlots = useMemo(() => (isMobile ? 2 : 3), [isMobile]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
-    const [selectedCards, setSelectedCards] = useState<(Card | null)[]>([null, null, null]);
+    const [selectedCards, setSelectedCards] = useState<(CardData | null)[]>([null, null, null]);
 
-    const [applyCard, setApplyCard] = useState<Card | null>(null);
+    const [applyCard, setApplyCard] = useState<CardData | null>(null);
     const [openApply, setOpenApply] = useState(false);
 
     useEffect(() => {
@@ -138,6 +127,16 @@ export default function Home() {
         load();
     }, []);
 
+    useEffect(() => {
+        setSelectedCards((current) => {
+            const next = current.slice(0, maxComparisonSlots);
+            while (next.length < maxComparisonSlots) {
+                next.push(null);
+            }
+            return next;
+        });
+    }, [maxComparisonSlots]);
+
     const handleAddCard = (slotIndex: number) => {
         setSelectedSlotIndex(slotIndex);
         setIsModalOpen(true);
@@ -158,6 +157,8 @@ export default function Home() {
             const emptySlotIndex = next.findIndex((c) => c === null);
             if (emptySlotIndex !== -1) {
                 next[emptySlotIndex] = card;
+            } else {
+                next[next.length - 1] = card;
             }
         }
 
@@ -165,8 +166,6 @@ export default function Home() {
         setIsModalOpen(false);
         setSelectedSlotIndex(null);
     };
-
-
 
     const handleRemoveCard = (slotIndex: number) => {
         const next = [...selectedCards];
@@ -198,29 +197,27 @@ export default function Home() {
                 />
             )}
 
-
             <PageHeroTitle />
 
             <div className="mt-2">
                 <ComparisonGridSection
-                    selectedCards={selectedCards as any}
+                    selectedCards={selectedCards}
                     onAddCard={handleAddCard}
                     onRemoveCard={handleRemoveCard}
                     setApplyCard={setApplyCard}
                     setOpenApply={setOpenApply}
                 />
             </div>
-            <div className="mt-2">
 
+            <div className="mt-2">
                 <CardBrowseSection
-                    cards={cards as any}
-                    onSelectCard={handleSelectCard as any}
+                    cards={cards}
+                    onSelectCard={handleSelectCard}
                     selectedCardIds={selectedCardIds}
                     setApplyCard={setApplyCard}
                     setOpenApply={setOpenApply}
                 />
             </div>
-
 
             <div className="mt-2">
                 <CardSelectionModal
@@ -231,7 +228,6 @@ export default function Home() {
                     onSelectCard={handleSelectCard}
                 />
             </div>
-
         </main>
     );
 }
