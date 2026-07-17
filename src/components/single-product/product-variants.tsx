@@ -262,21 +262,7 @@ function ProductVariantsSkeleton() {
     <section className="mt-7 w-full lg:mt-8" aria-label="Loading product variants">
       <div className="mb-3 flex items-center justify-between gap-4">
         <div className="h-4 w-40 animate-pulse rounded bg-[#e5e7eb]" />
-        <div className="h-9 w-[118px] animate-pulse rounded-[4px] bg-[#e5e7eb]" />
-      </div>
-
-      <div className="flex gap-2 overflow-hidden pb-3">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-[168px] w-[118px] shrink-0 animate-pulse rounded-[4px] border border-[#d5d9de] bg-white"
-          >
-            <div className="h-[88px] rounded-t-[4px] bg-[#f0f1f3]" />
-            <div className="m-2 h-3 rounded bg-[#e5e7eb]" />
-            <div className="mx-2 h-3 w-16 rounded bg-[#e5e7eb]" />
-            <div className="mx-2 mt-5 h-4 w-20 rounded bg-[#e5e7eb]" />
-          </div>
-        ))}
+        <div className="h-9 w-[150px] animate-pulse rounded-[4px] bg-[#e5e7eb]" />
       </div>
     </section>
   );
@@ -427,10 +413,10 @@ export default function ProductVariants() {
         <button
           type="button"
           onClick={toggleFiltersPanel}
-          className="inline-flex min-w-[118px] items-center justify-center gap-1 rounded-[4px] border border-[#0b63c8] bg-white px-4 py-2 text-[13px] font-medium text-[#0b63c8] hover:bg-[#f4f8ff]"
+          className="inline-flex min-w-[150px] items-center justify-center gap-1 whitespace-nowrap rounded-[4px] border border-[#0b63c8] bg-white px-4 py-2 text-[13px] font-medium text-[#0b63c8] hover:bg-[#f4f8ff]"
         >
           <ChevronDown className={cn("h-4 w-4 transition-transform", showFilters ? "rotate-180" : "")} />
-          filter
+          Show all variants
         </button>
       </div>
 
@@ -470,6 +456,7 @@ export default function ProductVariants() {
         </div>
       ) : null}
 
+      {showFilters ? (
       <div className="group relative">
         {canLeft ? (
           <button
@@ -528,7 +515,7 @@ export default function ProductVariants() {
                       <div className="line-clamp-2 text-[12px] font-semibold leading-[15px] text-[#111827]">
                         {getVariantLabel(variant)}
                       </div>
-                      <div className="mt-auto text-[12px] leading-tight text-[#6b7280]">away</div>
+                      <div className="mt-auto text-[12px] leading-tight text-[#6b7280]">from</div>
                       {price ? (
                         <div className="text-[15px] font-semibold leading-tight text-[#ff6600]">
                           {formatAED(price)}
@@ -551,6 +538,7 @@ export default function ProductVariants() {
           </button>
         ) : null}
       </div>
+      ) : null}
     </section>
   );
 }
