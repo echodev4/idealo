@@ -156,12 +156,18 @@ function ButtonPill({
 
 function RetailerLogo({ source }: { source: string }) {
     const sourceLogo = getSourceLogo(source);
+    const normalized = normalizeSourceName(source);
+    const boxClassName =
+        normalized === "jumbo"
+            ? "relative h-[24px] w-[92px] overflow-hidden bg-white"
+            : "relative h-[38px] w-[112px] overflow-hidden bg-white";
+    const imageSizes = normalized === "jumbo" ? "92px" : "112px";
 
     return (
-        <div className="flex min-w-[132px] flex-col items-start gap-2">
+        <div className="flex min-w-[112px] flex-col items-start gap-2">
             {sourceLogo ? (
-                <div className="relative h-[46px] w-[132px] overflow-hidden bg-white">
-                    <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes="132px" className="object-contain" />
+                <div className={boxClassName}>
+                    <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes={imageSizes} className="object-contain" />
                 </div>
             ) : (
                 <span className="text-[13px] font-semibold text-[#111827]">{source}</span>
