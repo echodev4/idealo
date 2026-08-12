@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
-import { resolvePrimaryProductImage } from "@/lib/products/imageFallback";
+import { resolvePreferredProductImage } from "@/lib/products/imageFallback";
 import { cn } from "@/lib/utils";
 
 type VariantProduct = {
@@ -52,7 +52,7 @@ function getVariantName(product: VariantProduct) {
 }
 
 function getVariantImage(product: VariantProduct) {
-  return resolvePrimaryProductImage(product);
+  return resolvePreferredProductImage(product);
 }
 
 function getVariantHref(product: VariantProduct) {

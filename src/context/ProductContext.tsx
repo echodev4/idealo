@@ -11,6 +11,7 @@ import {
     normalizeProductSource,
     PRODUCT_PLACEHOLDER_SRC,
     resolvePrimaryProductImage,
+    resolvePreferredProductImage,
     resolveProductImages,
 } from "@/lib/products/imageFallback";
 import { formatProductDisplayName } from "@/lib/products/displayName";
@@ -151,7 +152,7 @@ function orderOffersForDisplay<T extends {
 function normalizeListProduct(item: any): OfferProduct {
     const ratingValue =
         parseRatingValue(item?.average_rating) ?? parseRatingValue(item?.rating);
-    const imageUrl = resolvePrimaryProductImage(item);
+    const imageUrl = resolvePreferredProductImage(item);
     const source = String(item?.source || "");
     const images = resolveProductImages(item);
 
@@ -541,7 +542,7 @@ export function ProductProvider({
                 }
 
                 selectedProduct.images = resolveProductImages(selectedProduct);
-                selectedProduct.image_url = resolvePrimaryProductImage(selectedProduct);
+                selectedProduct.image_url = resolvePreferredProductImage(selectedProduct);
 
                 const sharafDisplayImages = getSharafDisplayImages(selectedProduct);
                 if (isSharafdgSource(selectedProduct.source) && sharafDisplayImages.length > 0) {
