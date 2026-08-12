@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const res = await fetch(`${BASE_URL}/offers/by-product`, {
+    const res = await fetch(`${BASE_URL}/offers/by-product-v2`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

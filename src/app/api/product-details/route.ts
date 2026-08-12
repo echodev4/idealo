@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const res = await fetch(`${BASE_URL}/lookup/by-url`, {
+    const res = await fetch(`${BASE_URL}/lookup/by-url-v2`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
