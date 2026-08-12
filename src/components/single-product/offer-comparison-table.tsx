@@ -71,11 +71,28 @@ function getSourceLogo(source: string) {
     if (normalized === "sharafdg") {
         return { src: sharafDgLogo, alt: "Sharaf", label: "sharaf" };
     }
-    return null;
-}
 
-function hasText(value?: string | number | null) {
-    return value !== null && value !== undefined && String(value).trim().length > 0;
+    if (normalized === "jumbo") {
+        return { src: "/uploads/sources/jumbo.svg", alt: "Jumbo", label: "jumbo" };
+    }
+
+    if (normalized === "jackys" || normalized === "jacky's") {
+        return { src: "/uploads/sources/jackys.svg", alt: "Jacky's", label: "jackys" };
+    }
+
+    if (normalized === "istyle") {
+        return { src: "/uploads/sources/istyle.svg", alt: "iSTYLE", label: "istyle" };
+    }
+
+    if (normalized === "eros") {
+        return { src: "/uploads/sources/eros.svg", alt: "Eros Group", label: "eros" };
+    }
+
+    if (normalized === "samsung") {
+        return { src: "/uploads/sources/samsung.svg", alt: "Samsung", label: "samsung" };
+    }
+
+    return null;
 }
 
 type Offer = {
@@ -89,9 +106,6 @@ type Offer = {
     imageUrl: string;
     available: boolean;
     source: string;
-    averageRating?: number | null;
-    ratingCount?: string;
-    reviews?: string | number;
 };
 
 function OfferComparisonTableSkeleton() {
@@ -106,40 +120,6 @@ function OfferComparisonTableSkeleton() {
                 </div>
             </div>
         </section>
-    );
-}
-
-function Star({ filled }: { filled: boolean }) {
-    return (
-        <span className={cn("text-[14px] leading-none", filled ? "text-[#22c55e]" : "text-[#d1d5db]")}>&#9733;</span>
-    );
-}
-
-function Rating({ value, count }: { value: number | null; count?: string | number | null }) {
-    const hasRatingValue = typeof value === "number" && value > 0;
-    const hasRatingCount = hasText(count);
-
-    if (!hasRatingValue && !hasRatingCount) return null;
-
-    const full = hasRatingValue ? Math.max(0, Math.min(5, Math.floor(value))) : 0;
-    const countText = hasRatingCount ? String(count).trim() : "";
-
-    return (
-        <div className="flex flex-col items-start gap-1">
-            {hasRatingValue ? (
-                <div className="flex items-center gap-1">
-                    <div className="flex items-center gap-[1px]">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <Star key={i} filled={i < full} />
-                        ))}
-                    </div>
-                    <span className="text-[12px] text-[#111827] font-semibold">{value.toFixed(1)}</span>
-                </div>
-            ) : null}
-            {countText ? (
-                <div className="text-[12px] text-[#6b7280] leading-none">{countText} ratings</div>
-            ) : null}
-        </div>
     );
 }
 
@@ -172,7 +152,7 @@ function ButtonPill({
     );
 }
 
-function RetailerLogoAndRating({ source, ratingValue, ratingCount }: { source: string; ratingValue: number | null; ratingCount?: string }) {
+function RetailerLogo({ source }: { source: string }) {
     const sourceLogo = getSourceLogo(source);
 
     return (
@@ -184,7 +164,6 @@ function RetailerLogoAndRating({ source, ratingValue, ratingCount }: { source: s
             ) : (
                 <span className="text-[13px] font-semibold text-[#111827]">{source}</span>
             )}
-            <Rating value={ratingValue} count={ratingCount} />
         </div>
     );
 }
@@ -238,14 +217,6 @@ export default function OfferComparisonTable() {
                 imageUrl: String(p?.image_url || p?.images?.[0]?.src || ""),
                 available: true,
                 source: source || "unknown",
-                averageRating: typeof p?.average_rating === "number" ? p.average_rating : null,
-                ratingCount:
-                    p?.ratingCount !== undefined && p?.ratingCount !== null
-                        ? String(p.ratingCount)
-                        : p?.reviews !== undefined && p?.reviews !== null
-                            ? String(p.reviews)
-                            : "",
-                reviews: p?.reviews,
             } as Offer;
         })
         .filter(Boolean) as Offer[];
@@ -390,11 +361,6 @@ export default function OfferComparisonTable() {
                             <div className="divide-y divide-[#e5e7eb]">
                                 {ordered.slice(0, visible).map((o) => {
                                     const isCheapest = o.price === cheapest;
-                                    const ratingValue =
-                                        typeof o.averageRating === "number" && o.averageRating > 0
-                                            ? o.averageRating
-                                            : null;
-
                                     return (
                                         <div key={o.id} className="p-3">
                                             <div className="hidden lg:grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_minmax(0,1.15fr)_minmax(0,0.9fr)] gap-4 items-start">
@@ -412,12 +378,12 @@ export default function OfferComparisonTable() {
                                                             {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
                                                         </div>
                                                     ) : null}
-                                                    <div className="text-[24px] font-semibold text-[#111827] leading-none">
+                                                    <div className="text-[20px] font-semibold text-[#111827] leading-tight">
                                                         <PriceText price={o.price} loading={o.loading} />
                                                     </div>
                                                 </div>
 
-                                                <RetailerLogoAndRating source={o.source} ratingValue={ratingValue} ratingCount={o.ratingCount} />
+                                                <RetailerLogo source={o.source} />
 
                                                 <div className="flex justify-end">
                                                     <button
@@ -445,11 +411,11 @@ export default function OfferComparisonTable() {
 
                                                 <div className="mt-3 flex items-start justify-between gap-3">
                                                     <div className="min-w-0">
-                                                        <div className="text-[24px] font-semibold text-[#111827] leading-none">
+                                                        <div className="text-[20px] font-semibold text-[#111827] leading-tight">
                                                             <PriceText price={o.price} loading={o.loading} />
                                                         </div>
                                                     </div>
-                                                    <RetailerLogoAndRating source={o.source} ratingValue={ratingValue} ratingCount={o.ratingCount} />
+                                                    <RetailerLogo source={o.source} />
                                                 </div>
 
                                                 <div className="mt-3">

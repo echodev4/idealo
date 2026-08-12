@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="Jumbo">
+  <rect width="320" height="80" fill="#ffffff"/>
+  <text x="0" y="58" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" fill="#064a8f" stroke="#79a6ce" stroke-width="1.4">JUMBO</text>
+  <path d="M276 62h31V19h-11v32h-20z" fill="#064a8f" stroke="#79a6ce" stroke-width="1.3"/>
+  <path d="M291 19c-7 13-15 25-28 36h17c6-7 11-15 16-25z" fill="#0d5ca9" stroke="#79a6ce" stroke-width="1.1"/>
+</svg>
