@@ -13,12 +13,17 @@ import {
 export interface Product {
     _id?: string;
     source?: string;
+    rawSource?: string;
+    primarySource?: string;
+    sources?: string[];
 
     product_name?: string;
     image_url?: string;
     price?: string;
 
     offerCount?: number;
+    variantCount?: number;
+    offerItems?: unknown[];
 
     title?: string;
     currentPrice?: string;

@@ -25,7 +25,9 @@ function normalizeDisplayImages(raw: RawProduct): { src: string; alt?: string }[
 export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
     const id = toText(raw._id);
     const productUrl = toText(raw.product_url);
-    const source = toText(raw.source);
+    const rawSource = toText(raw.source);
+    const primarySource = toText(raw.primarySource);
+    const source = primarySource || rawSource;
     const suggestedName = toText(raw.suggestedName);
     const title = suggestedName || formatProductDisplayName(raw.title || raw.product_name, {
         source,
@@ -70,9 +72,15 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         category: toText(raw.category),
         main_category: toText(raw.main_category),
         source,
+        rawSource,
+        primarySource,
+        sources: Array.isArray(raw.sources)
+            ? raw.sources.map((item) => toText(item)).filter(Boolean)
+            : [],
         source_record_id: id,
         scraped_at: toText(raw.scraped_at || raw.created_at || raw.inserted_at),
-        offerCount: 0,
+        offerCount: Number(raw.variantCount || raw.offerItems?.length || raw.productOffers?.length || 0),
+        variantCount: Number(raw.variantCount || 0),
         specifications:
             raw.specifications && typeof raw.specifications === "object"
                 ? raw.specifications
@@ -80,6 +88,7 @@ export function normalizeFaissProduct(raw: RawProduct): CategoryProduct | null {
         productOffers: Array.isArray(raw.productOffers)
             ? raw.productOffers.map((item) => String(item)).filter(Boolean)
             : [],
+        offerItems: Array.isArray(raw.offerItems) ? raw.offerItems : [],
         displayImages,
         displayImageUrl: toText(raw.display_image_url),
         displaySource: toText(raw.display_source),

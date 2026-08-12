@@ -13,7 +13,7 @@ export async function searchProducts(
     }
 
     const searchRes = await fetch(
-        `${BASE_URL}/search/products?q=${encodeURIComponent(query)}&limit=${candidateLimit}`,
+        `${BASE_URL}/search/products-v2?q=${encodeURIComponent(query)}&limit=${candidateLimit}`,
         {
         cache: "no-store",
         }

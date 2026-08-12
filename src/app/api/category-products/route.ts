@@ -5,7 +5,6 @@ import { enrichCategoryProducts } from "@/lib/category/enrichCategoryProducts";
 
 export const runtime = "nodejs";
 
-const BASE_URL = process.env.SCRAPER_API_BASE_URL;
 const SEARCH_LIMIT = 160;
 const STOPWORDS = new Set([
   "the",
@@ -47,6 +46,16 @@ function scoreProductForQuery(query: string, product: any): number {
         product?.category,
         product?.main_category,
         product?.category_path_text,
+        product?.modelName,
+        product?.storage,
+        product?.colour,
+        product?.specs,
+        Array.isArray(product?.sources) ? product.sources.join(" ") : "",
+        Array.isArray(product?.offerItems)
+          ? product.offerItems
+              .map((offer: any) => [offer?.title, offer?.product_name, offer?.source].filter(Boolean).join(" "))
+              .join(" ")
+          : "",
       ]
         .filter(Boolean)
         .join(" ")
@@ -122,6 +131,24 @@ function groupProductsBySuggestedName(products: RankedProduct[]): any[] {
   return groupedProducts;
 }
 
+function getGroupedOfferCount(product: any): number {
+  const candidates = [
+    product?.variantCount,
+    product?.offerCount,
+    Array.isArray(product?.offerItems) ? product.offerItems.length : 0,
+    Array.isArray(product?.productOffers) ? product.productOffers.length : 0,
+  ];
+
+  for (const value of candidates) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) {
+      return numeric;
+    }
+  }
+
+  return 1;
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -143,10 +170,6 @@ export async function GET(req: Request) {
       });
     }
 
-    if (!BASE_URL) {
-      throw new Error("SCRAPER_API_BASE_URL is not defined");
-    }
-
     const searchResult = await searchProducts(q, SEARCH_LIMIT);
     const applyStrictFilter = shouldApplyStrictFilter(q);
     const rankedProducts = [...searchResult.products]
@@ -160,71 +183,13 @@ export async function GET(req: Request) {
     const groupedProducts = groupProductsBySuggestedName(rankedProducts);
     const paginated = paginateProducts(groupedProducts, page, limit);
 
-    const countPayload = {
-      items: paginated.products.map((product) => ({
-        product_url: product.product_url,
-        source: product.source || "",
-      })),
-    };
-
-    const countRes = await fetch(`${BASE_URL}/offers/count-by-products`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(countPayload),
-      cache: "no-store",
+    const offerCountMap = new Map<string, number>();
+    paginated.products.forEach((product) => {
+      offerCountMap.set(`${product.product_url}::${product.source || ""}`, getGroupedOfferCount(product));
     });
 
-    if (!countRes.ok) {
-      const errorText = await countRes.text();
-      throw new Error(`Offer count backend error: ${errorText}`);
-    }
-
-    const countJson = await countRes.json();
-
-    const offerCountMap = new Map<string, number>();
-    const displayImageMap = new Map<
-      string,
-      {
-        displayImages: { src: string; alt?: string }[];
-        displayImageUrl: string;
-        displaySource: string;
-        displayProductUrl: string;
-      }
-    >();
-    const results = Array.isArray(countJson?.results) ? countJson.results : [];
-
-    for (const item of results) {
-      const key = `${item?.product_url || ""}::${item?.source || ""}`;
-      offerCountMap.set(key, Number(item?.offer_count || 0));
-
-      displayImageMap.set(key, {
-        displayImages: Array.isArray(item?.display_images) ? item.display_images : [],
-        displayImageUrl:
-          typeof item?.display_image_url === "string" ? item.display_image_url : "",
-        displaySource: typeof item?.display_source === "string" ? item.display_source : "",
-        displayProductUrl:
-          typeof item?.display_product_url === "string" ? item.display_product_url : "",
-      });
-    }
-
     const enrichedProducts = enrichCategoryProducts({
-      visibleProducts: paginated.products.map((product) => {
-        const displayImage = displayImageMap.get(
-          `${product.product_url}::${product.source || ""}`
-        );
-
-        if (!displayImage) return product;
-
-        return {
-          ...product,
-          displayImages: displayImage.displayImages,
-          displayImageUrl: displayImage.displayImageUrl,
-          displaySource: displayImage.displaySource,
-          displayProductUrl: displayImage.displayProductUrl,
-        };
-      }),
+      visibleProducts: paginated.products,
       offerCountMap,
     });
 

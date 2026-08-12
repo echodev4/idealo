@@ -1,6 +1,8 @@
 export type RawProduct = {
   _id?: string;
   source?: string;
+  primarySource?: string;
+  sources?: string[];
   product_url?: string;
   title?: string;
   product_name?: string;
@@ -25,6 +27,8 @@ export type RawProduct = {
   inserted_at?: string;
   specifications?: Record<string, unknown>;
   productOffers?: string[];
+  offerItems?: unknown[];
+  variantCount?: number;
   display_images?: { src?: string; alt?: string }[];
   display_image_url?: string;
   display_source?: string;
@@ -46,13 +50,18 @@ export type CategoryProduct = {
   category?: string;
   main_category?: string;
   source?: string;
+  rawSource?: string;
+  primarySource?: string;
+  sources?: string[];
   source_record_id?: string;
   numericPrice?: number;
   numericOldPrice?: number;
   scraped_at?: string;
   offerCount?: number;
+  variantCount?: number;
   specifications?: Record<string, unknown>;
   productOffers?: string[];
+  offerItems?: unknown[];
   displayImages?: { src: string; alt?: string }[];
   displayImageUrl?: string;
   displaySource?: string;
