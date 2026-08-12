@@ -29,8 +29,6 @@ export interface Product {
 
   numericPrice?: number;
   numericOldPrice?: number;
-  liveNumericPrice?: number;
-  livePriceLoading?: boolean;
 
   scraped_at?: any;
   offerCount?: number;
@@ -51,34 +49,6 @@ function getScrapedAtMs(p: Product) {
 
 type SortKey = "popular" | "savings" | "cheap" | "high" | "new";
 type ViewMode = "grid" | "list";
-
-function getProductKey(product: Product) {
-  return `${product.product_url}::${product.source || ""}`;
-}
-
-function normalizeLivePriceSource(source?: string) {
-  const value = String(source || "").trim().toLowerCase();
-  if (value === "noon") return "noon";
-  if (value === "carrefour" || value === "carrefouruae") return "carrefour";
-  return "";
-}
-
-function getUniqueLiveProducts(products: Product[]) {
-  const seen = new Set<string>();
-  const unique: Product[] = [];
-
-  for (const product of products) {
-    if (!product.product_url || !normalizeLivePriceSource(product.source)) continue;
-
-    const productKey = getProductKey(product);
-    if (!productKey || seen.has(productKey)) continue;
-
-    seen.add(productKey);
-    unique.push(product);
-  }
-
-  return unique;
-}
 
 
 function GridIcon({ active }: { active: boolean }) {
@@ -103,10 +73,7 @@ export default function CategoryPage() {
   const params = useParams();
   const searchedName = decodeURIComponent(params.name as string);
 
-  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadedResultKey, setLoadedResultKey] = useState("");
-  const [refreshRunId, setRefreshRunId] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -117,7 +84,6 @@ export default function CategoryPage() {
   const sortRef = useRef<HTMLDivElement | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -147,17 +113,13 @@ export default function CategoryPage() {
             offerCount: Math.max(1, typeof p.offerCount === "number" ? p.offerCount : 0),
           }));
 
-        setProducts(mapped);
         setDisplayProducts(mapped);
-        setLoadedResultKey(`${searchedName}::${currentPage}`);
-        setRefreshRunId((id) => id + 1);
         setTotalProducts(Number(json.total) || 0);
         setTotalPages(Number(json.totalPages) || 0);
       } catch (err) {
         console.error("Error fetching category products:", err);
         if (isActive) {
-          setProducts([]);
-          setLoadedResultKey("");
+          setDisplayProducts([]);
           setTotalProducts(0);
           setTotalPages(0);
         }
@@ -172,116 +134,6 @@ export default function CategoryPage() {
       isActive = false;
     };
   }, [searchedName, currentPage]);
-
-  useEffect(() => {
-    const activeResultKey = `${searchedName}::${currentPage}`;
-
-    if (!refreshRunId || loadedResultKey !== activeResultKey || products.length === 0) {
-      return;
-    }
-
-    const controller = new AbortController();
-    let stopped = false;
-    const liveProducts = getUniqueLiveProducts(displayProducts);
-    async function refreshVisiblePrices() {
-      if (!liveProducts.length) return;
-
-      setIsRefreshingPrices(true);
-
-      try {
-        for (const product of liveProducts) {
-          if (stopped || controller.signal.aborted) return;
-
-          const productKey = getProductKey(product);
-          const liveSource = normalizeLivePriceSource(product.source);
-
-          setDisplayProducts((current) =>
-            current.map((item) =>
-              getProductKey(item) === productKey ? { ...item, livePriceLoading: true } : item
-            )
-          );
-
-          try {
-            const res = await fetch("/api/live-price", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              cache: "no-store",
-              signal: controller.signal,
-              body: JSON.stringify({
-                product_url: product.product_url,
-                source: liveSource,
-              }),
-            });
-
-            const json = await res.json();
-
-            if (!res.ok || json?.success === false || !json?.currentPrice) {
-              throw new Error(json?.error || "Live current price could not be fetched");
-            }
-
-            if (stopped || controller.signal.aborted) return;
-
-            const nextPrice = String(json.currentPrice);
-            const nextPreviousPrice =
-              typeof json.previousPrice === "string" && json.previousPrice.trim()
-                ? json.previousPrice
-                : undefined;
-            const nextDiscountPercentage =
-              typeof json.discountPercentage === "string" && json.discountPercentage.trim()
-                ? json.discountPercentage
-                : undefined;
-            const nextRating =
-              typeof json.rating === "string" && json.rating.trim()
-                ? json.rating
-                : undefined;
-            const nextRatingCount =
-              typeof json.ratingCount === "string" && json.ratingCount.trim()
-                ? json.ratingCount
-                : undefined;
-
-            setDisplayProducts((current) =>
-              current.map((item) =>
-                getProductKey(item) === productKey
-                  ? {
-                    ...item,
-                    currentPrice: nextPrice,
-                    previousPrice: nextPreviousPrice ?? item.previousPrice,
-                    discountPercentage: nextDiscountPercentage ?? item.discountPercentage,
-                    rating: nextRating ?? item.rating,
-                    ratingCount: nextRatingCount ?? item.ratingCount,
-                    numericPrice: cleanPrice(nextPrice),
-                    numericOldPrice: cleanPrice(nextPreviousPrice ?? item.previousPrice),
-                    liveNumericPrice: cleanPrice(nextPrice),
-                    livePriceLoading: false,
-                  }
-                  : item
-              )
-            );
-          } catch (err: any) {
-            if (err?.name === "AbortError" || stopped || controller.signal.aborted) return;
-
-            console.error("Live current price refresh error:", product.product_url, err);
-            setDisplayProducts((current) =>
-              current.map((item) =>
-                getProductKey(item) === productKey
-                  ? { ...item, livePriceLoading: false }
-                  : item
-              )
-            );
-          }
-        }
-      } finally {
-        setIsRefreshingPrices(false);
-      }
-    }
-
-    refreshVisiblePrices();
-
-    return () => {
-      stopped = true;
-      controller.abort();
-    };
-  }, [refreshRunId, loadedResultKey, searchedName, currentPage]);
 
   useEffect(() => {
     if (!sortOpen) return;
