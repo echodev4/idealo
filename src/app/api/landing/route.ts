@@ -24,6 +24,8 @@ type Product = {
 type RawProduct = {
   _id?: string;
   source?: string;
+  primarySource?: string;
+  sources?: string[];
   product_url?: string;
   title?: string;
   product_name?: string;
@@ -49,7 +51,12 @@ function toPriceString(value: unknown): string {
 function normalizeProduct(raw: RawProduct): Product | null {
   const id = typeof raw?._id === "string" ? raw._id : "";
   const productUrl = typeof raw?.product_url === "string" ? raw.product_url : "";
-  const source = typeof raw?.source === "string" ? raw.source : "";
+  const source =
+    typeof raw?.primarySource === "string" && raw.primarySource.trim() !== ""
+      ? raw.primarySource.trim()
+      : typeof raw?.source === "string"
+        ? raw.source
+        : "";
   const category = typeof raw?.category === "string" ? raw.category : "";
 
   const suggestedName =
@@ -152,7 +159,7 @@ async function fetchProductsBySearchQuery(
   }
 
   const res = await fetch(
-    `${BASE_URL}/search/products?q=${encodeURIComponent(query)}&limit=${candidateLimit}`,
+    `${BASE_URL}/search/products-v2?q=${encodeURIComponent(query)}&limit=${candidateLimit}`,
     {
     cache: "no-store",
     }
