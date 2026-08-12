@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
+import { resolvePreferredProductImage } from "@/lib/products/imageFallback";
 import { cn } from "@/lib/utils";
 import noonLogo from "../../../public/uploads/sources/noon.jpg";
 import carrefourLogo from "../../../public/uploads/sources/carrefouruae.png";
@@ -104,6 +105,7 @@ type Offer = {
     loading?: boolean;
     url: string;
     imageUrl: string;
+    images?: { src: string; alt?: string }[];
     available: boolean;
     source: string;
 };
@@ -156,10 +158,10 @@ function RetailerLogo({ source }: { source: string }) {
     const sourceLogo = getSourceLogo(source);
 
     return (
-        <div className="flex min-w-[112px] flex-col items-start gap-2">
+        <div className="flex min-w-[132px] flex-col items-start gap-2">
             {sourceLogo ? (
-                <div className="relative h-[38px] w-[112px] overflow-hidden bg-white">
-                    <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes="112px" className="object-contain" />
+                <div className="relative h-[46px] w-[132px] overflow-hidden bg-white">
+                    <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes="132px" className="object-contain" />
                 </div>
             ) : (
                 <span className="text-[13px] font-semibold text-[#111827]">{source}</span>
@@ -215,6 +217,7 @@ export default function OfferComparisonTable() {
                 loading: Boolean(p?.livePriceLoading),
                 url: String(p?.product_url || "#"),
                 imageUrl: String(p?.image_url || p?.images?.[0]?.src || ""),
+                images: Array.isArray(p?.images) ? p.images : [],
                 available: true,
                 source: source || "unknown",
             } as Offer;
@@ -231,7 +234,12 @@ export default function OfferComparisonTable() {
             return selectedProductImage;
         }
 
-        return row.imageUrl;
+        return resolvePreferredProductImage({
+            source: row.source,
+            image_url: row.imageUrl,
+            images: row.images,
+            title: row.title,
+        });
     }
 
     const totalOffersCount = Math.max(1, offerCount || offerRows.length);

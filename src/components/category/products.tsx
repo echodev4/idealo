@@ -8,6 +8,7 @@ import {
     normalizeProductSource,
     PRODUCT_PLACEHOLDER_SRC,
     resolvePrimaryProductImage,
+    resolvePreferredProductImage,
 } from "@/lib/products/imageFallback";
 
 export interface Product {
@@ -64,7 +65,7 @@ function getImg(p: Product) {
         return categoryAssignedImage;
     }
 
-    return resolvePrimaryProductImage(p);
+    return resolvePreferredProductImage(p);
 }
 
 function getSource(p: Product) {

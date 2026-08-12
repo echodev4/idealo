@@ -1,5 +1,6 @@
 const SHARAFDG_SOURCE = "sharafdg";
 export const PRODUCT_PLACEHOLDER_SRC = "/placeholder.jpg";
+const SECOND_IMAGE_SOURCE_SET = new Set(["jumbo", "jackys", "istyle", "eros", "samsung"]);
 
 type ProductImageInput = {
     source?: unknown;
@@ -56,4 +57,17 @@ export function resolveProductImages(input: ProductImageInput): { src: string; a
 
 export function resolvePrimaryProductImage(input: ProductImageInput): string {
     return resolveProductImages(input)[0]?.src || "";
+}
+
+export function shouldPreferSecondProductImage(source: unknown): boolean {
+    return SECOND_IMAGE_SOURCE_SET.has(normalizeProductSource(source));
+}
+
+export function resolvePreferredProductImage(input: ProductImageInput): string {
+    if (shouldPreferSecondProductImage(input.source)) {
+        const secondImage = Array.isArray(input.images) ? toText(input.images[1]?.src) : "";
+        if (secondImage) return secondImage;
+    }
+
+    return resolvePrimaryProductImage(input);
 }
