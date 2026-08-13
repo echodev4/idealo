@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { searchProducts } from "@/lib/category/searchProducts";
-import { enrichCategoryProducts } from "@/lib/category/enrichCategoryProducts";
 
 export const runtime = "nodejs";
 
@@ -197,11 +196,14 @@ function normalizeStorage(value: string): string {
 }
 
 function extractStorage(product: any): string {
+  const directStorage = normalizeStorage(toText(product?.storage || product?.Storage));
+  if (directStorage) return directStorage;
+
   const specStorage = normalizeStorage(readSpecValue(product?.specifications, STORAGE_KEYS));
   if (specStorage) return specStorage;
 
   return normalizeStorage(
-    [product?.suggestedName, product?.title, product?.product_name].filter(Boolean).join(" ")
+    [product?.suggestedName, product?.title, product?.product_name, product?.specs].filter(Boolean).join(" ")
   );
 }
 
@@ -214,6 +216,9 @@ function titleCase(value: string): string {
 }
 
 function extractColor(product: any): string {
+  const directColor = toText(product?.colour || product?.color || product?.Colour || product?.Color);
+  if (directColor) return titleCase(directColor);
+
   const specColor = readSpecValue(product?.specifications, COLOR_KEYS);
   if (specColor) return titleCase(specColor);
 
@@ -229,7 +234,24 @@ function extractColor(product: any): string {
 }
 
 function isMobileProduct(product: any): boolean {
-  return Boolean(extractColor(product) && extractStorage(product));
+  const text = normalizeKey(
+    [
+      product?.suggestedName,
+      product?.title,
+      product?.product_name,
+      product?.modelName,
+      product?.category,
+      product?.main_category,
+      product?.category_path_text,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+  const looksLikePhone =
+    /\b(iphone|galaxy|samsung|mobile|smartphone|phone)\b/.test(text) ||
+    Boolean(extractColor(product) && extractStorage(product));
+
+  return looksLikePhone;
 }
 
 function getSearchQuery(product: any, fallbackName: string): string {
@@ -254,7 +276,7 @@ async function fetchSelectedProduct(productUrl: string, source: string) {
     throw new Error("SCRAPER_API_BASE_URL is not defined");
   }
 
-  const res = await fetch(`${BASE_URL}/lookup/by-url`, {
+  const res = await fetch(`${BASE_URL}/lookup/by-url-v2`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -275,57 +297,19 @@ async function fetchSelectedProduct(productUrl: string, source: string) {
 }
 
 async function enrichWithOfferCounts(products: any[]) {
-  if (!BASE_URL || products.length === 0) return products;
+  return products.map((product) => {
+    const offerItems = Array.isArray(product?.offerItems) ? product.offerItems : [];
+    const offerCount = Number(product?.variantCount || product?.offerCount || offerItems.length || 0);
+    const firstOfferWithImage = offerItems.find((offer: any) => Array.isArray(offer?.images) && offer.images.length > 0);
 
-  const countRes = await fetch(`${BASE_URL}/offers/count-by-products`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      items: products.map((product) => ({
-        product_url: product.product_url,
-        source: product.source || "",
-      })),
-    }),
-    cache: "no-store",
-  });
-
-  if (!countRes.ok) {
-    const errorText = await countRes.text();
-    throw new Error(`Variant offer count backend error: ${errorText}`);
-  }
-
-  const countJson = await countRes.json();
-  const offerCountMap = new Map<string, number>();
-  const displayImageMap = new Map<string, any>();
-  const results = Array.isArray(countJson?.results) ? countJson.results : [];
-
-  for (const item of results) {
-    const key = `${item?.product_url || ""}::${item?.source || ""}`;
-    offerCountMap.set(key, Number(item?.offer_count || 0));
-    displayImageMap.set(key, {
-      displayImages: Array.isArray(item?.display_images) ? item.display_images : [],
-      displayImageUrl: typeof item?.display_image_url === "string" ? item.display_image_url : "",
-      displaySource: typeof item?.display_source === "string" ? item.display_source : "",
-      displayProductUrl: typeof item?.display_product_url === "string" ? item.display_product_url : "",
-    });
-  }
-
-  return enrichCategoryProducts({
-    visibleProducts: products.map((product) => {
-      const displayImage = displayImageMap.get(`${product.product_url}::${product.source || ""}`);
-      if (!displayImage) return product;
-
-      return {
-        ...product,
-        displayImages: displayImage.displayImages,
-        displayImageUrl: displayImage.displayImageUrl,
-        displaySource: displayImage.displaySource,
-        displayProductUrl: displayImage.displayProductUrl,
-      };
-    }),
-    offerCountMap,
+    return {
+      ...product,
+      offerCount,
+      displayImages: Array.isArray(product?.displayImages) ? product.displayImages : product?.images,
+      displayImageUrl: product?.displayImageUrl || product?.image_url || firstOfferWithImage?.images?.[0]?.src || "",
+      displaySource: product?.displaySource || product?.primarySource || product?.source || "",
+      displayProductUrl: product?.displayProductUrl || product?.product_url || "",
+    };
   });
 }
 

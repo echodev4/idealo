@@ -14,6 +14,10 @@ type VariantProduct = {
   source?: string;
   title: string;
   suggestedName?: string;
+  modelName?: string;
+  storage?: string;
+  colour?: string;
+  color?: string;
   currentPrice?: string;
   price?: string;
   images?: { src: string; alt?: string }[];
@@ -112,9 +116,29 @@ function readSpecValue(specifications: unknown, candidates: string[]) {
 }
 
 function isLikelyMobileProduct(product: any) {
+  const directColor = String(product?.colour || product?.color || "").trim();
+  const directStorage = String(product?.storage || "").trim();
+  const productText = String(
+    [
+      product?.suggestedName,
+      product?.title,
+      product?.product_name,
+      product?.modelName,
+      product?.category,
+      product?.main_category,
+      product?.category_path_text,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  ).toLowerCase();
+
+  if (/\b(iphone|galaxy|samsung|mobile|smartphone|phone)\b/.test(productText)) {
+    return true;
+  }
+
   return Boolean(
-    readSpecValue(product?.specifications, COLOR_SPEC_KEYS) &&
-      readSpecValue(product?.specifications, STORAGE_SPEC_KEYS)
+    (directColor || readSpecValue(product?.specifications, COLOR_SPEC_KEYS)) &&
+      (directStorage || readSpecValue(product?.specifications, STORAGE_SPEC_KEYS))
   );
 }
 
