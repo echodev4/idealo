@@ -16,6 +16,7 @@ export default function NewHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionMessage, setSuggestionMessage] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchTypeOpen, setSearchTypeOpen] = useState(false);
@@ -42,16 +43,19 @@ export default function NewHeader() {
       });
       const data = await res.json();
       const tags = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
+      const message = typeof data?.message === "string" ? data.message : "";
 
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q: query, tags, ts: Date.now() }));
       if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
         setSuggestions(tags);
+        setSuggestionMessage(res.ok ? "" : message || "Search suggestions are temporarily unavailable.");
       }
       return tags;
-    } catch {
+    } catch (error) {
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q: query, tags: [], ts: Date.now() }));
       if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
         setSuggestions([]);
+        setSuggestionMessage(error instanceof Error ? error.message : "Search suggestions are temporarily unavailable.");
       }
       return [];
     }
@@ -93,6 +97,7 @@ export default function NewHeader() {
 
     if (query.length < 3) {
       setSuggestions([]);
+      setSuggestionMessage("");
       setIsSearching(false);
       return;
     }
@@ -207,14 +212,14 @@ export default function NewHeader() {
               />
             </div>
 
-            {searchFocused && (visibleSuggestions.length > 0 || isSearching) ? (
+            {searchFocused && (visibleSuggestions.length > 0 || isSearching || suggestionMessage) ? (
               <div className="absolute left-1/2 top-[calc(100%+6px)] z-50 w-full max-w-[670px] -translate-x-1/2 overflow-hidden rounded-[6px] border border-[#d1d5db] bg-white text-[#111827] shadow-[0_12px_28px_rgba(0,0,0,0.18)]">
                 <div className="border-b border-[#eef0f3] px-4 py-2 text-[13px] font-bold text-[#6b7280]">
                   Suggestions
                 </div>
                 {isSearching ? (
                   <div className="px-4 py-3 text-[14px] text-[#6b7280]">Loading...</div>
-                ) : (
+                ) : visibleSuggestions.length > 0 ? (
                   visibleSuggestions.map((item, index) => (
                     <button
                       key={`${item}-${index}`}
@@ -226,6 +231,8 @@ export default function NewHeader() {
                       <span className="truncate">{item}</span>
                     </button>
                   ))
+                ) : (
+                  <div className="px-4 py-3 text-[14px] text-[#6b7280]">{suggestionMessage}</div>
                 )}
               </div>
             ) : null}

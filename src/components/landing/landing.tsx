@@ -44,6 +44,7 @@ type LandingData = {
 type SearchSectionProps = {
   query: string;
   visibleSuggestions: string[];
+  suggestionMessage: string;
   isSearching: boolean;
   isFocused: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
@@ -138,6 +139,7 @@ function LandingHeroSection() {
 function LandingSearchSection({
   query,
   visibleSuggestions,
+  suggestionMessage,
   isSearching,
   isFocused,
   inputRef,
@@ -206,14 +208,14 @@ function LandingSearchSection({
             </button>
           </div>
 
-          {isFocused && (visibleSuggestions.length > 0 || isSearching) && (
+          {isFocused && (visibleSuggestions.length > 0 || isSearching || suggestionMessage) && (
             <div className="landing-search-suggestions absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-[6px] border border-[#e5e7eb] bg-white shadow-[0_12px_28px_rgba(0,0,0,0.12)]">
               <div className="border-b border-[#eef0f3] px-4 py-3 text-[13px] font-bold text-[#6b7280]">
                 Suggestions
               </div>
               {isSearching ? (
                 <div className="px-4 py-3 text-[14px] text-[#6b7280]">Loading...</div>
-              ) : (
+              ) : visibleSuggestions.length > 0 ? (
                 visibleSuggestions.map((item, index) => (
                   <button
                     key={`${item}-${index}`}
@@ -225,6 +227,8 @@ function LandingSearchSection({
                     <span className="truncate">{item}</span>
                   </button>
                 ))
+              ) : (
+                <div className="px-4 py-3 text-[14px] text-[#6b7280]">{suggestionMessage}</div>
               )}
             </div>
           )}
@@ -505,6 +509,7 @@ export default function Landing() {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionMessage, setSuggestionMessage] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [iphoneProducts, setIphoneProducts] = useState<LandingProduct[]>([]);
@@ -568,16 +573,19 @@ export default function Landing() {
       });
       const data = await res.json();
       const tags = Array.isArray(data?.data) ? data.data.slice(0, 5) : [];
+      const message = typeof data?.message === "string" ? data.message : "";
 
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags, ts: Date.now() }));
       if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
         setSuggestions(tags);
+        setSuggestionMessage(res.ok ? "" : message || "Search suggestions are temporarily unavailable.");
       }
       return tags;
-    } catch {
+    } catch (error) {
       sessionStorage.setItem(SUGGESTIONS_KEY, JSON.stringify({ q, tags: [], ts: Date.now() }));
       if (requestId === undefined || suggestionRequestIdRef.current === requestId) {
         setSuggestions([]);
+        setSuggestionMessage(error instanceof Error ? error.message : "Search suggestions are temporarily unavailable.");
       }
       return [];
     }
@@ -666,6 +674,7 @@ export default function Landing() {
 
     if (q.length < 3) {
       setSuggestions([]);
+      setSuggestionMessage("");
       setIsSearching(false);
       return;
     }
@@ -707,6 +716,7 @@ export default function Landing() {
       <LandingSearchSection
         query={query}
         visibleSuggestions={visibleSuggestions}
+        suggestionMessage={suggestionMessage}
         isSearching={isSearching}
         isFocused={isFocused}
         inputRef={searchInputRef}

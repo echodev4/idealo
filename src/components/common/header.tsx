@@ -127,6 +127,7 @@ export default function Header() {
   const debouncedQuery = useDebounce(query, 450);
 
   const [aiTags, setAiTags] = useState<string[]>([]);
+  const [suggestionMessage, setSuggestionMessage] = useState("");
   const [realProducts, setRealProducts] = useState<RealProduct[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -205,16 +206,19 @@ export default function Header() {
         ]);
 
         const aiJson = await aiRes.json();
+        const message = typeof aiJson?.message === "string" ? aiJson.message : "";
         // const realJson = await realRes.json();
 
         if (!alive) return;
 
         setAiTags(Array.isArray(aiJson?.data) ? aiJson.data : []);
+        setSuggestionMessage(aiRes.ok ? "" : message || "Search suggestions are temporarily unavailable.");
         // setRealProducts(Array.isArray(realJson?.data) ? realJson.data : []);
       } catch (e) {
         console.error("search dropdown error:", e);
         if (!alive) return;
         setAiTags([]);
+        setSuggestionMessage(e instanceof Error ? e.message : "Search suggestions are temporarily unavailable.");
         setRealProducts([]);
       } finally {
         if (alive) setLoading(false);
@@ -466,7 +470,9 @@ export default function Header() {
                       ))}
 
                       {query.trim().length >= 3 && aiTags.length === 0 && (
-                        <li className="px-4 py-2 text-[13px] text-[#666]">{t("header.search.noSuggestionsFound", "No suggestions found")}</li>
+                        <li className="px-4 py-2 text-[13px] text-[#666]">
+                          {suggestionMessage || t("header.search.noSuggestionsFound", "No suggestions found")}
+                        </li>
                       )}
                     </ol>
 

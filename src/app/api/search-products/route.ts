@@ -1,63 +1,89 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 
 export const runtime = "nodejs";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY as string,
-});
+const BASE_URL = process.env.SCRAPER_API_BASE_URL;
+
+type SuggestionResponse = {
+  data?: unknown;
+  message?: unknown;
+};
+
+function normalizeSuggestions(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const suggestions: string[] = [];
+
+  for (const item of value) {
+    const suggestion = String(item || "").replace(/\s+/g, " ").trim();
+    const key = suggestion.toLowerCase();
+    if (!suggestion || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    suggestions.push(suggestion);
+    if (suggestions.length >= 5) {
+      break;
+    }
+  }
+
+  return suggestions;
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const query = searchParams.get("q")?.trim();
+  const query = searchParams.get("q")?.trim() || "";
 
-  if (!query || query.length < 3) {
-    return NextResponse.json({ data: [] });
+  if (query.length < 3) {
+    return NextResponse.json({
+      data: [],
+      message: "Type at least 3 characters to get suggestions.",
+    });
+  }
+
+  if (!BASE_URL) {
+    return NextResponse.json(
+      {
+        data: [query],
+        message: "Search suggestion service is not configured.",
+      },
+      { status: 500 }
+    );
   }
 
   try {
-    const prompt = `
-You are generating autocomplete suggestions for an e-commerce search bar.
-
-STRICT RULES (DO NOT BREAK):
-1. ALWAYS include the exact query as the FIRST suggestion.
-2. If the query looks like a product name, prioritize PRODUCT VARIANTS
-   (e.g., Pro, Pro Max, Plus, Ultra) BEFORE accessories.
-3. Only include accessories IF fewer than 5 product or variant suggestions exist.
-4. Suggestions must be short (1–4 words).
-5. Return EXACTLY 5 suggestions (no more, no less).
-6. Do NOT invent unrelated products.
-7. Do NOT repeat the same intent (avoid multiple accessories if variants are possible).
-
-Query: "${query}"
-
-Return ONLY valid JSON in this format:
-{"data":["s1","s2","s3","s4","s5"]}
-`;
-
-
-
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0,
-      max_tokens: 80,
+    const response = await fetch(`${BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`, {
+      cache: "no-store",
     });
+    const payload = (await response.json().catch(() => ({}))) as SuggestionResponse;
+    const data = normalizeSuggestions(payload.data);
+    const message =
+      typeof payload.message === "string" && payload.message.trim()
+        ? payload.message.trim()
+        : response.ok
+          ? "Suggestions generated successfully."
+          : "Search suggestion service failed.";
 
-    const content = response.choices[0].message?.content ?? "{}";
-
-    let parsed: { data?: string[] } = {};
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      console.warn("⚠️ Invalid JSON from OpenAI:", content);
-    }
-
-    return NextResponse.json({
-      data: Array.isArray(parsed.data) ? parsed.data.slice(0, 5) : [],
-    });
+    return NextResponse.json(
+      {
+        data: data.length > 0 ? data : [query],
+        message,
+      },
+      { status: response.ok ? 200 : response.status }
+    );
   } catch (error) {
-    console.error("❌ AI search suggestion error:", error);
-    return NextResponse.json({ data: [] }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown backend suggestion error";
+    console.error("Search suggestion proxy failed:", message);
+
+    return NextResponse.json(
+      {
+        data: [query],
+        message: `Search suggestion service failed: ${message}`,
+      },
+      { status: 502 }
+    );
   }
 }
