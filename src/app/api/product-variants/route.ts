@@ -215,12 +215,27 @@ function titleCase(value: string): string {
     .join(" ");
 }
 
-function extractColor(product: any): string {
-  const directColor = toText(product?.colour || product?.color || product?.Colour || product?.Color);
-  if (directColor) return titleCase(directColor);
+function cleanColorValue(value: unknown): string {
+  const text = toText(value).replace(/\s+/g, " ");
+  if (!text) return "";
 
-  const specColor = readSpecValue(product?.specifications, COLOR_KEYS);
-  if (specColor) return titleCase(specColor);
+  const normalized = normalizeKey(text);
+  if (/^\d+$/.test(normalized)) return "";
+  if (/\b\d+\s*(gb|tb|mah|w|hz)\b/i.test(normalized)) return "";
+  if (normalized.length > 35) return "";
+
+  return titleCase(text);
+}
+
+function extractColor(product: any): string {
+  const groupedColor = cleanColorValue(product?.colour || product?.Colour);
+  if (groupedColor) return groupedColor;
+
+  const directColor = cleanColorValue(product?.color || product?.Color);
+  if (directColor) return directColor;
+
+  const specColor = cleanColorValue(readSpecValue(product?.specifications, COLOR_KEYS));
+  if (specColor) return specColor;
 
   const name = normalizeKey(
     [product?.suggestedName, product?.title, product?.product_name].filter(Boolean).join(" ")
