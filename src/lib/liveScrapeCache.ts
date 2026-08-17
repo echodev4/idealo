@@ -57,6 +57,26 @@ function normalizeSource(source: unknown): string {
   return value;
 }
 
+function normalizeProductUrl(value: unknown): string {
+  const text = toText(value);
+  if (!text) return "";
+
+  try {
+    const url = new URL(text);
+    url.hash = "";
+    url.search = "";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return text.split("#")[0].split("?")[0].replace(/\/$/, "");
+  }
+}
+
+function productUrlVariants(value: unknown): string[] {
+  const raw = toText(value).replace(/\/$/, "");
+  const normalized = normalizeProductUrl(raw);
+  return Array.from(new Set([raw, normalized].filter(Boolean)));
+}
+
 function sourceAliases(source: string): string[] {
   const normalized = normalizeSource(source);
   if (!normalized) return [];
@@ -96,10 +116,13 @@ async function getDb(): Promise<Db> {
 
 function findOffer(doc: GroupedProductDoc | null, productUrl: string, source: string) {
   const aliases = new Set(sourceAliases(source));
+  const urls = new Set(productUrlVariants(productUrl));
   const offers = Array.isArray(doc?.offerItems) ? doc.offerItems : [];
 
   return offers.find((offer) => {
-    if (toText(offer.product_url) !== productUrl) return false;
+    if (!urls.has(toText(offer.product_url).replace(/\/$/, "")) && !urls.has(normalizeProductUrl(offer.product_url))) {
+      return false;
+    }
     const offerSource = normalizeSource(offer.source);
     return aliases.size === 0 || aliases.has(offerSource);
   });
@@ -129,13 +152,14 @@ function cheapestCurrentPrice(offers: OfferItem[]): string {
 export async function findCachedProduct(productUrl: string, source: string) {
   const db = await getDb();
   const aliases = sourceAliases(source);
+  const urls = productUrlVariants(productUrl);
   const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
 
   let doc = await collection.findOne(
     {
       offerItems: {
         $elemMatch: {
-          product_url: productUrl,
+          product_url: { $in: urls },
           ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
         },
       },
@@ -158,7 +182,7 @@ export async function findCachedProduct(productUrl: string, source: string) {
 
   if (!doc) {
     doc = await collection.findOne(
-      { product_url: productUrl },
+      { product_url: { $in: urls } },
       {
         projection: {
           product_url: 1,
@@ -230,13 +254,14 @@ export async function persistLiveScrapeResult({
 }: PersistLiveScrapeParams) {
   const db = await getDb();
   const aliases = sourceAliases(source);
+  const urls = productUrlVariants(productUrl);
   const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
   const now = new Date();
 
   const doc = await collection.findOne({
     offerItems: {
       $elemMatch: {
-        product_url: productUrl,
+        product_url: { $in: urls },
         ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
       },
     },
@@ -250,7 +275,7 @@ export async function persistLiveScrapeResult({
   const updatedOffers = (Array.isArray(doc.offerItems) ? doc.offerItems : []).map((offer) => {
     const offerSource = normalizeSource(offer.source);
     const isMatch =
-      toText(offer.product_url) === productUrl &&
+      (urls.includes(toText(offer.product_url).replace(/\/$/, "")) || urls.includes(normalizeProductUrl(offer.product_url))) &&
       (aliases.length === 0 || aliases.includes(offerSource));
 
     if (!isMatch) return offer;

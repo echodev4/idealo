@@ -145,7 +145,10 @@ export async function POST(req: Request) {
 
     console.error("live-price route error:", err);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      {
+        success: false,
+        error: err?.message || "Internal server error",
+      },
       { status: 500 }
     );
   }
