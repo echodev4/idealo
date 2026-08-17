@@ -67,11 +67,13 @@ export async function POST(req: Request) {
     const cachedProduct = await findCachedProduct(productUrl, source);
 
     if (hasFreshLivePrice(cachedProduct)) {
+      const cached = buildCachedLivePricePayload(cachedProduct!);
+
       return NextResponse.json({
         success: true,
         product_url: productUrl,
         source,
-        ...buildCachedLivePricePayload(cachedProduct!),
+        ...cached,
         cached: true,
       });
     }
@@ -129,7 +131,7 @@ export async function POST(req: Request) {
       discountPercentage: prices.discountPercentage,
       rating: persisted.rating,
       ratingCount: persisted.ratingCount,
-      lastLiveScrapedAt: persisted.lastLiveScrapedAt,
+      lastUpdatedAtPrice: persisted.lastUpdatedAtPrice,
       cached: false,
     });
   } catch (err: any) {

@@ -2,10 +2,12 @@ import type { Db } from "mongodb";
 import type { Connection } from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 
-const PRODUCTS_COLLECTION = "products";
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const PRODUCTS_V2_COLLECTION = "products_v2";
+const PRICE_FRESHNESS_MS = 24 * 60 * 60 * 1000;
 
-type CachedProductDoc = {
+type DateLike = Date | string | { $date?: string } | null | undefined;
+
+type OfferItem = {
   product_url?: string;
   source?: string;
   currentPrice?: string | number | null;
@@ -14,7 +16,25 @@ type CachedProductDoc = {
   ratingCount?: string | number | null;
   average_rating?: number | null;
   reviews?: string | number | null;
-  lastLiveScrapedAt?: Date | string | { $date?: string } | null;
+  lastUpdatedAtPrice?: DateLike;
+};
+
+type GroupedProductDoc = {
+  _id?: unknown;
+  product_url?: string;
+  source?: string;
+  currentPrice?: string | number | null;
+  previousPrice?: string | number | null;
+  rating?: string | number | null;
+  ratingCount?: string | number | null;
+  average_rating?: number | null;
+  reviews?: string | number | null;
+  lastUpdatedAtPrice?: DateLike;
+  offerItems?: OfferItem[];
+};
+
+type CachedProductDoc = OfferItem & {
+  groupedProductId?: unknown;
 };
 
 type PersistLiveScrapeParams = {
@@ -31,7 +51,20 @@ function toText(value: unknown): string {
   return String(value).trim();
 }
 
-function parseDateMs(value: CachedProductDoc["lastLiveScrapedAt"]): number {
+function normalizeSource(source: unknown): string {
+  const value = toText(source).toLowerCase();
+  if (value === "carrefouruae") return "carrefour";
+  return value;
+}
+
+function sourceAliases(source: string): string[] {
+  const normalized = normalizeSource(source);
+  if (!normalized) return [];
+  if (normalized === "carrefour") return ["carrefour", "carrefouruae"];
+  return [normalized];
+}
+
+function parseDateMs(value: DateLike): number {
   const raw =
     value && typeof value === "object" && "$date" in value
       ? value.$date
@@ -45,7 +78,7 @@ function parseDateMs(value: CachedProductDoc["lastLiveScrapedAt"]): number {
 
 function parseRatingNumber(value: string): number | null {
   const numeric = Number(value.replace(/[^\d.]/g, ""));
-  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+  return Number.isFinite(numeric) && numeric > 0 ? Math.max(0, Math.min(5, numeric)) : null;
 }
 
 async function getDb(): Promise<Db> {
@@ -61,30 +94,120 @@ async function getDb(): Promise<Db> {
   return db;
 }
 
-export async function findCachedProduct(productUrl: string, source: string) {
-  const db = await getDb();
+function findOffer(doc: GroupedProductDoc | null, productUrl: string, source: string) {
+  const aliases = new Set(sourceAliases(source));
+  const offers = Array.isArray(doc?.offerItems) ? doc.offerItems : [];
 
-  let doc = (await db
-    .collection<CachedProductDoc>(PRODUCTS_COLLECTION)
-    .findOne({ product_url: productUrl, source })) as CachedProductDoc | null;
+  return offers.find((offer) => {
+    if (toText(offer.product_url) !== productUrl) return false;
+    const offerSource = normalizeSource(offer.source);
+    return aliases.size === 0 || aliases.has(offerSource);
+  });
+}
 
-  if (!doc) {
-    doc = (await db
-      .collection<CachedProductDoc>(PRODUCTS_COLLECTION)
-      .findOne({ product_url: productUrl })) as CachedProductDoc | null;
+function parsePriceNumber(value: unknown): number | null {
+  const numeric = Number(toText(value).replace(/[^\d.]/g, ""));
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
+
+function cheapestCurrentPrice(offers: OfferItem[]): string {
+  let bestPriceText = "";
+  let bestPriceNumber = Number.POSITIVE_INFINITY;
+
+  for (const offer of offers) {
+    const priceText = toText(offer.currentPrice);
+    const priceNumber = parsePriceNumber(priceText);
+    if (priceNumber === null || priceNumber >= bestPriceNumber) continue;
+
+    bestPriceText = priceText;
+    bestPriceNumber = priceNumber;
   }
 
-  return doc;
+  return bestPriceText;
+}
+
+export async function findCachedProduct(productUrl: string, source: string) {
+  const db = await getDb();
+  const aliases = sourceAliases(source);
+  const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
+
+  let doc = await collection.findOne(
+    {
+      offerItems: {
+        $elemMatch: {
+          product_url: productUrl,
+          ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
+        },
+      },
+    },
+    {
+      projection: {
+        product_url: 1,
+        source: 1,
+        currentPrice: 1,
+        previousPrice: 1,
+        rating: 1,
+        ratingCount: 1,
+        average_rating: 1,
+        reviews: 1,
+        lastUpdatedAtPrice: 1,
+        offerItems: 1,
+      },
+    }
+  );
+
+  if (!doc) {
+    doc = await collection.findOne(
+      { product_url: productUrl },
+      {
+        projection: {
+          product_url: 1,
+          source: 1,
+          currentPrice: 1,
+          previousPrice: 1,
+          rating: 1,
+          ratingCount: 1,
+          average_rating: 1,
+          reviews: 1,
+          lastUpdatedAtPrice: 1,
+          offerItems: 1,
+        },
+      }
+    );
+  }
+
+  const offer = findOffer(doc, productUrl, source);
+  if (offer) {
+    return {
+      ...offer,
+      groupedProductId: doc?._id,
+    } as CachedProductDoc;
+  }
+
+  if (!doc) return null;
+
+  return {
+    product_url: doc.product_url,
+    source: doc.source,
+    currentPrice: doc.currentPrice,
+    previousPrice: doc.previousPrice,
+    rating: doc.rating,
+    ratingCount: doc.ratingCount,
+    average_rating: doc.average_rating,
+    reviews: doc.reviews,
+    lastUpdatedAtPrice: doc.lastUpdatedAtPrice,
+    groupedProductId: doc._id,
+  } as CachedProductDoc;
 }
 
 export function hasFreshLivePrice(doc: CachedProductDoc | null | undefined): boolean {
   if (!doc) return false;
   if (!toText(doc.currentPrice)) return false;
 
-  const lastLiveScrapedMs = parseDateMs(doc.lastLiveScrapedAt);
-  if (!lastLiveScrapedMs) return false;
+  const lastUpdatedAtPriceMs = parseDateMs(doc.lastUpdatedAtPrice);
+  if (!lastUpdatedAtPriceMs) return false;
 
-  return Date.now() - lastLiveScrapedMs < SEVEN_DAYS_MS;
+  return Date.now() - lastUpdatedAtPriceMs < PRICE_FRESHNESS_MS;
 }
 
 export function buildCachedLivePricePayload(doc: CachedProductDoc) {
@@ -93,6 +216,7 @@ export function buildCachedLivePricePayload(doc: CachedProductDoc) {
     previousPrice: toText(doc.previousPrice),
     rating: toText(doc.rating) || toText(doc.average_rating),
     ratingCount: toText(doc.ratingCount) || toText(doc.reviews),
+    lastUpdatedAtPrice: doc.lastUpdatedAtPrice,
   };
 }
 
@@ -105,49 +229,73 @@ export async function persistLiveScrapeResult({
   ratingCount,
 }: PersistLiveScrapeParams) {
   const db = await getDb();
-  const existing = await findCachedProduct(productUrl, source);
+  const aliases = sourceAliases(source);
+  const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
   const now = new Date();
 
-  const nextPreviousPrice = toText(previousPrice) || toText(existing?.previousPrice);
-  const nextRating = toText(rating);
-  const nextRatingCount = toText(ratingCount);
-  const nextAverageRating = nextRating ? parseRatingNumber(nextRating) : null;
+  const doc = await collection.findOne({
+    offerItems: {
+      $elemMatch: {
+        product_url: productUrl,
+        ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
+      },
+    },
+  });
 
-  const setFields: Record<string, unknown> = {
-    currentPrice: toText(currentPrice),
-    price: toText(currentPrice),
-    lastLiveScrapedAt: now,
-  };
-
-  if (nextPreviousPrice) {
-    setFields.previousPrice = nextPreviousPrice;
-    setFields.old_price = nextPreviousPrice;
+  if (!doc) {
+    throw new Error("Matching products_v2 offer was not found");
   }
 
-  if (nextRating) {
-    setFields.rating = nextRating;
-    setFields.average_rating = nextAverageRating;
-  }
+  let matchedOffer: OfferItem | null = null;
+  const updatedOffers = (Array.isArray(doc.offerItems) ? doc.offerItems : []).map((offer) => {
+    const offerSource = normalizeSource(offer.source);
+    const isMatch =
+      toText(offer.product_url) === productUrl &&
+      (aliases.length === 0 || aliases.includes(offerSource));
 
-  if (nextRatingCount) {
-    setFields.ratingCount = nextRatingCount;
-    setFields.reviews = nextRatingCount;
-  }
+    if (!isMatch) return offer;
 
-  await db.collection(PRODUCTS_COLLECTION).updateOne(
-    existing
-      ? existing.source
-        ? { product_url: productUrl, source: existing.source }
-        : { product_url: productUrl }
-      : { product_url: productUrl },
-    { $set: setFields }
+    const nextPreviousPrice = toText(previousPrice) || toText(offer.previousPrice);
+    const nextRating = toText(rating);
+    const nextRatingCount = toText(ratingCount);
+
+    matchedOffer = {
+      ...offer,
+      currentPrice: toText(currentPrice),
+      previousPrice: nextPreviousPrice || offer.previousPrice,
+      rating: nextRating || offer.rating,
+      ratingCount: nextRatingCount || offer.ratingCount,
+      average_rating: nextRating ? parseRatingNumber(nextRating) : offer.average_rating,
+      reviews: nextRatingCount || offer.reviews,
+      lastUpdatedAtPrice: now,
+    };
+
+    return matchedOffer;
+  });
+
+  if (!matchedOffer) {
+    throw new Error("Matching products_v2 offer was not found");
+  }
+  const savedOffer = matchedOffer as OfferItem;
+
+  const topLevelPrice = cheapestCurrentPrice(updatedOffers) || toText(doc.currentPrice);
+
+  await collection.updateOne(
+    { _id: doc._id },
+    {
+      $set: {
+        offerItems: updatedOffers,
+        currentPrice: topLevelPrice,
+        lastUpdatedAtPrice: now,
+      },
+    }
   );
 
   return {
     currentPrice: toText(currentPrice),
-    previousPrice: nextPreviousPrice,
-    rating: nextRating || toText(existing?.rating) || toText(existing?.average_rating),
-    ratingCount: nextRatingCount || toText(existing?.ratingCount) || toText(existing?.reviews),
-    lastLiveScrapedAt: now.toISOString(),
+    previousPrice: toText(savedOffer.previousPrice),
+    rating: toText(savedOffer.rating) || toText(savedOffer.average_rating),
+    ratingCount: toText(savedOffer.ratingCount) || toText(savedOffer.reviews),
+    lastUpdatedAtPrice: now.toISOString(),
   };
 }

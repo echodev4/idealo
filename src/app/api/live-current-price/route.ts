@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         product_url: productUrl,
         source,
         currentPrice: cached.currentPrice,
-        lastLiveScrapedAt: cachedProduct?.lastLiveScrapedAt,
+        lastUpdatedAtPrice: cached.lastUpdatedAtPrice,
         cached: true,
       });
     }
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
       product_url: productUrl,
       source,
       currentPrice: persisted.currentPrice,
-      lastLiveScrapedAt: persisted.lastLiveScrapedAt,
+      lastUpdatedAtPrice: persisted.lastUpdatedAtPrice,
       cached: false,
     });
   } catch (err: any) {

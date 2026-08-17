@@ -38,6 +38,7 @@ export interface OfferProduct {
     ratingCount?: string;
     created_at?: string;
     updated_at?: string;
+    lastUpdatedAtPrice?: string | Date | { $date?: string };
     match_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
@@ -62,6 +63,7 @@ export interface RelatedProduct {
     ratingCount?: string;
     created_at?: string;
     updated_at?: string;
+    lastUpdatedAtPrice?: string | Date | { $date?: string };
     match_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
@@ -76,7 +78,10 @@ type LivePriceResult = {
     discountPercentage?: string;
     rating?: string;
     ratingCount?: string;
+    lastUpdatedAtPrice?: string;
 };
+
+const PRICE_FRESHNESS_MS = 24 * 60 * 60 * 1000;
 
 function cleanPrice(p?: string | number | null): number {
     return Number(String(p || "").replace(/[^\d.]/g, "")) || 0;
@@ -95,6 +100,25 @@ function normalizeLivePriceSource(source?: string) {
     if (value === "noon") return "noon";
     if (value === "carrefour" || value === "carrefouruae") return "carrefour";
     return "";
+}
+
+function parseDateMs(value: any): number {
+    const raw =
+        value && typeof value === "object" && "$date" in value
+            ? value.$date
+            : value;
+
+    if (!raw) return 0;
+
+    const ms = Date.parse(String(raw));
+    return Number.isFinite(ms) ? ms : 0;
+}
+
+function isPriceFresh(value: any): boolean {
+    const lastUpdatedAtPriceMs = parseDateMs(value);
+    if (!lastUpdatedAtPriceMs) return false;
+
+    return Date.now() - lastUpdatedAtPriceMs < PRICE_FRESHNESS_MS;
 }
 
 function getProductKey(product: { product_url?: string; source?: string }) {
@@ -186,6 +210,7 @@ function normalizeListProduct(item: any): OfferProduct {
         ratingCount: normalizeRatingCount(item),
         created_at: typeof item?.created_at === "string" ? item.created_at : "",
         updated_at: typeof item?.updated_at === "string" ? item.updated_at : "",
+        lastUpdatedAtPrice: item?.lastUpdatedAtPrice,
         match_score:
             typeof item?.match_score === "number" ? item.match_score : undefined,
         numericPrice: cleanPrice(item?.price ?? item?.currentPrice),
@@ -315,6 +340,7 @@ async function fetchLivePrice(
         discountPercentage: toText(json.discountPercentage),
         rating: toText(json.rating),
         ratingCount: toText(json.ratingCount),
+        lastUpdatedAtPrice: toText(json.lastUpdatedAtPrice),
     };
 }
 
@@ -324,6 +350,7 @@ function getUniqueLiveItems<T extends OfferProduct | RelatedProduct>(items: T[])
 
     for (const item of items) {
         if (!normalizeLivePriceSource(item.source)) continue;
+        if (isPriceFresh(item.lastUpdatedAtPrice)) continue;
 
         const productKey = getProductKey(item);
         if (!item.product_url || !productKey || seen.has(productKey)) continue;
@@ -332,11 +359,15 @@ function getUniqueLiveItems<T extends OfferProduct | RelatedProduct>(items: T[])
         unique.push(item);
     }
 
-    return unique;
+    return unique.sort((a, b) => parseDateMs(a.lastUpdatedAtPrice) - parseDateMs(b.lastUpdatedAtPrice));
 }
 
-function shouldRefreshLiveItem(item: { product_url?: string; source?: string }) {
-    return Boolean(item?.product_url && normalizeLivePriceSource(item.source));
+function shouldRefreshLiveItem(item: { product_url?: string; source?: string; lastUpdatedAtPrice?: any }) {
+    return Boolean(
+        item?.product_url &&
+        normalizeLivePriceSource(item.source) &&
+        !isPriceFresh(item.lastUpdatedAtPrice)
+    );
 }
 
 interface ProductContextType {
@@ -460,6 +491,7 @@ export function ProductProvider({
                         discountPercentage: live.discountPercentage?.trim()
                             ? live.discountPercentage
                             : current.discountPercentage,
+                        lastUpdatedAtPrice: live.lastUpdatedAtPrice || new Date().toISOString(),
                         liveNumericPrice: cleanPrice(live.currentPrice),
                         numericPrice: cleanPrice(live.currentPrice),
                         livePriceLoading: false,
