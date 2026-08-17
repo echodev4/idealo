@@ -15,6 +15,10 @@ function parsePrice(v: any): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+function isOutOfStock(item: any): boolean {
+  return Boolean(item?.isOutOfStock) || /\bout\s+of\s+stock\b/i.test(String(item?.stock || ""));
+}
+
 function formatAED(value: number) {
   const hasDecimals = value % 1 !== 0;
   return `AED ${value.toLocaleString("en-US", {
@@ -71,11 +75,14 @@ export default function ProductHeaderInfo() {
           : null;
 
   const offerPrices = ((offers || []).length ? offers : product ? [product] : [])
+    .filter((item: any) => !isOutOfStock(item))
     .map((item: any) => parsePrice(item?.price ?? item?.currentPrice))
     .filter((value: number | null): value is number => value !== null);
   const currentPrice = offerPrices.length
     ? Math.min(...offerPrices)
-    : parsePrice(product?.currentPrice ?? product?.price);
+    : isOutOfStock(product)
+      ? null
+      : parsePrice(product?.currentPrice ?? product?.price);
 
   return (
     <div className="w-full">

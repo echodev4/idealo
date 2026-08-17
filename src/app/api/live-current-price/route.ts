@@ -3,6 +3,7 @@ import {
   buildCachedLivePricePayload,
   findCachedProduct,
   hasFreshLivePrice,
+  persistOutOfStockResult,
   persistLiveScrapeResult,
 } from "@/lib/liveScrapeCache";
 
@@ -63,6 +64,9 @@ export async function POST(req: Request) {
         product_url: productUrl,
         source,
         currentPrice: cached.currentPrice,
+        stock: cached.stock,
+        isOutOfStock: cached.isOutOfStock,
+        outOfStock: cached.isOutOfStock,
         lastUpdatedAtPrice: cached.lastUpdatedAtPrice,
         cached: true,
       });
@@ -96,6 +100,29 @@ export async function POST(req: Request) {
     }
 
     const currentPrice = data?.data?.currentPrice;
+    const outOfStock =
+      Boolean(data?.data?.isOutOfStock) ||
+      /\bout\s+of\s+stock\b/i.test(String(data?.data?.stock || data?.data?.availability || ""));
+
+    if (outOfStock) {
+      const persisted = await persistOutOfStockResult({
+        productUrl,
+        source,
+      });
+
+      return NextResponse.json({
+        success: true,
+        product_url: productUrl,
+        source,
+        currentPrice: "",
+        stock: persisted.stock,
+        isOutOfStock: true,
+        outOfStock: true,
+        lastUpdatedAtPrice: persisted.lastUpdatedAtPrice,
+        cached: false,
+      });
+    }
+
     if (!currentPrice) {
       return NextResponse.json(
         { success: false, error: "Live current price was not found" },
@@ -127,7 +154,7 @@ export async function POST(req: Request) {
 
     console.error("live-current-price route error:", err);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: err?.message || "Internal server error" },
       { status: 500 }
     );
   }

@@ -39,6 +39,8 @@ export interface OfferProduct {
     created_at?: string;
     updated_at?: string;
     lastUpdatedAtPrice?: string | Date | { $date?: string };
+    stock?: string;
+    isOutOfStock?: boolean;
     match_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
@@ -64,6 +66,8 @@ export interface RelatedProduct {
     created_at?: string;
     updated_at?: string;
     lastUpdatedAtPrice?: string | Date | { $date?: string };
+    stock?: string;
+    isOutOfStock?: boolean;
     match_score?: number;
     numericPrice?: number;
     numericOldPrice?: number;
@@ -76,6 +80,8 @@ type LivePriceResult = {
     currentPrice: string;
     previousPrice?: string;
     discountPercentage?: string;
+    stock?: string;
+    isOutOfStock?: boolean;
     rating?: string;
     ratingCount?: string;
     lastUpdatedAtPrice?: string;
@@ -212,6 +218,8 @@ function normalizeListProduct(item: any): OfferProduct {
         created_at: typeof item?.created_at === "string" ? item.created_at : "",
         updated_at: typeof item?.updated_at === "string" ? item.updated_at : "",
         lastUpdatedAtPrice: item?.lastUpdatedAtPrice,
+        stock: toText(item?.stock),
+        isOutOfStock: Boolean(item?.isOutOfStock),
         match_score:
             typeof item?.match_score === "number" ? item.match_score : undefined,
         numericPrice: cleanPrice(item?.price ?? item?.currentPrice),
@@ -331,14 +339,18 @@ async function fetchLivePrice(
 
     const json = await res.json();
 
-    if (!res.ok || json?.success === false || !json?.currentPrice) {
+    const outOfStock = Boolean(json?.isOutOfStock || json?.outOfStock);
+
+    if (!res.ok || json?.success === false || (!json?.currentPrice && !outOfStock)) {
         throw new Error(json?.error || "Live price could not be fetched");
     }
 
     return {
-        currentPrice: String(json.currentPrice),
+        currentPrice: json.currentPrice ? String(json.currentPrice) : "",
         previousPrice: toText(json.previousPrice),
         discountPercentage: toText(json.discountPercentage),
+        stock: toText(json.stock),
+        isOutOfStock: outOfStock,
         rating: toText(json.rating),
         ratingCount: toText(json.ratingCount),
         lastUpdatedAtPrice: toText(json.lastUpdatedAtPrice),
@@ -476,10 +488,26 @@ export function ProductProvider({
                 if (!active || liveController.signal.aborted || !live) return;
 
                 updateProductEverywhere(productKey, (current: any) => {
+                    if (live.isOutOfStock) {
+                        return {
+                            ...current,
+                            currentPrice: "",
+                            price: "",
+                            stock: live.stock || "Out of Stock",
+                            isOutOfStock: true,
+                            lastUpdatedAtPrice: live.lastUpdatedAtPrice || new Date().toISOString(),
+                            liveNumericPrice: 0,
+                            numericPrice: 0,
+                            livePriceLoading: false,
+                        };
+                    }
+
                     const nextCurrent = {
                         ...current,
                         currentPrice: live.currentPrice,
                         price: live.currentPrice,
+                        stock: live.stock || "In Stock",
+                        isOutOfStock: false,
                         previousPrice: live.previousPrice?.trim()
                             ? live.previousPrice
                             : current.previousPrice ?? current.old_price,

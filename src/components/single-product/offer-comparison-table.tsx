@@ -43,6 +43,10 @@ function parseAED(price: string | number | null | undefined): number | null {
     return Number.isFinite(num) && num > 0 ? num : null;
 }
 
+function isOutOfStockProduct(product: any): boolean {
+    return Boolean(product?.isOutOfStock) || /\bout\s+of\s+stock\b/i.test(String(product?.stock || ""));
+}
+
 function truncate(s: string, n: number) {
     if (!s) return "";
     return s.length <= n ? s : s.slice(0, n).trimEnd() + "...";
@@ -107,6 +111,7 @@ type Offer = {
     imageUrl: string;
     images?: { src: string; alt?: string }[];
     available: boolean;
+    outOfStock: boolean;
     source: string;
 };
 
@@ -200,14 +205,17 @@ export default function OfferComparisonTable() {
             const parsedPrice = parseAED(p?.price ?? p?.currentPrice);
             const livePrice = typeof p?.liveNumericPrice === "number" ? p.liveNumericPrice : null;
             const price = livePrice ?? parsedPrice;
-            if (!price) return null;
+            const outOfStock = isOutOfStockProduct(p);
+            if (!price && !outOfStock) return null;
 
             const sortPrice =
-                typeof p?.initialNumericPrice === "number" && p.initialNumericPrice > 0
-                    ? p.initialNumericPrice
-                    : typeof p?.numericPrice === "number" && p.numericPrice > 0
-                        ? p.numericPrice
-                        : price;
+                outOfStock
+                    ? Number.POSITIVE_INFINITY
+                    : typeof p?.initialNumericPrice === "number" && p.initialNumericPrice > 0
+                        ? p.initialNumericPrice
+                        : typeof p?.numericPrice === "number" && p.numericPrice > 0
+                            ? p.numericPrice
+                            : price || Number.POSITIVE_INFINITY;
             const source = normalizeSourceName(p?.source || product?.source || "");
 
             return {
@@ -218,13 +226,14 @@ export default function OfferComparisonTable() {
                     t("singleProduct.offerComparisonTable.offerFallback", "Offer")
                 ),
                 full_name: p.full_name || "",
-                price,
+                price: price || 0,
                 sortPrice,
                 loading: Boolean(p?.livePriceLoading),
                 url: String(p?.product_url || "#"),
                 imageUrl: String(p?.image_url || p?.images?.[0]?.src || ""),
                 images: Array.isArray(p?.images) ? p.images : [],
-                available: true,
+                available: !outOfStock,
+                outOfStock,
                 source: source || "unknown",
             } as Offer;
         })
@@ -260,7 +269,8 @@ export default function OfferComparisonTable() {
     });
 
     const filtered = availableImmediately ? sorted.filter((o) => o.available) : sorted;
-    const cheapest = filtered.length ? Math.min(...filtered.map((o) => o.price)) : 0;
+    const pricedFiltered = filtered.filter((o) => !o.outOfStock && o.price > 0);
+    const cheapest = pricedFiltered.length ? Math.min(...pricedFiltered.map((o) => o.price)) : 0;
     const ordered = filtered;
     const top10 = sorted.slice(0, 10);
 
@@ -315,10 +325,16 @@ export default function OfferComparisonTable() {
                                                 {truncate(p.title, 28)}
                                             </div>
                                             <div className="text-[13px] text-[#111827]">
-                                                <span className="text-[#6b7280]">
-                                                    {t("singleProduct.offerComparisonTable.from", "from")} {" "}
-                                                </span>
-                                                <PriceText price={p.price} loading={p.loading} className="font-semibold" />
+                                                {p.outOfStock ? (
+                                                    <span className="font-semibold text-[#dc2626]">Out of stock</span>
+                                                ) : (
+                                                    <>
+                                                        <span className="text-[#6b7280]">
+                                                            {t("singleProduct.offerComparisonTable.from", "from")} {" "}
+                                                        </span>
+                                                        <PriceText price={p.price} loading={p.loading} className="font-semibold" />
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -374,7 +390,7 @@ export default function OfferComparisonTable() {
 
                             <div className="divide-y divide-[#e5e7eb]">
                                 {ordered.slice(0, visible).map((o) => {
-                                    const isCheapest = o.price === cheapest;
+                                    const isCheapest = !o.outOfStock && o.price === cheapest;
                                     return (
                                         <div key={o.id} className="p-3">
                                             <div className="hidden lg:grid grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_minmax(0,1.15fr)_minmax(0,0.9fr)] gap-4 items-start">
@@ -392,9 +408,15 @@ export default function OfferComparisonTable() {
                                                             {t("singleProduct.offerComparisonTable.cheapestTotalPrice", "Cheapest total price")}
                                                         </div>
                                                     ) : null}
-                                                    <div className="text-[20px] font-semibold text-[#111827] leading-tight">
-                                                        <PriceText price={o.price} loading={o.loading} />
-                                                    </div>
+                                                    {o.outOfStock ? (
+                                                        <div className="text-[16px] font-semibold text-[#dc2626] leading-tight">
+                                                            Out of stock
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-[20px] font-semibold text-[#111827] leading-tight">
+                                                            <PriceText price={o.price} loading={o.loading} />
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <RetailerLogo source={o.source} />
@@ -403,9 +425,12 @@ export default function OfferComparisonTable() {
                                                     <button
                                                         type="button"
                                                         onClick={() => window.open(o.url, "_blank")}
-                                                        className="h-10 px-5 rounded bg-[#22c55e] hover:bg-[#16a34a] text-white text-[14px] font-semibold"
+                                                        className={cn(
+                                                            "h-10 px-5 rounded text-white text-[14px] font-semibold",
+                                                            o.outOfStock ? "bg-[#9ca3af]" : "bg-[#22c55e] hover:bg-[#16a34a]"
+                                                        )}
                                                     >
-                                                        {t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
+                                                        {o.outOfStock ? "Out of stock" : t("singleProduct.offerComparisonTable.visitShop", "Visit the shop")}
                                                     </button>
                                                 </div>
                                             </div>
@@ -436,10 +461,13 @@ export default function OfferComparisonTable() {
                                                     <button
                                                         type="button"
                                                         onClick={() => window.open(o.url, "_blank")}
-                                                        className="w-full h-12 rounded-2xl border border-[#d1d5db] bg-[#f3f4f6] text-[#111827] text-[18px] font-semibold flex items-center justify-center gap-2"
+                                                        className={cn(
+                                                            "w-full h-12 rounded-2xl border border-[#d1d5db] text-[18px] font-semibold flex items-center justify-center gap-2",
+                                                            o.outOfStock ? "bg-[#e5e7eb] text-[#6b7280]" : "bg-[#f3f4f6] text-[#111827]"
+                                                        )}
                                                     >
                                                         <span className="text-[18px] leading-none">
-                                                            {t("singleProduct.offerComparisonTable.toShop", "To Shop")}
+                                                            {o.outOfStock ? "Out of stock" : t("singleProduct.offerComparisonTable.toShop", "To Shop")}
                                                         </span>
                                                         <span className="text-[#1a73e8] leading-none" aria-hidden="true">
                                                             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">

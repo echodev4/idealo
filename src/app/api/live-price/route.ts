@@ -3,6 +3,7 @@ import {
   buildCachedLivePricePayload,
   findCachedProduct,
   hasFreshLivePrice,
+  persistOutOfStockResult,
   persistLiveScrapeResult,
 } from "@/lib/liveScrapeCache";
 
@@ -25,6 +26,17 @@ function toPriceText(value: unknown): string {
   return String(value).trim();
 }
 
+function scraperPathForSource(source: string): string {
+  if (source === "noon") return "/noon-current-price/api/scrape/current-price";
+  if (source === "carrefouruae") return "/carrefouruae-current-price/api/scrape/current-price";
+  return `/${source}/api/scrape/details`;
+}
+
+function isOutOfStockPayload(scraped: any): boolean {
+  const stockText = toPriceText(scraped?.stock || scraped?.availability);
+  return Boolean(scraped?.isOutOfStock) || /\bout\s+of\s+stock\b/i.test(stockText);
+}
+
 function normalizePricePayload(data: any) {
   const scraped = data?.data || {};
 
@@ -32,6 +44,8 @@ function normalizePricePayload(data: any) {
     currentPrice: toPriceText(scraped?.currentPrice),
     previousPrice: toPriceText(scraped?.previousPrice),
     discountPercentage: toPriceText(scraped?.discountPercentage),
+    stock: toPriceText(scraped?.stock || scraped?.availability),
+    isOutOfStock: isOutOfStockPayload(scraped),
     rating: toPriceText(scraped?.rating),
     ratingCount: toPriceText(scraped?.ratingCount),
   };
@@ -79,7 +93,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const scraperUrl = `${BASE_URL}/${source}/api/scrape/details?product_url=${encodeURIComponent(productUrl)}`;
+    const scraperUrl = `${BASE_URL}${scraperPathForSource(source)}?product_url=${encodeURIComponent(productUrl)}`;
 
     const scraperResponse = await fetch(scraperUrl, {
       method: "GET",
@@ -107,6 +121,25 @@ export async function POST(req: Request) {
 
     const prices = normalizePricePayload(data);
 
+    if (prices.isOutOfStock) {
+      const persisted = await persistOutOfStockResult({
+        productUrl,
+        source,
+      });
+
+      return NextResponse.json({
+        success: true,
+        product_url: productUrl,
+        source,
+        currentPrice: "",
+        stock: persisted.stock,
+        isOutOfStock: true,
+        outOfStock: true,
+        lastUpdatedAtPrice: persisted.lastUpdatedAtPrice,
+        cached: false,
+      });
+    }
+
     if (!prices.currentPrice) {
       return NextResponse.json(
         { success: false, error: "Live price was not found" },
@@ -130,6 +163,9 @@ export async function POST(req: Request) {
       currentPrice: persisted.currentPrice,
       previousPrice: persisted.previousPrice,
       discountPercentage: prices.discountPercentage,
+      stock: persisted.stock || prices.stock,
+      isOutOfStock: false,
+      outOfStock: false,
       rating: persisted.rating,
       ratingCount: persisted.ratingCount,
       lastUpdatedAtPrice: persisted.lastUpdatedAtPrice,

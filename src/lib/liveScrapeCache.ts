@@ -12,6 +12,8 @@ type OfferItem = {
   source?: string;
   currentPrice?: string | number | null;
   previousPrice?: string | number | null;
+  stock?: string | null;
+  isOutOfStock?: boolean | null;
   rating?: string | number | null;
   ratingCount?: string | number | null;
   average_rating?: number | null;
@@ -25,6 +27,8 @@ type GroupedProductDoc = {
   source?: string;
   currentPrice?: string | number | null;
   previousPrice?: string | number | null;
+  stock?: string | null;
+  isOutOfStock?: boolean | null;
   rating?: string | number | null;
   ratingCount?: string | number | null;
   average_rating?: number | null;
@@ -44,6 +48,11 @@ type PersistLiveScrapeParams = {
   previousPrice?: string;
   rating?: string;
   ratingCount?: string;
+};
+
+type PersistOutOfStockParams = {
+  productUrl: string;
+  source: string;
 };
 
 function toText(value: unknown): string {
@@ -133,11 +142,17 @@ function parsePriceNumber(value: unknown): number | null {
   return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 }
 
+function isOfferOutOfStock(offer: OfferItem | CachedProductDoc | null | undefined): boolean {
+  if (!offer) return false;
+  return Boolean(offer.isOutOfStock) || /\bout\s+of\s+stock\b/i.test(toText(offer.stock));
+}
+
 function cheapestCurrentPrice(offers: OfferItem[]): string {
   let bestPriceText = "";
   let bestPriceNumber = Number.POSITIVE_INFINITY;
 
   for (const offer of offers) {
+    if (isOfferOutOfStock(offer)) continue;
     const priceText = toText(offer.currentPrice);
     const priceNumber = parsePriceNumber(priceText);
     if (priceNumber === null || priceNumber >= bestPriceNumber) continue;
@@ -170,6 +185,8 @@ export async function findCachedProduct(productUrl: string, source: string) {
         source: 1,
         currentPrice: 1,
         previousPrice: 1,
+        stock: 1,
+        isOutOfStock: 1,
         rating: 1,
         ratingCount: 1,
         average_rating: 1,
@@ -189,6 +206,8 @@ export async function findCachedProduct(productUrl: string, source: string) {
           source: 1,
           currentPrice: 1,
           previousPrice: 1,
+          stock: 1,
+          isOutOfStock: 1,
           rating: 1,
           ratingCount: 1,
           average_rating: 1,
@@ -215,6 +234,8 @@ export async function findCachedProduct(productUrl: string, source: string) {
     source: doc.source,
     currentPrice: doc.currentPrice,
     previousPrice: doc.previousPrice,
+    stock: doc.stock,
+    isOutOfStock: doc.isOutOfStock,
     rating: doc.rating,
     ratingCount: doc.ratingCount,
     average_rating: doc.average_rating,
@@ -226,7 +247,7 @@ export async function findCachedProduct(productUrl: string, source: string) {
 
 export function hasFreshLivePrice(doc: CachedProductDoc | null | undefined): boolean {
   if (!doc) return false;
-  if (!toText(doc.currentPrice)) return false;
+  if (!toText(doc.currentPrice) && !isOfferOutOfStock(doc)) return false;
 
   const lastUpdatedAtPriceMs = parseDateMs(doc.lastUpdatedAtPrice);
   if (!lastUpdatedAtPriceMs) return false;
@@ -238,6 +259,8 @@ export function buildCachedLivePricePayload(doc: CachedProductDoc) {
   return {
     currentPrice: toText(doc.currentPrice),
     previousPrice: toText(doc.previousPrice),
+    stock: toText(doc.stock),
+    isOutOfStock: isOfferOutOfStock(doc),
     rating: toText(doc.rating) || toText(doc.average_rating),
     ratingCount: toText(doc.ratingCount) || toText(doc.reviews),
     lastUpdatedAtPrice: doc.lastUpdatedAtPrice,
@@ -288,6 +311,8 @@ export async function persistLiveScrapeResult({
       ...offer,
       currentPrice: toText(currentPrice),
       previousPrice: nextPreviousPrice || offer.previousPrice,
+      stock: "In Stock",
+      isOutOfStock: false,
       rating: nextRating || offer.rating,
       ratingCount: nextRatingCount || offer.ratingCount,
       average_rating: nextRating ? parseRatingNumber(nextRating) : offer.average_rating,
@@ -311,6 +336,8 @@ export async function persistLiveScrapeResult({
       $set: {
         offerItems: updatedOffers,
         currentPrice: topLevelPrice,
+        stock: topLevelPrice ? "In Stock" : "Out of Stock",
+        isOutOfStock: !topLevelPrice,
         lastUpdatedAtPrice: now,
       },
     }
@@ -319,8 +346,80 @@ export async function persistLiveScrapeResult({
   return {
     currentPrice: toText(currentPrice),
     previousPrice: toText(savedOffer.previousPrice),
+    stock: toText(savedOffer.stock),
+    isOutOfStock: Boolean(savedOffer.isOutOfStock),
     rating: toText(savedOffer.rating) || toText(savedOffer.average_rating),
     ratingCount: toText(savedOffer.ratingCount) || toText(savedOffer.reviews),
+    lastUpdatedAtPrice: now.toISOString(),
+  };
+}
+
+export async function persistOutOfStockResult({
+  productUrl,
+  source,
+}: PersistOutOfStockParams) {
+  const db = await getDb();
+  const aliases = sourceAliases(source);
+  const urls = productUrlVariants(productUrl);
+  const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
+  const now = new Date();
+
+  const doc = await collection.findOne({
+    offerItems: {
+      $elemMatch: {
+        product_url: { $in: urls },
+        ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
+      },
+    },
+  });
+
+  if (!doc) {
+    throw new Error("Matching products_v2 offer was not found");
+  }
+
+  let matchedOffer: OfferItem | null = null;
+  const updatedOffers = (Array.isArray(doc.offerItems) ? doc.offerItems : []).map((offer) => {
+    const offerSource = normalizeSource(offer.source);
+    const isMatch =
+      (urls.includes(toText(offer.product_url).replace(/\/$/, "")) || urls.includes(normalizeProductUrl(offer.product_url))) &&
+      (aliases.length === 0 || aliases.includes(offerSource));
+
+    if (!isMatch) return offer;
+
+    matchedOffer = {
+      ...offer,
+      currentPrice: "",
+      stock: "Out of Stock",
+      isOutOfStock: true,
+      lastUpdatedAtPrice: now,
+    };
+
+    return matchedOffer;
+  });
+
+  if (!matchedOffer) {
+    throw new Error("Matching products_v2 offer was not found");
+  }
+
+  const topLevelPrice = cheapestCurrentPrice(updatedOffers);
+
+  await collection.updateOne(
+    { _id: doc._id },
+    {
+      $set: {
+        offerItems: updatedOffers,
+        currentPrice: topLevelPrice,
+        stock: topLevelPrice ? "In Stock" : "Out of Stock",
+        isOutOfStock: !topLevelPrice,
+        lastUpdatedAtPrice: now,
+      },
+    }
+  );
+
+  return {
+    currentPrice: "",
+    stock: "Out of Stock",
+    isOutOfStock: true,
     lastUpdatedAtPrice: now.toISOString(),
   };
 }
