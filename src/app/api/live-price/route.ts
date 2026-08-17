@@ -15,6 +15,7 @@ function normalizeSource(source: unknown): string {
 
   if (value === "carrefour" || value === "carrefouruae") return "carrefouruae";
   if (value === "noon") return "noon";
+  if (["jumbo", "jackys", "istyle", "eros", "samsung"].includes(value)) return value;
 
   return "";
 }

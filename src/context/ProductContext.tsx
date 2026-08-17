@@ -99,6 +99,7 @@ function normalizeLivePriceSource(source?: string) {
     const value = normalizeSource(source);
     if (value === "noon") return "noon";
     if (value === "carrefour" || value === "carrefouruae") return "carrefour";
+    if (["jumbo", "jackys", "istyle", "eros", "samsung"].includes(value)) return value;
     return "";
 }
 
