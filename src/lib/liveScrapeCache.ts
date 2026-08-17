@@ -22,7 +22,7 @@ type OfferItem = {
 };
 
 type GroupedProductDoc = {
-  _id?: unknown;
+  _id?: any;
   product_url?: string;
   source?: string;
   currentPrice?: string | number | null;
@@ -80,10 +80,39 @@ function normalizeProductUrl(value: unknown): string {
   }
 }
 
+function urlPathSignature(value: unknown): string {
+  const text = toText(value);
+  if (!text) return "";
+
+  try {
+    const url = new URL(text);
+    return `${url.hostname}${url.pathname}`.toLowerCase().replace(/\/$/, "");
+  } catch {
+    return text.split("#")[0].split("?")[0].toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+  }
+}
+
+function getUrlParam(value: unknown, paramName: string): string {
+  const text = toText(value);
+  if (!text) return "";
+
+  try {
+    const url = new URL(text);
+    return toText(url.searchParams.get(paramName)).toLowerCase();
+  } catch {
+    const match = text.match(new RegExp(`[?&]${paramName}=([^&#]+)`, "i"));
+    return match ? decodeURIComponent(match[1]).toLowerCase() : "";
+  }
+}
+
 function productUrlVariants(value: unknown): string[] {
   const raw = toText(value).replace(/\/$/, "");
   const normalized = normalizeProductUrl(raw);
   return Array.from(new Set([raw, normalized].filter(Boolean)));
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function sourceAliases(source: string): string[] {
@@ -91,6 +120,20 @@ function sourceAliases(source: string): string[] {
   if (!normalized) return [];
   if (normalized === "carrefour") return ["carrefour", "carrefouruae"];
   return [normalized];
+}
+
+function sameProductUrl(left: unknown, right: unknown): boolean {
+  const leftVariants = new Set(productUrlVariants(left));
+  const rightVariants = productUrlVariants(right);
+  if (rightVariants.some((url) => leftVariants.has(url))) return true;
+
+  const leftPath = urlPathSignature(left);
+  const rightPath = urlPathSignature(right);
+  if (leftPath && rightPath && leftPath === rightPath) return true;
+
+  const leftModelCode = getUrlParam(left, "modelCode");
+  const rightModelCode = getUrlParam(right, "modelCode");
+  return Boolean(leftModelCode && rightModelCode && leftModelCode === rightModelCode);
 }
 
 function parseDateMs(value: DateLike): number {
@@ -125,16 +168,86 @@ async function getDb(): Promise<Db> {
 
 function findOffer(doc: GroupedProductDoc | null, productUrl: string, source: string) {
   const aliases = new Set(sourceAliases(source));
-  const urls = new Set(productUrlVariants(productUrl));
   const offers = Array.isArray(doc?.offerItems) ? doc.offerItems : [];
 
   return offers.find((offer) => {
-    if (!urls.has(toText(offer.product_url).replace(/\/$/, "")) && !urls.has(normalizeProductUrl(offer.product_url))) {
+    if (!sameProductUrl(offer.product_url, productUrl)) {
       return false;
     }
     const offerSource = normalizeSource(offer.source);
     return aliases.size === 0 || aliases.has(offerSource);
   });
+}
+
+async function findGroupedDocByOfferUrl(
+  collection: ReturnType<Db["collection"]>,
+  productUrl: string,
+  source: string
+): Promise<GroupedProductDoc | null> {
+  const aliases = sourceAliases(source);
+  const urls = productUrlVariants(productUrl);
+  const sourceMatch = aliases.length > 0 ? { source: { $in: aliases } } : {};
+  const projection = {
+    product_url: 1,
+    source: 1,
+    currentPrice: 1,
+    previousPrice: 1,
+    stock: 1,
+    isOutOfStock: 1,
+    rating: 1,
+    ratingCount: 1,
+    average_rating: 1,
+    reviews: 1,
+    lastUpdatedAtPrice: 1,
+    offerItems: 1,
+  };
+
+  const exactDoc = await collection.findOne(
+    {
+      offerItems: {
+        $elemMatch: {
+          product_url: { $in: urls },
+          ...sourceMatch,
+        },
+      },
+    },
+    { projection }
+  );
+  if (exactDoc) return exactDoc as GroupedProductDoc;
+
+  const modelCode = getUrlParam(productUrl, "modelCode");
+  if (modelCode) {
+    const modelCodeDoc = await collection.findOne(
+      {
+        offerItems: {
+          $elemMatch: {
+            product_url: { $regex: `modelCode=${escapeRegExp(modelCode)}`, $options: "i" },
+            ...sourceMatch,
+          },
+        },
+      },
+      { projection }
+    );
+    if (modelCodeDoc) return modelCodeDoc as GroupedProductDoc;
+  }
+
+  const path = urlPathSignature(productUrl);
+  if (path) {
+    const pathDoc = await collection.findOne(
+      {
+        offerItems: {
+          $elemMatch: {
+            product_url: { $regex: escapeRegExp(path), $options: "i" },
+            ...sourceMatch,
+          },
+        },
+      },
+      { projection }
+    );
+    if (pathDoc) return pathDoc as GroupedProductDoc;
+  }
+
+  return null;
 }
 
 function parsePriceNumber(value: unknown): number | null {
@@ -166,36 +279,10 @@ function cheapestCurrentPrice(offers: OfferItem[]): string {
 
 export async function findCachedProduct(productUrl: string, source: string) {
   const db = await getDb();
-  const aliases = sourceAliases(source);
   const urls = productUrlVariants(productUrl);
   const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
 
-  let doc = await collection.findOne(
-    {
-      offerItems: {
-        $elemMatch: {
-          product_url: { $in: urls },
-          ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
-        },
-      },
-    },
-    {
-      projection: {
-        product_url: 1,
-        source: 1,
-        currentPrice: 1,
-        previousPrice: 1,
-        stock: 1,
-        isOutOfStock: 1,
-        rating: 1,
-        ratingCount: 1,
-        average_rating: 1,
-        reviews: 1,
-        lastUpdatedAtPrice: 1,
-        offerItems: 1,
-      },
-    }
-  );
+  let doc = await findGroupedDocByOfferUrl(collection, productUrl, source);
 
   if (!doc) {
     doc = await collection.findOne(
@@ -277,18 +364,10 @@ export async function persistLiveScrapeResult({
 }: PersistLiveScrapeParams) {
   const db = await getDb();
   const aliases = sourceAliases(source);
-  const urls = productUrlVariants(productUrl);
   const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
   const now = new Date();
 
-  const doc = await collection.findOne({
-    offerItems: {
-      $elemMatch: {
-        product_url: { $in: urls },
-        ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
-      },
-    },
-  });
+  const doc = await findGroupedDocByOfferUrl(collection, productUrl, source);
 
   if (!doc) {
     throw new Error("Matching products_v2 offer was not found");
@@ -298,7 +377,7 @@ export async function persistLiveScrapeResult({
   const updatedOffers = (Array.isArray(doc.offerItems) ? doc.offerItems : []).map((offer) => {
     const offerSource = normalizeSource(offer.source);
     const isMatch =
-      (urls.includes(toText(offer.product_url).replace(/\/$/, "")) || urls.includes(normalizeProductUrl(offer.product_url))) &&
+      sameProductUrl(offer.product_url, productUrl) &&
       (aliases.length === 0 || aliases.includes(offerSource));
 
     if (!isMatch) return offer;
@@ -360,18 +439,10 @@ export async function persistOutOfStockResult({
 }: PersistOutOfStockParams) {
   const db = await getDb();
   const aliases = sourceAliases(source);
-  const urls = productUrlVariants(productUrl);
   const collection = db.collection<GroupedProductDoc>(PRODUCTS_V2_COLLECTION);
   const now = new Date();
 
-  const doc = await collection.findOne({
-    offerItems: {
-      $elemMatch: {
-        product_url: { $in: urls },
-        ...(aliases.length > 0 ? { source: { $in: aliases } } : {}),
-      },
-    },
-  });
+  const doc = await findGroupedDocByOfferUrl(collection, productUrl, source);
 
   if (!doc) {
     throw new Error("Matching products_v2 offer was not found");
@@ -381,7 +452,7 @@ export async function persistOutOfStockResult({
   const updatedOffers = (Array.isArray(doc.offerItems) ? doc.offerItems : []).map((offer) => {
     const offerSource = normalizeSource(offer.source);
     const isMatch =
-      (urls.includes(toText(offer.product_url).replace(/\/$/, "")) || urls.includes(normalizeProductUrl(offer.product_url))) &&
+      sameProductUrl(offer.product_url, productUrl) &&
       (aliases.length === 0 || aliases.includes(offerSource));
 
     if (!isMatch) return offer;
