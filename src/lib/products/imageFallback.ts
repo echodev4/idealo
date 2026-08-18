@@ -1,5 +1,5 @@
 const SHARAFDG_SOURCE = "sharafdg";
-export const PRODUCT_PLACEHOLDER_SRC = "/placeholder.jpg";
+export const PRODUCT_PLACEHOLDER_SRC = "/placeholder.png";
 const SECOND_IMAGE_SOURCE_SET = new Set(["jumbo", "jackys", "istyle", "eros", "samsung"]);
 const BAD_IMAGE_KEYWORDS = [
     "tdra",
