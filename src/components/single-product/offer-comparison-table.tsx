@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import { resolvePreferredProductImage } from "@/lib/products/imageFallback";
 import { cn } from "@/lib/utils";
+import FallbackImage from "@/components/common/fallback-image";
 import noonLogo from "../../../public/uploads/sources/noon.jpg";
 import carrefourLogo from "../../../public/uploads/sources/carrefouruae.png";
 import sharafDgLogo from "../../../public/uploads/sources/sharaf.jpg";
@@ -172,7 +172,7 @@ function RetailerLogo({ source }: { source: string }) {
         <div className="flex min-w-[112px] flex-col items-start gap-2">
             {sourceLogo ? (
                 <div className={boxClassName}>
-                    <Image src={sourceLogo.src} alt={sourceLogo.alt} fill sizes={imageSizes} className="object-contain" />
+                    <FallbackImage src={typeof sourceLogo.src === "string" ? sourceLogo.src : sourceLogo.src.src} alt={sourceLogo.alt} fill sizes={imageSizes} className="object-contain" />
                 </div>
             ) : (
                 <span className="text-[13px] font-semibold text-[#111827]">{source}</span>
@@ -310,7 +310,7 @@ export default function OfferComparisonTable() {
 
                                         <div className="w-[34px] h-[34px] rounded border border-[#e5e7eb] bg-white relative overflow-hidden">
                                             {!!getTopProductImage(p) && (
-                                                <Image
+                                                <FallbackImage
                                                     src={getTopProductImage(p)}
                                                     alt={p.title}
                                                     fill

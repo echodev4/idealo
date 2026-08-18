@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProduct } from "@/context/ProductContext";
 import { resolvePreferredProductImage } from "@/lib/products/imageFallback";
 import { cn } from "@/lib/utils";
+import FallbackImage from "@/components/common/fallback-image";
 
 type VariantProduct = {
   _id?: string;
@@ -532,7 +532,7 @@ export default function ProductVariants() {
                     ) : null}
 
                     <div className="relative h-[88px] w-full bg-[#f3f4f6]">
-                      <Image src={image} alt={name} fill sizes="118px" className="object-contain p-3" />
+                      <FallbackImage src={image} alt={name} fill sizes="118px" className="object-contain p-3" />
                     </div>
 
                     <div className="flex min-h-0 flex-1 flex-col px-2 py-2">

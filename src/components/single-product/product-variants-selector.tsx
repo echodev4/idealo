@@ -1,12 +1,12 @@
 ﻿"use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import { useRouter } from "next/navigation";
+import FallbackImage from "@/components/common/fallback-image";
 
 function parseAEDPrice(price: string): number | null {
     if (!price) return null;
@@ -196,7 +196,7 @@ export default function ProductVariantsSelector() {
                                 <div className="grid grid-cols-2 gap-2">
                                     {allThumbs.map((thumb) => (
                                         <div key={thumb.key} className="relative aspect-square overflow-hidden rounded-[2px] bg-white">
-                                            <Image src={thumb.imageUrl} alt={thumb.name} fill className="object-contain p-1" sizes="52px" />
+                                            <FallbackImage src={thumb.imageUrl} alt={thumb.name} fill className="object-contain p-1" sizes="52px" />
                                         </div>
                                     ))}
                                 </div>
@@ -238,7 +238,7 @@ export default function ProductVariantsSelector() {
                                 <div className="px-2 pt-2">
                                     <div className="rounded-[3px] bg-[#f3f4f6] border border-[#e5e7eb] h-[92px] flex items-center justify-center overflow-hidden">
                                         <div className="relative w-full h-full">
-                                            <Image src={item.imageUrl} alt={item.name} fill className="object-contain p-2" sizes="120px" />
+                                            <FallbackImage src={item.imageUrl} alt={item.name} fill className="object-contain p-2" sizes="120px" />
                                         </div>
                                     </div>
                                 </div>

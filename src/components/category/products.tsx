@@ -1,9 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { useLanguage } from "@/contexts/language-context";
 import WatchlistToggle from "@/components/common/watchlist-toggle";
+import FallbackImage from "@/components/common/fallback-image";
 import {
     normalizeProductSource,
     PRODUCT_PLACEHOLDER_SRC,
@@ -127,7 +127,7 @@ function ProductCellGrid({ product }: { product: Product }) {
 
             <Link href={href} className="block">
                 <div className="relative mx-auto mt-8 h-[170px] w-full max-w-[230px]">
-                    <Image
+                    <FallbackImage
                         src={img}
                         alt={name}
                         fill
@@ -175,7 +175,7 @@ function ProductRowList({ product, onOpenDetails }: { product: Product; onOpenDe
             <div className="flex items-start gap-4">
                 <Link href={href} className="shrink-0">
                     <div className="relative h-[92px] w-[92px] overflow-hidden rounded bg-white">
-                        <Image src={img} alt={name} fill className="object-contain p-1" sizes="92px" />
+                        <FallbackImage src={img} alt={name} fill className="object-contain p-1" sizes="92px" />
                     </div>
                 </Link>
 

@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useProduct } from "@/context/ProductContext";
 import { useLanguage } from "@/contexts/language-context";
 import WatchlistToggle from "@/components/common/watchlist-toggle";
+import FallbackImage from "@/components/common/fallback-image";
 
 const ProductGallerySkeleton = () => {
   return (
@@ -107,7 +107,7 @@ export default function ProductGallery() {
           >
             {safeImages.map((img: { src: string; alt?: string }, idx: number) => (
               <div key={`${img.src}-${idx}`} className="relative aspect-square w-full shrink-0">
-                <Image
+                <FallbackImage
                   src={img.src}
                   alt={img.alt ?? title}
                   fill
@@ -151,7 +151,7 @@ export default function ProductGallery() {
                 selected ? "border-[#1a73e8]" : "border-[#e5e7eb] hover:border-[#1a73e8]"
               )}
             >
-              <Image
+              <FallbackImage
                 src={img.src}
                 alt={img.alt ?? title}
                 fill

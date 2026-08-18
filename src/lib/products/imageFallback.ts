@@ -1,5 +1,7 @@
 const SHARAFDG_SOURCE = "sharafdg";
+const EROS_SOURCE = "eros";
 export const PRODUCT_PLACEHOLDER_SRC = "/placeholder.png";
+const PLACEHOLDER_SOURCE_SET = new Set([SHARAFDG_SOURCE, EROS_SOURCE]);
 const SECOND_IMAGE_SOURCE_SET = new Set(["jumbo", "jackys", "istyle", "eros", "samsung"]);
 const BAD_IMAGE_KEYWORDS = [
     "tdra",
@@ -45,7 +47,7 @@ export function normalizeProductSource(source: unknown): string {
 }
 
 export function shouldUseSharafdgPlaceholder(source: unknown): boolean {
-    return normalizeProductSource(source) === SHARAFDG_SOURCE;
+    return PLACEHOLDER_SOURCE_SET.has(normalizeProductSource(source));
 }
 
 function getImageAlt(input: ProductImageInput): string {
