@@ -204,7 +204,7 @@ function getNativeScrollLeft(normalizedLeft: number, el: HTMLDivElement) {
   return normalizedLeft;
 }
 
-function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
+function useScrollState(ref: React.RefObject<HTMLDivElement | null>, enabled = true) {
   const [canLeft, setCanLeft] = React.useState(false);
   const [canRight, setCanRight] = React.useState(false);
 
@@ -220,6 +220,12 @@ function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
   }, [ref]);
 
   React.useEffect(() => {
+    if (!enabled) {
+      setCanLeft(false);
+      setCanRight(false);
+      return;
+    }
+
     const el = ref.current;
     if (!el) return;
 
@@ -232,7 +238,7 @@ function useScrollState(ref: React.RefObject<HTMLDivElement | null>) {
       el.removeEventListener("scroll", update);
       resizeObserver.disconnect();
     };
-  }, [ref, update]);
+  }, [ref, update, enabled]);
 
   const scrollBy = React.useCallback(
     (direction: "left" | "right") => {
@@ -303,7 +309,7 @@ export default function ProductVariants() {
   const [isApplicable, setIsApplicable] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const scrollerRef = React.useRef<HTMLDivElement | null>(null);
-  const { canLeft, canRight, scrollBy, update } = useScrollState(scrollerRef);
+  const { canLeft, canRight, scrollBy, update } = useScrollState(scrollerRef, showFilters);
 
   React.useEffect(() => {
     if (loading || !product?.product_url) {
@@ -381,8 +387,11 @@ export default function ProductVariants() {
   }, [variants, selectedColors, selectedMemories]);
 
   React.useEffect(() => {
+    if (!showFilters) return;
     update();
-  }, [filteredVariants.length, update]);
+    const frame = window.requestAnimationFrame(update);
+    return () => window.cancelAnimationFrame(frame);
+  }, [filteredVariants.length, showFilters, update]);
 
   if (!isApplicable) {
     return isLoading && isLikelyMobileProduct(product) ? <ProductVariantsSkeleton /> : null;
@@ -487,7 +496,7 @@ export default function ProductVariants() {
             type="button"
             aria-label="Scroll variants left"
             onClick={() => scrollBy("left")}
-            className="absolute left-0 top-1/2 z-20 hidden h-12 w-10 -translate-y-1/2 items-center justify-center bg-[#8d949d]/85 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 md:flex"
+            className="absolute left-0 top-1/2 z-20 flex h-12 w-10 -translate-y-1/2 items-center justify-center bg-[#8d949d]/90 text-white shadow-md transition-colors hover:bg-[#6b7280]"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
@@ -556,7 +565,7 @@ export default function ProductVariants() {
             type="button"
             aria-label="Scroll variants right"
             onClick={() => scrollBy("right")}
-            className="absolute right-0 top-1/2 z-20 hidden h-12 w-10 -translate-y-1/2 items-center justify-center bg-[#8d949d]/85 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 md:flex"
+            className="absolute right-0 top-1/2 z-20 flex h-12 w-10 -translate-y-1/2 items-center justify-center bg-[#8d949d]/90 text-white shadow-md transition-colors hover:bg-[#6b7280]"
           >
             <ChevronRight className="h-6 w-6" />
           </button>
